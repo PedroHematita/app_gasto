@@ -23,6 +23,7 @@ export const GastoDetail: React.FC<GastoDetailProps> = ({
     observacoes: gasto.observacoes,
     comprovanteFile: null,
     comprovanteUrl: gasto.comprovanteUrl,
+    parcelas: gasto.parcelas,
   };
 
   const whatsAppMessage = buildWhatsAppMessage(
@@ -57,7 +58,9 @@ export const GastoDetail: React.FC<GastoDetailProps> = ({
 
         {/* Payment chips */}
         <div className="detail-chips">
-          <span className="detail-chip">{gasto.formaPagamento}</span>
+          <span className="detail-chip">
+            {gasto.formaPagamento === 'À Vista' ? 'À Vista' : `Parcelado em ${gasto.parcelas || 2}x`}
+          </span>
           <span className="detail-chip">{gasto.meioPagamento}</span>
           <span className="detail-chip">{gasto.instituicaoFinanceira}</span>
         </div>

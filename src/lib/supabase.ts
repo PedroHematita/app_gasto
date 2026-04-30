@@ -16,6 +16,7 @@ export async function saveGasto(
   observacoes: string,
   total: number,
   comprovanteUrl: string,
+  parcelas: number | undefined,
   items: Array<{
     ordem: number;
     descricao: string;
@@ -49,6 +50,7 @@ export async function saveGasto(
       observacoes: observacoes || null,
       total: total / 100,
       comprovante_url: comprovanteUrl || null,
+      numero_parcelas: formaPagamento === 'a_vista' ? null : parcelas,
     })
     .select()
     .single();
@@ -94,12 +96,12 @@ export async function uploadComprovante(
   return data.publicUrl;
 }
 
-export async function searchDescricoes(query: string): Promise<string[]> {
+export async function searchDescricoes(query: string): Promise<{ label: string; payload: any }[]> {
   if (!supabase || query.length < 2) return [];
 
   const { data, error } = await supabase
     .from('itens_gasto')
-    .select('descricao_produto_servico')
+    .select('descricao_produto_servico, unidade_medida')
     .ilike('descricao_produto_servico', `%${query}%`)
     .order('created_at', { ascending: false })
     .limit(20);
@@ -107,8 +109,44 @@ export async function searchDescricoes(query: string): Promise<string[]> {
   if (error || !data) return [];
 
   // Deduplicate and return max 5
-  const unique = [...new Set(data.map((r) => r.descricao_produto_servico as string))];
+  const unique: { label: string; payload: any }[] = [];
+  const seen = new Set<string>();
+
+  for (const r of data) {
+    const desc = r.descricao_produto_servico as string;
+    if (!seen.has(desc)) {
+      seen.add(desc);
+      unique.push({ label: desc, payload: { unidade: r.unidade_medida } });
+    }
+  }
+
   return unique.slice(0, 5);
+}
+
+export async function checkUnidadeForDescricao(descricao: string): Promise<string | null> {
+  if (!supabase || !descricao.trim()) return null;
+
+  // Use % instead of spaces to catch spacing variations in the DB
+  const queryDesc = descricao.trim().replace(/\s+/g, '%');
+
+  const { data, error } = await supabase
+    .from('itens_gasto')
+    .select('descricao_produto_servico, unidade_medida')
+    .ilike('descricao_produto_servico', `%${queryDesc}%`)
+    .order('created_at', { ascending: false });
+
+  if (error || !data) return null;
+
+  const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
+  const normInput = normalize(descricao);
+
+  for (const r of data) {
+    if (normalize(r.descricao_produto_servico as string) === normInput) {
+      return r.unidade_medida as string;
+    }
+  }
+
+  return null;
 }
 
 export async function searchFornecedores(query: string): Promise<string[]> {
@@ -150,7 +188,7 @@ export async function fetchGastos(): Promise<GastoRecord[]> {
     .from('gastos')
     .select(`
       id, data_compra, fornecedor, forma_pagamento, meio_pagamento,
-      instituicao_financeira, observacoes, total, comprovante_url, created_at,
+      instituicao_financeira, observacoes, total, comprovante_url, numero_parcelas, created_at,
       itens_gasto ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total, created_at )
     `)
     .order('created_at', { ascending: false });
@@ -168,6 +206,7 @@ export async function fetchGastos(): Promise<GastoRecord[]> {
     observacoes: row.observacoes || '',
     total: Math.round((row.total || 0) * 100),
     comprovanteUrl: row.comprovante_url || '',
+    parcelas: row.numero_parcelas || undefined,
     createdAt: row.created_at,
     items: (row.itens_gasto || [])
       .sort((a: any, b: any) => a.ordem - b.ordem)
@@ -190,7 +229,7 @@ export async function fetchGastoById(gastoId: string): Promise<GastoRecord | nul
     .from('gastos')
     .select(`
       id, data_compra, fornecedor, forma_pagamento, meio_pagamento,
-      instituicao_financeira, observacoes, total, comprovante_url, created_at,
+      instituicao_financeira, observacoes, total, comprovante_url, numero_parcelas, created_at,
       itens_gasto ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total, created_at )
     `)
     .eq('id', gastoId)
@@ -215,6 +254,7 @@ export async function fetchGastoById(gastoId: string): Promise<GastoRecord | nul
     observacoes: data.observacoes || '',
     total: Math.round((data.total || 0) * 100),
     comprovanteUrl: data.comprovante_url || '',
+    parcelas: data.numero_parcelas || undefined,
     createdAt: data.created_at,
     items: ((data as any).itens_gasto || [])
       .sort((a: any, b: any) => a.ordem - b.ordem)
@@ -240,6 +280,7 @@ export async function updateGasto(
   observacoes: string,
   total: number,
   newComprovanteUrl: string | null, // null = keep existing
+  parcelas: number | undefined,
   items: Array<{
     ordem: number;
     descricao: string;
@@ -258,6 +299,7 @@ export async function updateGasto(
     instituicao_financeira: instituicaoFinanceira,
     observacoes: observacoes || null,
     total: total / 100,
+    numero_parcelas: formaPagamento === 'a_vista' ? null : parcelas,
   };
 
   // Only update comprovante_url if a new file was provided
@@ -303,27 +345,43 @@ export interface PriceHistoryRecord {
   data: string;       // dd/mm/yyyy
   fornecedor: string;
   valorCentavos: number;
+  quantidade: number;
+  unidade: string;
+  valorUnitarioCentavos: number;
 }
 
-export async function fetchPriceHistory(descricao: string): Promise<PriceHistoryRecord[]> {
-  if (!supabase || !descricao.trim()) return [];
+export async function fetchPriceHistory(descricao: string, unidade: string): Promise<PriceHistoryRecord[]> {
+  if (!supabase || !descricao.trim() || !unidade) return [];
 
   // Query itens_gasto with their parent gasto for date and fornecedor
   const { data, error } = await supabase
     .from('itens_gasto')
     .select(`
       valor_total,
+      quantidade_adquirida,
+      unidade_medida,
       created_at,
       gastos!inner ( data_compra, fornecedor )
     `)
     .ilike('descricao_produto_servico', descricao.trim())
+    .eq('unidade_medida', unidade)
     .order('created_at', { ascending: false });
 
   if (error || !data) return [];
 
-  return data.map((row: any) => ({
-    data: isoToBR(row.gastos.data_compra),
-    fornecedor: row.gastos.fornecedor || '',
-    valorCentavos: Math.round((row.valor_total || 0) * 100),
-  }));
+  // Filter out records with 0 quantity to avoid division by zero
+  const validData = data.filter((r: any) => Number(r.quantidade_adquirida) > 0);
+
+  return validData.map((row: any) => {
+    const qty = Number(row.quantidade_adquirida);
+    const totalCents = Math.round((row.valor_total || 0) * 100);
+    return {
+      data: isoToBR(row.gastos.data_compra),
+      fornecedor: row.gastos.fornecedor || '',
+      valorCentavos: totalCents,
+      quantidade: qty,
+      unidade: row.unidade_medida,
+      valorUnitarioCentavos: Math.round(totalCents / qty),
+    };
+  });
 }

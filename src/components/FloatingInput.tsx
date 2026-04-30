@@ -1,5 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 
+export type AutocompleteResult = string | { label: string; payload?: any };
+
 interface FloatingInputProps {
   label: string;
   value: string;
@@ -12,7 +14,8 @@ interface FloatingInputProps {
   onClick?: () => void;
   inputMode?: 'text' | 'numeric' | 'decimal' | 'tel';
   id?: string;
-  autocompleteSearch?: (query: string) => Promise<string[]>;
+  autocompleteSearch?: (query: string) => Promise<AutocompleteResult[]>;
+  onSelectSuggestion?: (value: string, payload?: any) => void;
 }
 
 export const FloatingInput: React.FC<FloatingInputProps> = ({
@@ -28,12 +31,13 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
   inputMode,
   id,
   autocompleteSearch,
+  onSelectSuggestion,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<AutocompleteResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const bgClass = bgVariant === 'edit'
@@ -68,13 +72,18 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
 
   // Select suggestion
   const handleSelect = useCallback(
-    (val: string) => {
+    (s: AutocompleteResult) => {
+      const val = typeof s === 'string' ? s : s.label;
+      const payload = typeof s === 'string' ? undefined : s.payload;
+      
       onChange(val);
+      if (onSelectSuggestion) onSelectSuggestion(val, payload);
+      
       setSuggestions([]);
       setShowSuggestions(false);
       inputRef.current?.focus();
     },
-    [onChange]
+    [onChange, onSelectSuggestion]
   );
 
   // Close on outside click
@@ -117,15 +126,18 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
 
       {showSuggestions && suggestions.length > 0 && (
         <div className="custom-dropdown">
-          {suggestions.map((s, i) => (
-            <div
-              key={`${s}-${i}`}
-              className="custom-dropdown__item"
-              onClick={() => handleSelect(s)}
-            >
-              {s}
-            </div>
-          ))}
+          {suggestions.map((s, i) => {
+            const label = typeof s === 'string' ? s : s.label;
+            return (
+              <div
+                key={`${label}-${i}`}
+                className="custom-dropdown__item"
+                onClick={() => handleSelect(s)}
+              >
+                {label}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

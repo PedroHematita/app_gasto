@@ -9,6 +9,7 @@ interface FloatingSelectProps {
   className?: string;
   bgVariant?: 'surface' | 'main' | 'edit';
   id?: string;
+  disabled?: boolean;
 }
 
 export const FloatingSelect: React.FC<FloatingSelectProps> = ({
@@ -19,6 +20,7 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
   className = '',
   bgVariant = 'main',
   id,
+  disabled = false,
 }) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -52,10 +54,11 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
   }, [open]);
 
   const handleOpen = useCallback(() => {
+    if (disabled) return;
     setOpen(true);
     setSearch('');
     setTimeout(() => inputRef.current?.focus(), 0);
-  }, []);
+  }, [disabled]);
 
   const handleSelect = useCallback((opt: string) => {
     onChange(opt);
@@ -73,7 +76,13 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
           id={id}
           className="floating-field__input has-value"
           onClick={handleOpen}
-          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', userSelect: 'none' }}
+          style={{ 
+            cursor: disabled ? 'not-allowed' : 'pointer', 
+            display: 'flex', 
+            alignItems: 'center', 
+            userSelect: 'none',
+            opacity: disabled ? 0.5 : 1
+          }}
         >
           <span style={{ flex: 1 }}>{value}</span>
         </div>
@@ -95,12 +104,16 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
 
       <span
         className="floating-field__select-arrow"
-        onClick={() => { if (open) { setOpen(false); setSearch(''); } else { handleOpen(); } }}
+        onClick={() => {
+          if (disabled) return;
+          if (open) { setOpen(false); setSearch(''); } else { handleOpen(); }
+        }}
         style={{
           transition: 'transform 0.2s',
           transform: open ? 'translateY(-50%) rotate(180deg)' : 'translateY(-50%)',
-          cursor: 'pointer',
+          cursor: disabled ? 'not-allowed' : 'pointer',
           pointerEvents: 'auto',
+          opacity: disabled ? 0.3 : 1
         }}
       >
         <ChevronDown size={16} />
@@ -108,8 +121,9 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
 
       <label className="floating-field__label" style={{
         top: 0, transform: 'translateY(-50%)', fontSize: 10,
-        color: open ? 'var(--accent)' : 'var(--accent)',
+        color: disabled ? 'var(--text-inactive)' : open ? 'var(--accent)' : 'var(--accent)',
         background: labelBg, padding: '0 5px',
+        opacity: disabled ? 0.6 : 1
       }}>
         {label}
       </label>

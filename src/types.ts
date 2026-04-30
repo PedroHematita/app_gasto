@@ -15,6 +15,7 @@ export interface PaymentData {
   observacoes: string;
   comprovanteFile: File | null;
   comprovanteUrl: string;
+  parcelas?: number;
 }
 
 export interface Gasto {
@@ -36,6 +37,7 @@ export interface GastoRecord {
   observacoes: string;
   total: number; // cents
   comprovanteUrl: string;
+  parcelas?: number;
   createdAt: string;
   items: GastoItem[];
 }

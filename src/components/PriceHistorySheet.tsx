@@ -22,17 +22,19 @@ export const PriceHistorySheet: React.FC<PriceHistorySheetProps> = ({
   const latest = records[0];
   const previous = records[1];
 
-  // Average of last 3
+  // Average of last 3 (weighted)
   const avg3 = useMemo(() => {
     const slice = records.slice(0, 3);
     if (slice.length === 0) return 0;
-    return Math.round(slice.reduce((s, r) => s + r.valorCentavos, 0) / slice.length);
+    const totalCents = slice.reduce((s, r) => s + r.valorCentavos, 0);
+    const totalQty = slice.reduce((s, r) => s + r.quantidade, 0);
+    return totalQty > 0 ? Math.round(totalCents / totalQty) : 0;
   }, [records]);
 
   // Variation
   const variation = useMemo(() => {
-    if (!latest || !previous || previous.valorCentavos === 0) return null;
-    return ((latest.valorCentavos - previous.valorCentavos) / previous.valorCentavos) * 100;
+    if (!latest || !previous || previous.valorUnitarioCentavos === 0) return null;
+    return ((latest.valorUnitarioCentavos - previous.valorUnitarioCentavos) / previous.valorUnitarioCentavos) * 100;
   }, [latest, previous]);
 
   // Chart dimensions
@@ -45,14 +47,14 @@ export const PriceHistorySheet: React.FC<PriceHistorySheetProps> = ({
 
   const chartData = useMemo(() => {
     if (chronological.length < 2) return null;
-    const values = chronological.map((r) => r.valorCentavos);
+    const values = chronological.map((r) => r.valorUnitarioCentavos);
     const min = Math.min(...values);
     const max = Math.max(...values);
     const range = max - min || 1;
 
     const points = chronological.map((r, i) => ({
       x: padX + (i / (chronological.length - 1)) * innerW,
-      y: padY + innerH - ((r.valorCentavos - min) / range) * innerH,
+      y: padY + innerH - ((r.valorUnitarioCentavos - min) / range) * innerH,
       record: r,
     }));
 
@@ -68,13 +70,13 @@ export const PriceHistorySheet: React.FC<PriceHistorySheetProps> = ({
 
         {/* Title */}
         <div className="ph-title">{descricao}</div>
-        <div className="ph-subtitle">Histórico dos seus registros</div>
+        <div className="ph-subtitle">Histórico dos seus registros em {latest?.unidade || ''}</div>
 
         {/* Stats bar */}
         <div className="ph-stats">
           <div className="ph-stat">
             <span className="ph-stat__label">Última vez</span>
-            <span className="ph-stat__value">{formatCurrency(latest.valorCentavos)}</span>
+            <span className="ph-stat__value">{formatCurrency(latest.valorUnitarioCentavos)}</span>
           </div>
           <div className="ph-stat-sep" />
           <div className="ph-stat">
@@ -136,7 +138,7 @@ export const PriceHistorySheet: React.FC<PriceHistorySheetProps> = ({
                           strokeWidth="0.5"
                         />
                         <text x={p.x} y={p.y - 18} textAnchor="middle" fill="var(--accent)" fontSize="9" fontFamily="Inter">
-                          {p.record.data} • {formatCurrency(p.record.valorCentavos)}
+                          {p.record.data} • {formatCurrency(p.record.valorUnitarioCentavos)}
                         </text>
                       </g>
                     )}
@@ -159,7 +161,7 @@ export const PriceHistorySheet: React.FC<PriceHistorySheetProps> = ({
             <div key={i} className="ph-table-row">
               <span className="ph-table-row__date">{r.data}</span>
               <span className="ph-table-row__fornecedor">{r.fornecedor || '—'}</span>
-              <span className="ph-table-row__value">{formatCurrency(r.valorCentavos)}</span>
+              <span className="ph-table-row__value">{formatCurrency(r.valorUnitarioCentavos)}</span>
             </div>
           ))}
         </div>

@@ -11,8 +11,9 @@ import { DatePickerSheet } from './components/DatePickerSheet';
 import { BottomNav } from './components/BottomNav';
 import { MeusGastos } from './components/MeusGastos';
 import { GastoDetail } from './components/GastoDetail';
+import { PriceWarningModal } from './components/PriceWarningModal';
 import { formatDateBR, generateId } from './utils';
-import { supabase, saveGasto, updateGasto } from './lib/supabase';
+import { supabase, saveGasto, updateGasto, fetchPriceHistory } from './lib/supabase';
 import type { GastoItem, PaymentData, Screen, GastoRecord } from './types';
 
 const defaultPayment: PaymentData = {
@@ -23,6 +24,7 @@ const defaultPayment: PaymentData = {
   observacoes: '',
   comprovanteFile: null,
   comprovanteUrl: '',
+  parcelas: 2,
 };
 
 function App() {
@@ -64,6 +66,19 @@ function App() {
   const [quantidade, setQuantidade] = useState('1');
   const [unidade, setUnidade] = useState('Unidade');
   const [valorCentavos, setValorCentavos] = useState(0);
+  const [lockedUnit, setLockedUnit] = useState<string | null>(null);
+
+  const [pendingItemWarning, setPendingItemWarning] = useState<{
+    media: number;
+    unidade: string;
+    limiteInferior: number;
+    limiteSuperior: number;
+    valorInformado: number;
+    commit: () => void;
+  } | null>(null);
+
+  // Zero value warning state
+  const [pendingZeroWarning, setPendingZeroWarning] = useState<(() => void) | null>(null);
 
   // Edit mode (editing an item within the form)
   const [editingItem, setEditingItem] = useState<GastoItem | null>(null);
@@ -100,6 +115,7 @@ function App() {
     setUnidade('Unidade');
     setValorCentavos(0);
     setEditingItem(null);
+    setLockedUnit(null);
   }, []);
 
   // Full reset to new gasto state
@@ -115,35 +131,139 @@ function App() {
     resetForm();
   }, [resetForm]);
 
-  // Add or update item
-  const handleSubmitItem = useCallback(() => {
-    if (!descricao.trim()) return;
-    const qty = parseFloat(quantidade) || 1;
+  // Check history to lock unit
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (descricao.trim().length < 2) {
+        setLockedUnit(null);
+        return;
+      }
+      const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
+      const normInput = normalize(descricao);
 
-    if (editingItem) {
-      setItems((prev) =>
-        prev.map((item) =>
-          item.id === editingItem.id
-            ? { ...item, descricao: descricao.trim(), quantidade: qty, unidade, valorCentavos }
-            : item
-        )
-      );
-      resetForm();
-    } else {
-      const newItem: GastoItem = {
-        id: generateId(),
-        ordem: nextOrdem,
-        descricao: descricao.trim(),
-        quantidade: qty,
-        unidade,
-        valorCentavos,
-      };
-      setItems((prev) => [...prev, newItem]);
-      setLatestItemId(newItem.id);
-      setNextOrdem((n) => n + 1);
-      resetForm();
+      // 1. Check local list
+      const itemAtual = items.find((i) => i.id !== editingItem?.id && normalize(i.descricao) === normInput);
+      if (itemAtual) {
+        setLockedUnit(itemAtual.unidade);
+        setUnidade(itemAtual.unidade);
+        return;
+      }
+
+      // 2. Check DB
+      const { checkUnidadeForDescricao } = await import('./lib/supabase');
+      const dbUnit = await checkUnidadeForDescricao(descricao);
+      if (dbUnit) {
+        setLockedUnit(dbUnit);
+        setUnidade(dbUnit);
+      } else {
+        setLockedUnit(null);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [descricao, items, editingItem]);
+
+  // Add or update item
+  const handleSubmitItem = useCallback(async () => {
+    if (!descricao.trim()) return;
+
+    // Validação da quantidade
+    const qtyStr = quantidade.replace(',', '.');
+    const qty = parseFloat(qtyStr);
+    
+    if (isNaN(qty) || qty <= 0) {
+      alert("A quantidade informada é inválida.\nInforme um valor maior que zero para continuar.");
+      setTimeout(() => document.getElementById('input-quantidade')?.focus(), 10);
+      return;
     }
-  }, [descricao, quantidade, unidade, valorCentavos, editingItem, nextOrdem, resetForm]);
+
+    const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
+    const normInput = normalize(descricao);
+
+    // 1. Validar na lista atual
+    const itemAtual = items.find((i) => i.id !== editingItem?.id && normalize(i.descricao) === normInput);
+    if (itemAtual && itemAtual.unidade !== unidade) {
+      alert(`Esta descrição já está na lista atual com a unidade de medida "${itemAtual.unidade}".\nPara usar outra unidade, altere a descrição do item.`);
+      return;
+    }
+
+    // 2. Validar no banco de dados
+    const { checkUnidadeForDescricao } = await import('./lib/supabase');
+    const unidadeNoBanco = await checkUnidadeForDescricao(descricao);
+    
+    if (unidadeNoBanco && unidadeNoBanco !== unidade) {
+      alert(`Esta descrição já está cadastrada com a unidade de medida "${unidadeNoBanco}".\nPara usar outra unidade, altere a descrição do item.\nExemplo: "${descricao.trim()} sem controle de litros".`);
+      return;
+    }
+
+    const commitItem = () => {
+      if (editingItem) {
+        setItems((prev) =>
+          prev.map((item) =>
+            item.id === editingItem.id
+              ? { ...item, descricao: descricao.trim(), quantidade: qty, unidade, valorCentavos }
+              : item
+          )
+        );
+        resetForm();
+      } else {
+        const newItem: GastoItem = {
+          id: generateId(),
+          ordem: nextOrdem,
+          descricao: descricao.trim(),
+          quantidade: qty,
+          unidade,
+          valorCentavos,
+        };
+        setItems((prev) => [...prev, newItem]);
+        setLatestItemId(newItem.id);
+        setNextOrdem((n) => n + 1);
+        resetForm();
+      }
+    };
+
+    const checkPriceDeviationAndCommit = async () => {
+      // Price deviation check
+      if (qty > 0 && valorCentavos > 0) {
+        const history = await fetchPriceHistory(descricao.trim(), unidade);
+
+        if (history.length > 0) {
+          const totalHistCents = history.reduce((s, r) => s + r.valorCentavos, 0);
+          const totalHistQty = history.reduce((s, r) => s + r.quantidade, 0);
+          const mediaPonderada = totalHistQty > 0 ? Math.round(totalHistCents / totalHistQty) : 0;
+
+          if (mediaPonderada > 0) {
+            const limInf = Math.round(mediaPonderada * 0.9);
+            const limSup = Math.round(mediaPonderada * 1.1);
+            const valorUnitario = Math.round(valorCentavos / qty);
+
+            if (valorUnitario < limInf || valorUnitario > limSup) {
+              setPendingItemWarning({
+                media: mediaPonderada,
+                unidade,
+                limiteInferior: limInf,
+                limiteSuperior: limSup,
+                valorInformado: valorUnitario,
+                commit: () => {
+                  commitItem();
+                  setPendingItemWarning(null);
+                }
+              });
+              return;
+            }
+          }
+        }
+      }
+
+      commitItem();
+    };
+
+    if (valorCentavos === 0) {
+      setPendingZeroWarning(() => checkPriceDeviationAndCommit);
+      return;
+    }
+
+    await checkPriceDeviationAndCommit();
+  }, [descricao, quantidade, unidade, valorCentavos, editingItem, nextOrdem, resetForm, items]);
 
   const handleEdit = useCallback((item: GastoItem) => {
     setEditingItem(item);
@@ -200,6 +320,7 @@ function App() {
           payment.observacoes,
           totalCents,
           newUrl,
+          payment.parcelas,
           itemsPayload
         );
       } else {
@@ -213,6 +334,7 @@ function App() {
           payment.observacoes,
           totalCents,
           payment.comprovanteUrl,
+          payment.parcelas,
           itemsPayload
         );
       }
@@ -289,6 +411,7 @@ function App() {
       observacoes: g.observacoes,
       comprovanteFile: null,
       comprovanteUrl: g.comprovanteUrl,
+      parcelas: g.parcelas || 2,
     });
 
     setEditingGastoId(g.id);
@@ -441,6 +564,7 @@ function App() {
         unidade={unidade}
         valorCentavos={valorCentavos}
         editingItem={editingItem}
+        lockedUnit={lockedUnit}
         onDescricaoChange={setDescricao}
         onQuantidadeChange={setQuantidade}
         onUnidadeChange={setUnidade}
@@ -474,7 +598,57 @@ function App() {
           onClose={() => setShowPaymentModal(false)}
           saving={saving}
           isEditing={!!editingGastoId}
+          totalCents={totalCents}
         />
+      )}
+
+      {pendingItemWarning && (
+        <PriceWarningModal
+          media={pendingItemWarning.media}
+          unidade={pendingItemWarning.unidade}
+          limiteInferior={pendingItemWarning.limiteInferior}
+          limiteSuperior={pendingItemWarning.limiteSuperior}
+          valorInformado={pendingItemWarning.valorInformado}
+          onConfirm={pendingItemWarning.commit}
+          onCancel={() => setPendingItemWarning(null)}
+        />
+      )}
+
+      {pendingZeroWarning && (
+        <div className="modal-overlay" onClick={() => setPendingZeroWarning(null)} style={{ zIndex: 1000 }}>
+          <div className="modal-sheet price-history-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-sheet__handle" />
+            <div className="ph-title" style={{ color: '#ffcc00', marginBottom: 12 }}>Atenção: Valor Zerado</div>
+            
+            <div style={{ padding: '10px 20px 20px', fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5 }}>
+              <p>O valor do item está zerado. Deseja lançar assim mesmo?</p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 20px 20px' }}>
+              <button
+                onClick={() => {
+                  setPendingZeroWarning(null);
+                  document.getElementById('input-valor')?.focus();
+                }}
+                type="button"
+                style={{ width: '100%', padding: '14px', borderRadius: 8, background: '#333', color: '#fff', border: 'none', fontWeight: 500, cursor: 'pointer' }}
+              >
+                Corrigir valor
+              </button>
+              <button
+                onClick={() => {
+                  const commit = pendingZeroWarning;
+                  setPendingZeroWarning(null);
+                  commit();
+                }}
+                type="button"
+                style={{ width: '100%', padding: '14px', borderRadius: 8, background: 'transparent', color: 'var(--text-inactive)', border: '1px solid #333', fontWeight: 500, cursor: 'pointer' }}
+              >
+                Lançar assim mesmo
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Bottom nav only on new gasto screen */}

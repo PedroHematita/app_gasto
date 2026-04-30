@@ -18,7 +18,7 @@ export const ConfirmationScreen: React.FC<ConfirmationScreenProps> = ({
   totalCents,
   onNewExpense,
 }) => {
-  const formaLabel = payment.formaPagamento === 'a_vista' ? 'À Vista' : 'Parcelado';
+  const formaLabel = payment.formaPagamento === 'a_vista' ? 'À Vista' : `Parcelado em ${payment.parcelas || 2}x`;
   const whatsAppMessage = buildWhatsAppMessage(dataCompra, items, payment, totalCents);
   const sortedItems = [...items].sort((a, b) => a.ordem - b.ordem);
 

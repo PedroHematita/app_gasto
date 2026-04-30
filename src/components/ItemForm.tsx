@@ -14,6 +14,7 @@ interface ItemFormProps {
   unidade: string;
   valorCentavos: number;
   editingItem: GastoItem | null;
+  lockedUnit: string | null;
   onDescricaoChange: (v: string) => void;
   onQuantidadeChange: (v: string) => void;
   onUnidadeChange: (v: string) => void;
@@ -28,6 +29,7 @@ export const ItemForm: React.FC<ItemFormProps> = ({
   unidade,
   valorCentavos,
   editingItem,
+  lockedUnit,
   onDescricaoChange,
   onQuantidadeChange,
   onUnidadeChange,
@@ -54,8 +56,13 @@ export const ItemForm: React.FC<ItemFormProps> = ({
         onChange={onDescricaoChange}
         bgVariant={bgVariant}
         autocompleteSearch={searchDescricoes}
+        onSelectSuggestion={(_, payload) => {
+          if (payload && payload.unidade) {
+            onUnidadeChange(payload.unidade);
+          }
+        }}
       />
-      <PriceHintBar descricao={descricao} />
+      <PriceHintBar descricao={descricao} unidade={unidade} />
 
       <div className="form-row">
         <FloatingInput
@@ -74,6 +81,7 @@ export const ItemForm: React.FC<ItemFormProps> = ({
           onChange={onUnidadeChange}
           options={UNIDADES}
           bgVariant={bgVariant}
+          disabled={!!lockedUnit}
         />
       </div>
 

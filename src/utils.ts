@@ -51,8 +51,8 @@ export function buildWhatsAppMessage(
     lines.push(`Fornecedor: ${payment.fornecedor.trim()}`);
   }
 
-  const forma = payment.formaPagamento === 'a_vista' ? 'À Vista' : 'Parcelado';
-  lines.push(`Pagamento: ${forma} | ${payment.meioPagamento} | ${payment.instituicaoFinanceira}`);
+  const forma = payment.formaPagamento === 'a_vista' ? 'À Vista' : `Parcelado ${payment.parcelas || 2}x`;
+  lines.push(`*Pagamento:* ${forma} | ${payment.meioPagamento} | ${payment.instituicaoFinanceira}`);
 
   const obs = payment.observacoes.trim() || '—';
   lines.push(`Obs: ${obs}`);
