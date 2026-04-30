@@ -82,7 +82,6 @@ function App() {
   // Edit gasto mode (editing an existing gasto from DB)
   const [editingGastoId, setEditingGastoId] = useState<string | null>(null);
   const [editingGastoSeq, setEditingGastoSeq] = useState<number | null>(null);
-  const [existingComprovanteUrl, setExistingComprovanteUrl] = useState<string>('');
 
   // Meus Gastos
   const [selectedGasto, setSelectedGasto] = useState<GastoRecord | null>(null);
@@ -113,7 +112,6 @@ function App() {
     setSavedData(null);
     setEditingGastoId(null);
     setEditingGastoSeq(null);
-    setExistingComprovanteUrl('');
     resetForm();
   }, [resetForm]);
 
@@ -295,7 +293,6 @@ function App() {
 
     setEditingGastoId(g.id);
     setEditingGastoSeq(g.seq);
-    setExistingComprovanteUrl(g.comprovanteUrl);
     resetForm();
     setScreen('gasto_edit');
   }, [selectedGasto, resetForm]);

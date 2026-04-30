@@ -140,7 +140,7 @@ function brToISO(br: string): string {
   return `${y}-${m}-${d}`;
 }
 
-import type { GastoRecord, GastoItem } from '../types';
+import type { GastoRecord } from '../types';
 
 // Fetch all gastos with items (for search across fornecedor AND item descriptions)
 export async function fetchGastos(): Promise<GastoRecord[]> {
