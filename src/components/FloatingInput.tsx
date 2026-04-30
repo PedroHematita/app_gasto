@@ -1,0 +1,133 @@
+import { useRef, useEffect, useState, useCallback } from 'react';
+
+interface FloatingInputProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  className?: string;
+  bgVariant?: 'surface' | 'main' | 'edit';
+  inputClassName?: string;
+  readOnly?: boolean;
+  onClick?: () => void;
+  inputMode?: 'text' | 'numeric' | 'decimal' | 'tel';
+  id?: string;
+  autocompleteSearch?: (query: string) => Promise<string[]>;
+}
+
+export const FloatingInput: React.FC<FloatingInputProps> = ({
+  label,
+  value,
+  onChange,
+  type = 'text',
+  className = '',
+  bgVariant = 'main',
+  inputClassName = '',
+  readOnly = false,
+  onClick,
+  inputMode,
+  id,
+  autocompleteSearch,
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const bgClass = bgVariant === 'edit'
+    ? 'floating-field--edit-bg'
+    : bgVariant === 'main'
+    ? 'floating-field--main-bg'
+    : '';
+
+  // Debounced search
+  const handleChange = useCallback(
+    (val: string) => {
+      onChange(val);
+
+      if (!autocompleteSearch) return;
+
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+
+      if (val.length < 2) {
+        setSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+
+      debounceRef.current = setTimeout(async () => {
+        const results = await autocompleteSearch(val);
+        setSuggestions(results);
+        setShowSuggestions(results.length > 0);
+      }, 300);
+    },
+    [onChange, autocompleteSearch]
+  );
+
+  // Select suggestion
+  const handleSelect = useCallback(
+    (val: string) => {
+      onChange(val);
+      setSuggestions([]);
+      setShowSuggestions(false);
+      inputRef.current?.focus();
+    },
+    [onChange]
+  );
+
+  // Close on outside click
+  useEffect(() => {
+    if (!showSuggestions) return;
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showSuggestions]);
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  return (
+    <div className={`floating-field ${bgClass} ${className}`} ref={containerRef} style={{ position: 'relative' }}>
+      <input
+        ref={inputRef}
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => handleChange(e.target.value)}
+        className={`floating-field__input ${value ? 'has-value' : ''} ${inputClassName}`}
+        readOnly={readOnly}
+        onClick={onClick}
+        inputMode={inputMode}
+        autoComplete="off"
+        onFocus={() => {
+          if (suggestions.length > 0) setShowSuggestions(true);
+        }}
+      />
+      <label className="floating-field__label">{label}</label>
+
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="custom-dropdown">
+          {suggestions.map((s, i) => (
+            <div
+              key={`${s}-${i}`}
+              className="custom-dropdown__item"
+              onClick={() => handleSelect(s)}
+            >
+              {s}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
