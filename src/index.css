@@ -1,37 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-/* ===== CSS VARIABLES ===== */
-:root {
-  --bg-main: #0f0f0f;
-  --bg-surface: #161616;
-  --bg-edit: #0d0d1a;
-  --border-subtle: #2a2a2a;
-  --border-medium: #2d2d2d;
-  --accent: #7c6fff;
-  --accent-dark: #1e1a3a;
-  --accent-border: #3d2fa0;
-  --text-primary: #e0e0e0;
-  --text-secondary: #888;
-  --text-inactive: #555;
-  --text-accent-light: #c0b4ff;
-  --text-accent-medium: #9f8fff;
-  --total-bg: #1a1530;
-  --total-border: #2e2060;
-  --separator: #1a1a1a;
-  --whatsapp-green: #128c3e;
-  --whatsapp-bg: #0d1a0d;
-  --whatsapp-border: #1e3a1e;
-  --whatsapp-text: #8fbc8f;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-}
+@import url('./tokens.css');
 
 /* ===== RESET & BASE ===== */
 *, *::before, *::after {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  margin: 0undefined
+  padding: 0undefined
 }
 
 html, body, #root {
@@ -40,8 +14,8 @@ html, body, #root {
   background: var(--bg-main);
   color: var(--text-primary);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--font-primary);
+  line-height: var(--line-height-single);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -50,7 +24,7 @@ html, body, #root {
 /* ===== APP CONTAINER ===== */
 .app-container {
   max-width: 480px;
-  margin: 0 auto;
+  margin: 0 autoundefined
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -60,19 +34,19 @@ html, body, #root {
 /* ===== FLOATING LABEL INPUT (OUTLINED WITH NOTCH) ===== */
 .floating-field {
   position: relative;
-  margin-bottom: 14px;
+  margin-bottom: 16pxundefined
 }
 
 .floating-field__input,
 .floating-field__select {
   width: 100%;
-  padding: 13px 14px;
+  padding: 12px 16pxundefined
   background: transparent;
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
+  font-size: var(--font-secondary);
   outline: none;
   transition: border-color 0.2s ease;
   appearance: none;
@@ -80,14 +54,14 @@ html, body, #root {
 }
 
 .floating-field__select {
-  padding-right: 36px;
+  padding-right: 36pxundefined
   cursor: pointer;
 }
 
 .floating-field__select-arrow {
   position: absolute;
-  right: 12px;
-  top: 50%;
+  right: 12pxundefined
+  top: 50%undefined
   transform: translateY(-50%);
   pointer-events: none;
   color: var(--text-inactive);
@@ -106,15 +80,15 @@ html, body, #root {
 
 .floating-field__label {
   position: absolute;
-  left: 12px;
-  top: 50%;
+  left: 12pxundefined
+  top: 50%undefined
   transform: translateY(-50%);
-  font-size: 13px;
+  font-size: var(--font-secondary);
   color: var(--text-inactive);
   pointer-events: none;
   transition: all 0.2s ease;
   background: transparent;
-  padding: 0;
+  padding: 0undefined
 }
 
 /* Floated state */
@@ -122,12 +96,12 @@ html, body, #root {
 .floating-field__input.has-value ~ .floating-field__label,
 .floating-field__select:focus ~ .floating-field__label,
 .floating-field__select.has-value ~ .floating-field__label {
-  top: 0;
+  top: 0undefined
   transform: translateY(-50%);
-  font-size: 10px;
+  font-size: var(--font-auxiliary);
   color: var(--accent);
   background: var(--bg-surface);
-  padding: 0 5px;
+  padding: 0 4pxundefined
 }
 
 /* When on main bg (not inside a card) */
@@ -153,7 +127,7 @@ html, body, #root {
 /* ===== FORM ROW (two columns) ===== */
 .form-row {
   display: flex;
-  gap: 10px;
+  gap: 12pxundefined
 }
 
 .form-row > .floating-field {
@@ -165,39 +139,39 @@ html, body, #root {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 12px 16pxundefined
   background: var(--total-bg);
-  border-bottom: 0.5px solid var(--total-border);
+  border-bottom: 0px solid var(--total-border)undefined
 }
 
 .total-bar__label {
-  font-size: 12px;
+  font-size: var(--font-secondary);
   color: var(--text-secondary);
-  font-weight: 400;
+  font-weight: var(--weight-regular);
 }
 
 .total-bar__value {
-  font-size: 20px;
+  font-size: var(--font-display);
   color: var(--accent);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
 }
 
 /* ===== ITEM FORM ===== */
 .item-form {
-  padding: 16px 16px 8px;
+  padding: 16px 16px 8pxundefined
 }
 
 .item-form--editing {
-  border-left: 2px solid var(--accent);
+  border-left: 4px solid var(--accent)undefined
   background: var(--bg-edit);
 }
 
 .item-form__editing-badge {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 8pxundefined
+  margin-bottom: 12pxundefined
   font-size: 11px;
   color: var(--text-accent-medium);
 }
@@ -206,28 +180,28 @@ html, body, #root {
   background: var(--accent);
   color: #fff;
   font-size: 9px;
-  font-weight: 600;
-  padding: 1px 6px;
+  font-weight: var(--weight-medium);
+  padding: 4px 8pxundefined
   border-radius: 4px;
 }
 
 /* ===== ACTION BUTTONS ===== */
 .btn-launch {
   width: 100%;
-  padding: 11px;
+  padding: 12pxundefined
   background: var(--accent-dark);
   border: 1px solid var(--accent);
   border-radius: var(--radius-md);
   color: var(--text-accent-medium);
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8pxundefined
 }
 
 .btn-launch:hover {
@@ -240,16 +214,16 @@ html, body, #root {
 
 .btn-save-main {
   width: 100%;
-  margin: 10px 16px;
+  margin: 12px 16pxundefined
   width: calc(100% - 32px);
-  padding: 12px;
+  padding: 12pxundefined
   background: var(--accent);
   border: none;
   border-radius: var(--radius-lg);
   color: #fff;
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -270,19 +244,19 @@ html, body, #root {
 
 /* ===== ITEMS TABLE ===== */
 .items-table {
-  padding: 0 16px;
+  padding: 0 16pxundefined
 }
 
 .items-table__empty {
   text-align: center;
-  padding: 24px 16px;
+  padding: 24px 16pxundefined
   color: var(--text-inactive);
-  font-size: 12px;
+  font-size: var(--font-secondary);
 }
 
 .item-row {
-  padding: 10px 0;
-  border-bottom: 0.5px solid var(--separator);
+  padding: 12px 0undefined
+  border-bottom: 0px solid var(--separator)undefined
   position: relative;
   overflow: hidden;
   transition: background 0.2s ease;
@@ -291,30 +265,30 @@ html, body, #root {
 .item-row--editing {
   background: var(--accent-dark);
   border-radius: 4px;
-  padding: 10px 8px;
-  margin: 0 -8px;
+  padding: 12px 8pxundefined
+  margin: 0 -8pxundefined
 }
 
 .item-row__top {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 8pxundefined
 }
 
 .item-row__number {
-  font-size: 10px;
-  color: #444;
+  font-size: var(--font-auxiliary);
+  color: var(--text-secondary);
   min-width: 16px;
-  padding-top: 2px;
+  padding-top: 4pxundefined
   flex-shrink: 0;
 }
 
 .item-row__desc {
   flex: 1;
-  font-size: 12px;
-  color: #d0d0d0;
+  font-size: var(--font-secondary);
+  color: var(--text-secondary);
   word-break: break-word;
-  line-height: 1.4;
+  line-height: var(--line-height-single);
 }
 
 .item-row__desc--new {
@@ -325,11 +299,11 @@ html, body, #root {
   display: inline-block;
   background: var(--accent);
   color: #fff;
-  font-size: 8px;
-  font-weight: 600;
-  padding: 1px 5px;
+  font-size: var(--font-auxiliary);
+  font-weight: var(--weight-medium);
+  padding: 4px 4pxundefined
   border-radius: 3px;
-  margin-left: 6px;
+  margin-left: 8pxundefined
   vertical-align: middle;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -340,7 +314,7 @@ html, body, #root {
   border: none;
   color: var(--text-inactive);
   cursor: pointer;
-  padding: 2px;
+  padding: 4pxundefined
   flex-shrink: 0;
   transition: color 0.2s;
 }
@@ -353,19 +327,19 @@ html, body, #root {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-left: 24px;
-  margin-top: 3px;
+  padding-left: 24pxundefined
+  margin-top: 4pxundefined
 }
 
 .item-row__qty {
-  font-size: 10px;
+  font-size: var(--font-auxiliary);
   color: var(--text-inactive);
 }
 
 .item-row__value {
-  font-size: 12px;
+  font-size: var(--font-secondary);
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
 }
 
@@ -377,9 +351,9 @@ html, body, #root {
 
 .item-row__delete-bg {
   position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
+  right: 0undefined
+  top: 0undefined
+  bottom: 0undefined
   width: 80px;
   background: #3a1111;
   display: flex;
@@ -387,7 +361,7 @@ html, body, #root {
   justify-content: center;
   color: #ff4444;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   border-radius: 4px;
 }
 
@@ -425,7 +399,7 @@ html, body, #root {
   background: var(--bg-surface);
   border-radius: 16px 16px 0 0;
   overflow-y: auto;
-  padding: 12px 16px 24px;
+  padding: 12px 16px 24pxundefined
   animation: slideUp 0.3s ease;
 }
 
@@ -439,52 +413,52 @@ html, body, #root {
   height: 4px;
   background: #333;
   border-radius: 2px;
-  margin: 0 auto 16px;
+  margin: 0 auto 16pxundefined
 }
 
 .modal-sheet__title {
-  font-size: 13px;
-  color: #ccc;
+  font-size: var(--font-secondary);
+  color: var(--text-secondary);
   text-align: center;
-  margin-bottom: 18px;
-  font-weight: 500;
+  margin-bottom: 20pxundefined
+  font-weight: var(--weight-medium);
 }
 
 /* Payment separator */
 .payment-separator {
   text-align: center;
-  color: #333;
+  color: var(--text-secondary);
   font-size: 11px;
-  margin: 16px 0;
+  margin: 16px 0undefined
   letter-spacing: 0.5px;
 }
 
 /* Payment tabs */
 .payment-tabs {
-  margin-bottom: 14px;
+  margin-bottom: 16pxundefined
 }
 
 .payment-tabs__label {
   font-size: 9px;
-  color: #444;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 8px;
-  font-weight: 500;
+  margin-bottom: 8pxundefined
+  font-weight: var(--weight-medium);
 }
 
 .payment-tabs__row {
   display: flex;
-  gap: 8px;
+  gap: 8pxundefined
 }
 
 .payment-tab {
   flex: 1;
-  padding: 10px;
+  padding: 12pxundefined
   border-radius: var(--radius-sm);
   font-family: 'Inter', sans-serif;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
   cursor: pointer;
   text-align: center;
   transition: all 0.2s ease;
@@ -493,7 +467,7 @@ html, body, #root {
 
 .payment-tab--inactive {
   border: 1px solid var(--border-medium);
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .payment-tab--active {
@@ -505,20 +479,20 @@ html, body, #root {
 /* Attach button */
 .btn-attach {
   width: 100%;
-  padding: 9px 12px;
+  padding: 8px 12pxundefined
   background: transparent;
   border: 1px dashed var(--accent-border);
   border-radius: var(--radius-md);
   color: var(--accent);
   font-family: 'Inter', sans-serif;
-  font-size: 12px;
+  font-size: var(--font-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 8pxundefined
   transition: all 0.2s ease;
-  margin-bottom: 4px;
+  margin-bottom: 4pxundefined
 }
 
 .btn-attach--has-file {
@@ -528,26 +502,26 @@ html, body, #root {
 }
 
 .btn-attach__hint {
-  font-size: 10px;
+  font-size: var(--font-auxiliary);
   color: var(--text-inactive);
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 16pxundefined
 }
 
 /* Modal save button */
 .btn-save-modal {
   width: 100%;
-  padding: 11px;
+  padding: 12pxundefined
   background: var(--accent);
   border: none;
   border-radius: var(--radius-lg);
   color: #fff;
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-top: 8px;
+  margin-top: 8pxundefined
 }
 
 .btn-save-modal:hover {
@@ -560,24 +534,24 @@ html, body, #root {
 
 /* ===== CONFIRMATION SCREEN ===== */
 .confirmation {
-  padding: 0 16px 24px;
+  padding: 0 16px 24pxundefined
 }
 
 .confirmation__header {
   text-align: center;
-  padding: 16px;
-  font-size: 14px;
-  font-weight: 500;
+  padding: 16pxundefined
+  font-size: var(--font-primary);
+  font-weight: var(--weight-medium);
   color: var(--text-primary);
-  border-bottom: 0.5px solid var(--separator);
-  margin-bottom: 20px;
+  border-bottom: 0px solid var(--separator)undefined
+  margin-bottom: 20pxundefined
 }
 
 .confirmation__success {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 24pxundefined
 }
 
 .confirmation__icon {
@@ -589,7 +563,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 12pxundefined
 }
 
 .confirmation__icon svg {
@@ -597,10 +571,10 @@ html, body, #root {
 }
 
 .confirmation__title {
-  font-size: 15px;
+  font-size: var(--font-primary);
   color: var(--text-primary);
-  font-weight: 500;
-  margin-bottom: 4px;
+  font-weight: var(--weight-medium);
+  margin-bottom: 4pxundefined
 }
 
 .confirmation__subtitle {
@@ -610,13 +584,13 @@ html, body, #root {
 
 /* Payment summary */
 .confirmation__summary {
-  margin-bottom: 20px;
+  margin-bottom: 20pxundefined
 }
 
 .confirmation__summary-row {
   display: flex;
   justify-content: space-between;
-  padding: 6px 0;
+  padding: 8px 0undefined
 }
 
 .confirmation__summary-label {
@@ -633,20 +607,20 @@ html, body, #root {
 
 /* Items summary */
 .confirmation__items-title {
-  font-size: 10px;
+  font-size: var(--font-auxiliary);
   color: var(--text-inactive);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 8px;
-  font-weight: 500;
+  margin-bottom: 8pxundefined
+  font-weight: var(--weight-medium);
 }
 
 .confirmation__item {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 6px 0;
-  border-bottom: 0.5px solid #181818;
+  padding: 8px 0undefined
+  border-bottom: 0px solid #181818undefined
 }
 
 .confirmation__item-left {
@@ -654,20 +628,20 @@ html, body, #root {
 }
 
 .confirmation__item-desc {
-  font-size: 12px;
+  font-size: var(--font-secondary);
   color: var(--text-primary);
 }
 
 .confirmation__item-meta {
-  font-size: 10px;
+  font-size: var(--font-auxiliary);
   color: var(--text-inactive);
-  margin-top: 1px;
+  margin-top: 4pxundefined
 }
 
 .confirmation__item-value {
-  font-size: 12px;
+  font-size: var(--font-secondary);
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
 }
 
@@ -676,17 +650,17 @@ html, body, #root {
   background: var(--whatsapp-bg);
   border: 0.5px solid var(--whatsapp-border);
   border-radius: var(--radius-lg);
-  padding: 14px;
-  margin: 20px 0 12px;
+  padding: 16pxundefined
+  margin: 20px 0 12pxundefined
 }
 
 .whatsapp-preview__label {
-  font-size: 10px;
-  color: #444;
+  font-size: var(--font-auxiliary);
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 8px;
-  font-weight: 500;
+  margin-bottom: 8pxundefined
+  font-weight: var(--weight-medium);
 }
 
 .whatsapp-preview__text {
@@ -701,21 +675,21 @@ html, body, #root {
 /* WhatsApp button */
 .btn-whatsapp {
   width: 100%;
-  padding: 12px;
+  padding: 12pxundefined
   background: var(--whatsapp-green);
   border: none;
   border-radius: var(--radius-lg);
   color: #fff;
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 8pxundefined
   transition: all 0.2s ease;
-  margin-bottom: 10px;
+  margin-bottom: 12pxundefined
 }
 
 .btn-whatsapp:hover {
@@ -729,19 +703,19 @@ html, body, #root {
 /* New expense button */
 .btn-new-expense {
   width: 100%;
-  padding: 12px;
+  padding: 12pxundefined
   background: transparent;
   border: 1px solid var(--accent-border);
   border-radius: var(--radius-lg);
   color: var(--text-accent-medium);
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8pxundefined
   transition: all 0.2s ease;
 }
 
@@ -755,13 +729,13 @@ html, body, #root {
 
 /* ===== DATE HEADER ===== */
 .date-header {
-  padding: 16px 16px 0;
+  padding: 16px 16px 0undefined
 }
 
 .date-header__row {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 8pxundefined
 }
 
 .date-header__row > .floating-field {
@@ -797,7 +771,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 20pxundefined
   animation: fadeIn 0.15s ease;
 }
 
@@ -805,30 +779,30 @@ html, body, #root {
   background: var(--bg-surface);
   border: 1px solid var(--border-medium);
   border-radius: 12px;
-  padding: 20px;
+  padding: 20pxundefined
   max-width: 300px;
   width: 100%;
   text-align: center;
 }
 
 .delete-confirm__text {
-  font-size: 13px;
+  font-size: var(--font-secondary);
   color: var(--text-primary);
-  margin-bottom: 16px;
+  margin-bottom: 16pxundefined
 }
 
 .delete-confirm__actions {
   display: flex;
-  gap: 10px;
+  gap: 12pxundefined
 }
 
 .delete-confirm__btn {
   flex: 1;
-  padding: 9px;
+  padding: 8pxundefined
   border-radius: var(--radius-sm);
   font-family: 'Inter', sans-serif;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -860,9 +834,9 @@ html, body, #root {
 /* ===== CUSTOM DROPDOWN ===== */
 .custom-dropdown {
   position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
+  top: calc(100% + 4px)undefined
+  left: 0undefined
+  right: 0undefined
   background: var(--bg-surface);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
@@ -879,16 +853,16 @@ html, body, #root {
 }
 
 .custom-dropdown__item {
-  padding: 10px 14px;
-  font-size: 13px;
+  padding: 12px 16pxundefined
+  font-size: var(--font-secondary);
   color: var(--text-primary);
   cursor: pointer;
   transition: background 0.15s ease;
-  border-bottom: 0.5px solid var(--separator);
+  border-bottom: 0px solid var(--separator)undefined
 }
 
 .custom-dropdown__item:last-child {
-  border-bottom: none;
+  border-bottom: noneundefined
 }
 
 .custom-dropdown__item:hover {
@@ -901,8 +875,8 @@ html, body, #root {
 }
 
 .custom-dropdown__empty {
-  padding: 14px;
-  font-size: 12px;
+  padding: 16pxundefined
+  font-size: var(--font-secondary);
   color: var(--text-inactive);
   text-align: center;
 }
@@ -920,13 +894,13 @@ html, body, #root {
 
 /* ===== DATE PICKER SHEET ===== */
 .datepicker-sheet {
-  padding-bottom: 28px;
+  padding-bottom: 28pxundefined
 }
 
 .datepicker-shortcuts {
   display: flex;
-  gap: 8px;
-  margin-bottom: 18px;
+  gap: 8pxundefined
+  margin-bottom: 20pxundefined
 }
 
 .datepicker-shortcut {
@@ -934,8 +908,8 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 10px 6px;
+  gap: 4pxundefined
+  padding: 12px 8pxundefined
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-medium);
   background: transparent;
@@ -946,13 +920,13 @@ html, body, #root {
 
 .datepicker-shortcut__label {
   font-size: 11px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .datepicker-shortcut__date {
-  font-size: 13px;
+  font-size: var(--font-secondary);
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
 }
 
@@ -974,12 +948,12 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 16pxundefined
 }
 
 .datepicker-nav__title {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
   color: var(--text-primary);
 }
 
@@ -988,7 +962,7 @@ html, body, #root {
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 6px;
+  padding: 8pxundefined
   border-radius: 4px;
   transition: all 0.2s ease;
   display: flex;
@@ -1002,7 +976,7 @@ html, body, #root {
 
 .datepicker-nav__btn--disabled,
 .datepicker-nav__btn:disabled {
-  color: #2a2a2a;
+  color: var(--text-secondary);
   cursor: not-allowed;
 }
 
@@ -1010,15 +984,15 @@ html, body, #root {
 .datepicker-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: 4pxundefined
 }
 
 .datepicker-weekday {
   text-align: center;
-  font-size: 10px;
+  font-size: var(--font-auxiliary);
   color: var(--text-inactive);
-  padding: 4px 0 8px;
-  font-weight: 500;
+  padding: 4px 0 8pxundefined
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1028,7 +1002,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: var(--font-secondary);
   color: var(--text-primary);
   background: none;
   border: 1px solid transparent;
@@ -1056,25 +1030,25 @@ html, body, #root {
   background: var(--accent) !important;
   color: #fff !important;
   border-color: var(--accent);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
 }
 
 .datepicker-day--disabled {
-  color: #2a2a2a;
+  color: var(--text-secondary);
   cursor: not-allowed;
 }
 
 /* ===== BOTTOM NAV ===== */
 .bottom-nav {
   position: fixed;
-  bottom: 0;
-  left: 50%;
+  bottom: 0undefined
+  left: 50%undefined
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
   display: flex;
   background: var(--bg-surface);
-  border-top: 0.5px solid var(--border-subtle);
+  border-top: 0px solid var(--border-subtle)undefined
   z-index: 90;
 }
 
@@ -1083,13 +1057,13 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 10px 0 8px;
+  gap: 4pxundefined
+  padding: 12px 0 8pxundefined
   background: none;
   border: none;
   color: var(--text-inactive);
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: var(--font-auxiliary);
   cursor: pointer;
   transition: color 0.2s ease;
 }
@@ -1107,12 +1081,12 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+  padding: 16pxundefined
 }
 
 .meus-gastos-header__title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--font-primary);
+  font-weight: var(--weight-medium);
   color: var(--text-primary);
 }
 
@@ -1121,7 +1095,7 @@ html, body, #root {
   border: 1px solid var(--accent);
   border-radius: 8px;
   color: var(--accent);
-  padding: 6px 10px;
+  padding: 8px 12pxundefined
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1135,13 +1109,13 @@ html, body, #root {
 /* Search */
 .meus-gastos-search {
   position: relative;
-  margin: 0 16px 10px;
+  margin: 0 16px 12pxundefined
 }
 
 .meus-gastos-search__icon {
   position: absolute;
-  left: 12px;
-  top: 50%;
+  left: 12pxundefined
+  top: 50%undefined
   transform: translateY(-50%);
   color: var(--text-inactive);
   pointer-events: none;
@@ -1149,13 +1123,13 @@ html, body, #root {
 
 .meus-gastos-search__input {
   width: 100%;
-  padding: 10px 12px 10px 34px;
+  padding: 12px 12px 12px 36pxundefined
   background: var(--bg-surface);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
-  font-size: 12px;
+  font-size: var(--font-secondary);
   outline: none;
   transition: border-color 0.2s ease;
 }
@@ -1173,17 +1147,17 @@ html, body, #root {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 6px;
+  padding: 8px 8pxundefined
   font-size: 11px;
   color: var(--text-secondary);
-  border-bottom: 0.5px solid var(--separator);
-  margin-bottom: 4px;
+  border-bottom: 0px solid var(--separator)undefined
+  margin-bottom: 4pxundefined
 }
 
 .meus-gastos-summary__total {
   color: var(--accent);
-  font-weight: 600;
-  font-size: 13px;
+  font-weight: var(--weight-medium);
+  font-size: var(--font-secondary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1194,20 +1168,20 @@ html, body, #root {
   justify-content: space-between;
   font-size: 11px;
   color: var(--text-secondary);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   letter-spacing: 0.4px;
-  padding: 14px 12px 6px;
-  border-top: none;
+  padding: 16px 12px 8pxundefined
+  border-top: noneundefined
 }
 
 .meus-gastos-year__total {
-  font-size: 10px;
-  color: #666;
-  font-weight: 500;
+  font-size: var(--font-auxiliary);
+  color: var(--text-secondary);
+  font-weight: var(--weight-medium);
 }
 
 .meus-gastos-month-card {
-  margin: 0 8px 8px;
+  margin: 0 8px 8pxundefined
   background: #151515;
   border-radius: 14px;
   overflow: hidden;
@@ -1215,14 +1189,14 @@ html, body, #root {
 
 .meus-gastos-month-header {
   width: 100%;
-  padding: 11px 14px;
+  padding: 12px 16pxundefined
   background: transparent;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12pxundefined
   font-family: 'Inter', sans-serif;
   text-align: left;
 }
@@ -1231,38 +1205,38 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: 4pxundefined
 }
 
 .meus-gastos-month-header__title {
-  font-size: 13px;
-  color: #80786e;
-  font-weight: 500;
+  font-size: var(--font-secondary);
+  color: var(--text-secondary);
+  font-weight: var(--weight-medium);
   text-transform: none;
   letter-spacing: 0.3px;
-  line-height: 1.2;
+  line-height: var(--line-height-single);
 }
 
 .meus-gastos-month-header__count {
-  font-size: 10px;
-  color: #75706a;
-  font-weight: 400;
+  font-size: var(--font-auxiliary);
+  color: var(--text-secondary);
+  font-weight: var(--weight-regular);
   text-transform: none;
   letter-spacing: 0.25px;
-  line-height: 1.2;
+  line-height: var(--line-height-single);
 }
 
 .meus-gastos-month-header__right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 8pxundefined
   color: var(--text-secondary);
 }
 
 .meus-gastos-month-header__total {
-  font-size: 14px;
-  color: #e8e8e8;
-  font-weight: 600;
+  font-size: var(--font-primary);
+  color: var(--text-secondary);
+  font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1278,7 +1252,7 @@ html, body, #root {
 }
 
 .meus-gastos-month-header--expanded {
-  padding: 8px 14px;
+  padding: 8px 16pxundefined
   background: transparent;
   position: relative;
 }
@@ -1286,40 +1260,40 @@ html, body, #root {
 .meus-gastos-month-header--expanded .meus-gastos-month-header__left {
   flex-direction: column;
   align-items: flex-start;
-  gap: 1px;
+  gap: 4pxundefined
 }
 
 .meus-gastos-month-header--expanded .meus-gastos-month-header__title,
 .meus-gastos-month-header--expanded .meus-gastos-month-header__count {
-  font-size: 10px;
+  font-size: var(--font-auxiliary);
   text-transform: none;
   letter-spacing: 0.45px;
-  color: #606060;
-  font-weight: 400;
+  color: var(--text-secondary);
+  font-weight: var(--weight-regular);
 }
 
 .meus-gastos-month-header--expanded::after {
   content: '';
   position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 0;
-  border-bottom: 1px solid #1b1b1b;
+  left: 16pxundefined
+  right: 16pxundefined
+  bottom: 0undefined
+  border-bottom: 4px solid #1b1b1bundefined
 }
 
 /* Empty */
 .meus-gastos-empty {
   text-align: center;
-  padding: 40px 16px;
+  padding: 40px 16pxundefined
   color: var(--text-inactive);
-  font-size: 12px;
+  font-size: var(--font-secondary);
 }
 
 /* Gasto card */
 .gasto-card {
   display: block;
   width: 100%;
-  padding: 12px 14px;
+  padding: 12px 16pxundefined
   background: none;
   border: none;
   cursor: pointer;
@@ -1336,23 +1310,23 @@ html, body, #root {
 .meus-gastos-month-card .gasto-card + .gasto-card::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 14px;
-  right: 14px;
-  border-top: 1px solid #1b1b1b;
+  top: 0undefined
+  left: 16pxundefined
+  right: 16pxundefined
+  border-top: 4px solid #1b1b1bundefined
 }
 
 .gasto-card__top {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 8pxundefined
 }
 
 .gasto-card__fornecedor {
   flex: 1;
-  font-size: 14px;
-  color: #e6e6e6;
-  font-weight: 500;
+  font-size: var(--font-primary);
+  color: var(--text-secondary);
+  font-weight: var(--weight-medium);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1360,9 +1334,9 @@ html, body, #root {
 }
 
 .gasto-card__total {
-  font-size: 14px;
-  color: #eaeaea;
-  font-weight: 600;
+  font-size: var(--font-primary);
+  color: var(--text-secondary);
+  font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
   line-height: 1.25;
 }
@@ -1370,19 +1344,19 @@ html, body, #root {
 .gasto-card__bottom {
   display: flex;
   justify-content: space-between;
-  padding-left: 0;
-  margin-top: 4px;
+  padding-left: 0undefined
+  margin-top: 4pxundefined
 }
 
 .gasto-card__date {
   font-size: 11px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .gasto-card__meio {
   font-size: 11px;
   color: #8f87df;
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   text-align: right;
 }
 
@@ -1390,8 +1364,8 @@ html, body, #root {
 .detail-header {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
-  border-bottom: 0.5px solid var(--separator);
+  padding: 12px 16pxundefined
+  border-bottom: 0px solid var(--separator)undefined
 }
 
 .detail-header__back {
@@ -1399,8 +1373,8 @@ html, body, #root {
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 4px;
-  margin-right: 8px;
+  padding: 4pxundefined
+  margin-right: 8pxundefined
   display: flex;
 }
 
@@ -1410,8 +1384,8 @@ html, body, #root {
 
 .detail-header__title {
   flex: 1;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--font-primary);
+  font-weight: var(--weight-medium);
   color: var(--text-primary);
 }
 
@@ -1422,12 +1396,12 @@ html, body, #root {
   color: var(--text-accent-medium);
   font-family: 'Inter', sans-serif;
   font-size: 11px;
-  font-weight: 500;
-  padding: 5px 10px;
+  font-weight: var(--weight-medium);
+  padding: 4px 12pxundefined
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 4pxundefined
   transition: all 0.2s ease;
 }
 
@@ -1436,71 +1410,71 @@ html, body, #root {
 }
 
 .detail-content {
-  padding: 16px;
+  padding: 16pxundefined
 }
 
 .detail-info {
-  margin-bottom: 14px;
+  margin-bottom: 16pxundefined
 }
 
 .detail-info__fornecedor {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--font-primary);
+  font-weight: var(--weight-medium);
   color: var(--text-primary);
-  margin-bottom: 2px;
+  margin-bottom: 4pxundefined
 }
 
 .detail-info__date {
-  font-size: 12px;
+  font-size: var(--font-secondary);
   color: var(--text-inactive);
 }
 
 .detail-chips {
   display: flex;
-  gap: 6px;
+  gap: 8pxundefined
   flex-wrap: wrap;
-  margin-bottom: 18px;
+  margin-bottom: 20pxundefined
 }
 
 .detail-chip {
-  padding: 4px 10px;
+  padding: 4px 12pxundefined
   background: var(--accent-dark);
   border: 1px solid var(--accent-border);
   border-radius: 16px;
-  font-size: 10px;
+  font-size: var(--font-auxiliary);
   color: var(--text-accent-light);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 
 .detail-items-title {
-  font-size: 10px;
+  font-size: var(--font-auxiliary);
   color: var(--text-inactive);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 8px;
-  font-weight: 500;
+  margin-bottom: 8pxundefined
+  font-weight: var(--weight-medium);
 }
 
 .detail-item {
-  padding: 8px 0;
-  border-bottom: 0.5px solid #181818;
+  padding: 8px 0undefined
+  border-bottom: 0px solid #181818undefined
 }
 
 .detail-item__top {
   display: flex;
-  gap: 8px;
+  gap: 8pxundefined
 }
 
 .detail-item__num {
-  font-size: 10px;
-  color: #444;
+  font-size: var(--font-auxiliary);
+  color: var(--text-secondary);
   min-width: 16px;
-  padding-top: 2px;
+  padding-top: 4pxundefined
 }
 
 .detail-item__desc {
   flex: 1;
-  font-size: 12px;
+  font-size: var(--font-secondary);
   color: var(--text-primary);
   word-break: break-word;
 }
@@ -1508,38 +1482,38 @@ html, body, #root {
 .detail-item__bottom {
   display: flex;
   justify-content: space-between;
-  padding-left: 24px;
-  margin-top: 3px;
+  padding-left: 24pxundefined
+  margin-top: 4pxundefined
 }
 
 .detail-item__qty {
-  font-size: 10px;
+  font-size: var(--font-auxiliary);
   color: var(--text-inactive);
 }
 
 .detail-item__value {
-  font-size: 12px;
+  font-size: var(--font-secondary);
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
 }
 
 .detail-obs {
-  margin-bottom: 12px;
+  margin-bottom: 12pxundefined
 }
 
 .detail-obs__label {
   display: block;
-  font-size: 10px;
+  font-size: var(--font-auxiliary);
   color: var(--text-inactive);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 4px;
-  font-weight: 500;
+  margin-bottom: 4pxundefined
+  font-weight: var(--weight-medium);
 }
 
 .detail-obs__value {
-  font-size: 12px;
+  font-size: var(--font-secondary);
   color: var(--text-primary);
 }
 
@@ -1547,9 +1521,9 @@ html, body, #root {
 .edit-mode-header {
   display: flex;
   align-items: center;
-  padding: 10px 16px;
+  padding: 12px 16pxundefined
   background: var(--accent-dark);
-  border-bottom: 1px solid var(--accent-border);
+  border-bottom: 4px solid var(--accent-border)undefined
 }
 
 .edit-mode-header__back {
@@ -1557,14 +1531,14 @@ html, body, #root {
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 4px;
-  margin-right: 8px;
+  padding: 4pxundefined
+  margin-right: 8pxundefined
   display: flex;
 }
 
 .edit-mode-header__title {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
   color: var(--text-accent-light);
 }
 
@@ -1572,12 +1546,12 @@ html, body, #root {
 .price-hint-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 5px 14px;
-  margin-top: -10px;
-  margin-bottom: 10px;
+  gap: 8pxundefined
+  padding: 4px 16pxundefined
+  margin-top: -8pxundefined
+  margin-bottom: 12pxundefined
   border: 0.5px solid var(--border-subtle);
-  border-top: none;
+  border-top: noneundefined
   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
   background: rgba(22, 22, 22, 0.5);
 }
@@ -1585,35 +1559,35 @@ html, body, #root {
 .price-hint-bar__item {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 4pxundefined
 }
 
 .price-hint-bar__label {
   font-size: 9px;
-  color: #444;
+  color: var(--text-secondary);
 }
 
 .price-hint-bar__value {
-  font-size: 10px;
+  font-size: var(--font-auxiliary);
   color: var(--accent);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
 }
 
 .price-hint-bar__sep {
-  color: #2a2a2a;
-  font-size: 10px;
+  color: var(--text-secondary);
+  font-size: var(--font-auxiliary);
 }
 
 .price-hint-bar__link {
-  margin-left: auto;
+  margin-left: autoundefined
   background: none;
   border: none;
   color: var(--text-accent-medium);
   font-family: 'Inter', sans-serif;
   font-size: 9px;
   cursor: pointer;
-  padding: 0;
+  padding: 0undefined
   transition: color 0.2s;
 }
 
@@ -1627,18 +1601,18 @@ html, body, #root {
 }
 
 .ph-title {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-primary);
+  font-weight: var(--weight-medium);
   color: var(--text-primary);
   text-align: center;
-  margin-bottom: 2px;
+  margin-bottom: 4pxundefined
 }
 
 .ph-subtitle {
-  font-size: 10px;
+  font-size: var(--font-auxiliary);
   color: var(--text-inactive);
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 16pxundefined
 }
 
 /* Stats bar */
@@ -1646,9 +1620,9 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 10px 0;
-  margin-bottom: 16px;
+  gap: 12pxundefined
+  padding: 12px 0undefined
+  margin-bottom: 16pxundefined
   border: 0.5px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   background: rgba(22, 22, 22, 0.3);
@@ -1658,20 +1632,20 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 4pxundefined
 }
 
 .ph-stat__label {
   font-size: 9px;
-  color: #444;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
 .ph-stat__value {
-  font-size: 12px;
+  font-size: var(--font-secondary);
   color: var(--accent);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1693,7 +1667,7 @@ html, body, #root {
 .ph-chart-container {
   display: flex;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 16pxundefined
   overflow-x: auto;
 }
 
@@ -1703,12 +1677,12 @@ html, body, #root {
 
 /* Table */
 .ph-table-title {
-  font-size: 10px;
+  font-size: var(--font-auxiliary);
   color: var(--text-inactive);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 6px;
-  font-weight: 500;
+  margin-bottom: 8pxundefined
+  font-weight: var(--weight-medium);
 }
 
 .ph-table {
@@ -1719,21 +1693,21 @@ html, body, #root {
 .ph-table-header {
   display: grid;
   grid-template-columns: 90px 1fr 80px;
-  gap: 8px;
-  padding: 6px 0;
+  gap: 8pxundefined
+  padding: 8px 0undefined
   font-size: 9px;
-  color: #444;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border-bottom: 0.5px solid var(--border-subtle);
+  border-bottom: 0px solid var(--border-subtle)undefined
 }
 
 .ph-table-row {
   display: grid;
   grid-template-columns: 90px 1fr 80px;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 0.5px solid #181818;
+  gap: 8pxundefined
+  padding: 8px 0undefined
+  border-bottom: 0px solid #181818undefined
   align-items: center;
 }
 
@@ -1754,7 +1728,7 @@ html, body, #root {
 .ph-table-row__value {
   font-size: 11px;
   color: var(--accent);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   text-align: right;
   font-variant-numeric: tabular-nums;
 }

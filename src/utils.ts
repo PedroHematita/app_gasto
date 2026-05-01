@@ -52,13 +52,13 @@ export function buildWhatsAppMessage(
   }
 
   const forma = payment.formaPagamento === 'a_vista' ? 'À Vista' : `Parcelado ${payment.parcelas || 2}x`;
-  lines.push(`*Pagamento:* ${forma} | ${payment.meioPagamento} | ${payment.instituicaoFinanceira}`);
+  lines.push(`Pagamento: ${forma} | ${payment.meioPagamento} | ${payment.instituicaoFinanceira}`);
 
   const obs = payment.observacoes.trim() || '—';
   lines.push(`Obs: ${obs}`);
 
   lines.push('');
-  lines.push('#;Descrição;Qtd;Unidade;Valor');
+  lines.push('N;Descrição;Qtd;Unidade;Valor');
 
   // Items in ascending order for the message
   const sorted = [...items].sort((a, b) => a.ordem - b.ordem);

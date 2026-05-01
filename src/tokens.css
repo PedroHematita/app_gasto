@@ -1,0 +1,63 @@
+/* ===== DESIGN TOKENS ===== */
+:root {
+  /* COLORS */
+  --bg-main: #0f0f0f;
+  --bg-surface: #161616;
+  --bg-edit: #0d0d1a;
+  --border-subtle: #2a2a2a;
+  --border-medium: #2d2d2d;
+  
+  --accent: #7c6fff;
+  --accent-dark: #1e1a3a;
+  --accent-border: #3d2fa0;
+  
+  --color-text-base: #e0e0e0;
+  --text-primary: var(--color-text-base);
+  --text-secondary: rgba(224, 224, 224, 0.4);
+  --text-inactive: rgba(224, 224, 224, 0.25);
+  
+  --text-accent-light: #c0b4ff;
+  --text-accent-medium: #9f8fff;
+  
+  /* Semantic Colors */
+  --color-error: #ff4444;
+  --color-warning: #ffcc00;
+  
+  --total-bg: #1a1530;
+  --total-border: #2e2060;
+  --separator: #1a1a1a;
+  
+  --whatsapp-green: #128c3e;
+  --whatsapp-bg: #0d1a0d;
+  --whatsapp-border: #1e3a1e;
+  --whatsapp-text: #8fbc8f;
+
+  /* TYPOGRAPHY */
+  --font-display: 18px;    /* Exceção: Totais de Destaque */
+  --font-primary: 13px;    /* Fornecedor, valor total, títulos */
+  --font-secondary: 11px;  /* Data, meio de pagamento, labels */
+  --font-auxiliary: 9px;   /* Badges, uppercase, metadados */
+  
+  --weight-regular: 400;
+  --weight-medium: 500;
+  
+  --line-height-single: 1.4;
+  --line-height-multi: 1.6;
+
+  /* BORDER RADIUS */
+  --radius-sm: 6px;   /* Badges, chips e elementos pequenos */
+  --radius-md: 8px;   /* Botões, campos e inputs */
+  --radius-lg: 12px;  /* Cards e superfícies */
+
+  /* SPACING (Múltiplos de 4) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-9: 36px;
+  --space-10: 40px;
+}
