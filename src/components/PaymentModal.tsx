@@ -89,14 +89,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           <div className="payment-tabs__row">
             <button
               className={`payment-tab ${payment.formaPagamento === 'a_vista' ? 'payment-tab--active' : 'payment-tab--inactive'}`}
-              onClick={() => onChange({ formaPagamento: 'a_vista' })}
+              onClick={() => onChange({ formaPagamento: 'a_vista', parcelas: 1 })}
               type="button"
             >
               À Vista
             </button>
             <button
               className={`payment-tab ${payment.formaPagamento === 'parcelado' ? 'payment-tab--active' : 'payment-tab--inactive'}`}
-              onClick={() => onChange({ formaPagamento: 'parcelado' })}
+              onClick={() => onChange({ formaPagamento: 'parcelado', parcelas: payment.parcelas && payment.parcelas >= 2 ? payment.parcelas : 2 })}
               type="button"
             >
               Parcelado

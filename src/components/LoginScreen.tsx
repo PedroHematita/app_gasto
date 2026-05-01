@@ -56,11 +56,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           <LogIn size={24} color="var(--accent)" />
         </div>
         <h1 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
-          Registro de Gastos
+          Sistema Madrigal Mineira
         </h1>
-        <p style={{ fontSize: 12, color: 'var(--text-inactive)', marginTop: 6 }}>
-          Faça login para continuar
-        </p>
       </div>
 
       <div onKeyDown={handleKeyDown}>

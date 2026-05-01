@@ -24,7 +24,7 @@ const defaultPayment: PaymentData = {
   observacoes: '',
   comprovanteFile: null,
   comprovanteUrl: '',
-  parcelas: 2,
+  parcelas: 1,
 };
 
 function App() {
@@ -52,6 +52,7 @@ function App() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showClearDraftWarning, setShowClearDraftWarning] = useState(false);
 
   // Date
   const [dataCompra, setDataCompra] = useState(formatDateBR(new Date()));
@@ -107,6 +108,11 @@ function App() {
     () => items.reduce((sum, item) => sum + item.valorCentavos, 0),
     [items]
   );
+
+  const hasDraft = useMemo(() => {
+    if (editingGastoId) return false;
+    return items.length > 0 || descricao.trim() !== '' || valorCentavos > 0;
+  }, [items, descricao, valorCentavos, editingGastoId]);
 
   // Reset form
   const resetForm = useCallback(() => {
@@ -165,6 +171,13 @@ function App() {
   // Add or update item
   const handleSubmitItem = useCallback(async () => {
     if (!descricao.trim()) return;
+
+    const normalizedDesc = descricao.trim().replace(/\s+/g, ' ');
+    if (normalizedDesc.length < 3) {
+      alert("A descrição do item é muito curta.\nUse ao menos 3 caracteres para identificar \no produto ou serviço.");
+      setTimeout(() => document.getElementById('input-descricao')?.focus(), 10);
+      return;
+    }
 
     // Validação da quantidade
     const qtyStr = quantidade.replace(',', '.');
@@ -299,6 +312,7 @@ function App() {
     setSaving(true);
     try {
       const forma = payment.formaPagamento === 'a_vista' ? 'À Vista' : 'Parcelado';
+      const parcelasFinal = payment.formaPagamento === 'a_vista' ? 1 : payment.parcelas;
       const itemsPayload = items.map((item) => ({
         ordem: item.ordem,
         descricao: item.descricao,
@@ -320,7 +334,7 @@ function App() {
           payment.observacoes,
           totalCents,
           newUrl,
-          payment.parcelas,
+          parcelasFinal,
           itemsPayload
         );
       } else {
@@ -334,7 +348,7 @@ function App() {
           payment.observacoes,
           totalCents,
           payment.comprovanteUrl,
-          payment.parcelas,
+          parcelasFinal,
           itemsPayload
         );
       }
@@ -379,11 +393,8 @@ function App() {
 
   // Navigate from bottom nav
   const handleNavigate = useCallback((target: Screen) => {
-    if (target === 'main') {
-      resetAll();
-    }
     setScreen(target);
-  }, [resetAll]);
+  }, []);
 
   // Select gasto from list
   const handleSelectGasto = useCallback((gasto: GastoRecord) => {
@@ -411,7 +422,7 @@ function App() {
       observacoes: g.observacoes,
       comprovanteFile: null,
       comprovanteUrl: g.comprovanteUrl,
-      parcelas: g.parcelas || 2,
+      parcelas: g.formaPagamento === 'À Vista' ? 1 : (g.parcelas || 2),
     });
 
     setEditingGastoId(g.id);
@@ -497,8 +508,31 @@ function App() {
         </div>
       )}
 
+      {/* Draft Clear Button */}
+      {!isEditMode && hasDraft && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px 20px 0' }}>
+          <button
+            onClick={() => setShowClearDraftWarning(true)}
+            type="button"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#ff4444',
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4
+            }}
+          >
+            Limpar rascunho
+          </button>
+        </div>
+      )}
+
       {/* Date header */}
-      <div className="date-header">
+      <div className="date-header" style={{ paddingTop: (!isEditMode && hasDraft) ? 8 : 16 }}>
         <div className="date-header__row">
           <FloatingInput
             id="input-data"
@@ -645,6 +679,40 @@ function App() {
                 style={{ width: '100%', padding: '14px', borderRadius: 8, background: 'transparent', color: 'var(--text-inactive)', border: '1px solid #333', fontWeight: 500, cursor: 'pointer' }}
               >
                 Lançar assim mesmo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showClearDraftWarning && (
+        <div className="modal-overlay" onClick={() => setShowClearDraftWarning(false)} style={{ zIndex: 1000 }}>
+          <div className="modal-sheet price-history-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-sheet__handle" />
+            <div className="ph-title" style={{ color: '#ff4444', marginBottom: 12 }}>Atenção</div>
+            
+            <div style={{ padding: '10px 20px 20px', fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5 }}>
+              <p>Deseja descartar o rascunho atual?</p>
+              <p style={{ marginTop: 8 }}>Todos os dados preenchidos serão perdidos.</p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 20px 20px' }}>
+              <button
+                onClick={() => {
+                  setShowClearDraftWarning(false);
+                  resetAll();
+                }}
+                type="button"
+                style={{ width: '100%', padding: '14px', borderRadius: 8, background: '#333', color: '#ff4444', border: 'none', fontWeight: 500, cursor: 'pointer' }}
+              >
+                Descartar rascunho
+              </button>
+              <button
+                onClick={() => setShowClearDraftWarning(false)}
+                type="button"
+                style={{ width: '100%', padding: '14px', borderRadius: 8, background: 'transparent', color: 'var(--text-inactive)', border: '1px solid #333', fontWeight: 500, cursor: 'pointer' }}
+              >
+                Cancelar
               </button>
             </div>
           </div>
