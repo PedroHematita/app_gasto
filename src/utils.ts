@@ -1,3 +1,5 @@
+import { isDateInForecastWindow } from './lib/forecastWindow';
+import type { PerenePeriodInput } from './lib/gastosPerenePeriods';
 import type { GastoItem, PaymentData, CompromissoRecord, GastoPereneRecord, PeriodicidadePerene } from './types';
 
 /** Mensagem única para fornecedor obrigatório (UI + camada de dados). */
@@ -172,6 +174,38 @@ export function buildWhatsAppMessage(
 export function openWhatsApp(message: string): void {
   const encoded = encodeURIComponent(message);
   window.open(`https://wa.me/?text=${encoded}`, '_blank');
+}
+
+export function gastoPereneToPeriodInput(gp: GastoPereneRecord): PerenePeriodInput | null {
+  const dataInicio = parseDateBR(gp.dataInicio);
+  if (!dataInicio) return null;
+  const dataTermino = gp.dataTermino ? parseDateBR(gp.dataTermino) : null;
+  return {
+    periodicidade: gp.periodicidade,
+    diaVencimento: gp.diaVencimento,
+    mesVencimento: gp.mesVencimento,
+    dataInicio,
+    dataTermino,
+  };
+}
+
+export function isGastoPereneEligibleForForecast(gp: GastoPereneRecord, refToday: Date): boolean {
+  if (gp.status === 'encerrado') return false;
+  const t = gp.dataTermino ? parseDateBR(gp.dataTermino) : null;
+  if (!t) return true;
+  return startOfDayLocal(t).getTime() >= startOfDayLocal(refToday).getTime();
+}
+
+/**
+ * Janela de N dias incluindo hoje: [hoje, hoje + (N − 1)] (comparação só por data local).
+ * Lógica compartilhada com `lib/forecastWindow.ts`.
+ */
+export function isDateWithinForecastWindow(
+  due: Date,
+  windowStart: Date,
+  windowDays: number
+): boolean {
+  return isDateInForecastWindow(due, windowStart, windowDays);
 }
 
 export const UNIDADES = [

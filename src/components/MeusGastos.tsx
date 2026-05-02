@@ -3,14 +3,33 @@ import { ChevronDown, Plus, Search } from 'lucide-react';
 import { fetchGastos, fetchCompromissosAtivos, fetchGastosPerenesAtivos } from '../lib/supabase';
 import {
   formatCurrency,
+  formatDateBR,
   compromissoDisplayTitle,
   daysOverdueFromPrevistaBR,
   compareDateBR,
   labelPeriodicidade,
-  formatVencimentoGastoPerene,
+  gastoPereneToPeriodInput,
+  isGastoPereneEligibleForForecast,
+  startOfDayLocal,
 } from '../utils';
 import type { GastoRecord, CompromissoRecord, GastoPereneRecord } from '../types';
+import { proximoVencimentoEmOuDepoisDeHoje, vencimentosPereneNaJanela } from '../lib/gastosPerenePeriods';
+import {
+  consolidarGastosFuturos,
+  filterAnosFuturosPorBusca,
+  type LinhaGastoFuturo,
+} from '../lib/gastosFuturosConsolidacao';
 import { meusGastosSectionCollapse } from '../meusGastosSectionCollapse';
+import { meusGastosFuturosCollapse } from '../meusGastosFuturosCollapse';
+import {
+  meusGastosFuturosIncludeRealizados,
+  setMeusGastosFuturosIncludeRealizados,
+} from '../meusGastosFuturosIncludeRealizados';
+import {
+  meusGastosPereneForecastWindow,
+  setMeusGastosPereneForecastWindowDays,
+  type PereneForecastWindowDays,
+} from '../meusGastosPereneForecastWindow';
 
 interface MeusGastosProps {
   onSelectGasto: (gasto: GastoRecord) => void;
@@ -87,6 +106,9 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
   const [search, setSearch] = useState('');
   const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
   const [, setCollapseTick] = useState(0);
+  const [forecastWindowTick, setForecastWindowTick] = useState(0);
+  const [futurosUiTick, setFuturosUiTick] = useState(0);
+  const [expandedFuturosMonths, setExpandedFuturosMonths] = useState<Record<string, boolean>>({});
   const compromissosSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -157,6 +179,43 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     setCollapseTick((t) => t + 1);
   };
 
+  const forecastWindowDays = meusGastosPereneForecastWindow.windowDays;
+
+  const selectForecastWindow = (d: PereneForecastWindowDays) => {
+    setMeusGastosPereneForecastWindowDays(d);
+    setForecastWindowTick((t) => t + 1);
+  };
+
+  const pereneForecast = useMemo(() => {
+    const today = startOfDayLocal(new Date());
+    const days = meusGastosPereneForecastWindow.windowDays;
+    let sumCents = 0;
+    const byId = new Map<
+      string,
+      { proximo: Date | null; vencimentosNaJanela: number; subtotalCents: number }
+    >();
+
+    for (const gp of gastosPerenesParaExibir) {
+      if (!isGastoPereneEligibleForForecast(gp, today)) {
+        byId.set(gp.id, { proximo: null, vencimentosNaJanela: 0, subtotalCents: 0 });
+        continue;
+      }
+      const input = gastoPereneToPeriodInput(gp);
+      if (!input) {
+        byId.set(gp.id, { proximo: null, vencimentosNaJanela: 0, subtotalCents: 0 });
+        continue;
+      }
+      const vencimentos = vencimentosPereneNaJanela(input, today, days);
+      const k = vencimentos.length;
+      const subtotalCents = gp.valorPrevistoCents * k;
+      sumCents += subtotalCents;
+      const proximo = proximoVencimentoEmOuDepoisDeHoje(input, today);
+      byId.set(gp.id, { proximo, vencimentosNaJanela: k, subtotalCents });
+    }
+
+    return { sumCents, byId };
+  }, [gastosPerenesParaExibir, forecastWindowTick, refreshKey]);
+
   const totalPagoSum = useMemo(() => {
     if (search.trim()) return filteredGastos.reduce((s, g) => s + g.total, 0);
     return gastos.reduce((s, g) => s + g.total, 0);
@@ -167,12 +226,31 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     [compromissosParaExibir]
   );
 
-  const totalPrevistoPerenes = useMemo(
-    () => gastosPerenesParaExibir.reduce((s, gp) => s + gp.valorPrevistoCents, 0),
-    [gastosPerenesParaExibir]
+  const countGastosExibicao = search.trim() ? filteredGastos.length : gastos.length;
+
+  const includeRealizadosFuturos = meusGastosFuturosIncludeRealizados.include;
+
+  const gastosFuturosAnosRaw = useMemo(
+    () =>
+      consolidarGastosFuturos({
+        hoje: startOfDayLocal(new Date()),
+        gastosPerenes: gastosPerenesAtivos,
+        compromissos: compromissosAtivos,
+        gastos,
+        incluirRealizados: includeRealizadosFuturos,
+      }),
+    [gastosPerenesAtivos, compromissosAtivos, gastos, includeRealizadosFuturos, refreshKey, futurosUiTick]
   );
 
-  const countGastosExibicao = search.trim() ? filteredGastos.length : gastos.length;
+  const gastosFuturosAnos = useMemo(
+    () => filterAnosFuturosPorBusca(gastosFuturosAnosRaw, search),
+    [gastosFuturosAnosRaw, search]
+  );
+
+  const futurosMonthKeysInOrder = useMemo(
+    () => gastosFuturosAnos.flatMap((y) => y.months.map((m) => m.key)),
+    [gastosFuturosAnos]
+  );
 
   const grouped = useMemo<YearGroup[]>(() => {
     const monthMap = new Map<string, MonthGroup>();
@@ -258,6 +336,34 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     });
   }, [monthKeysInOrder, search]);
 
+  useEffect(() => {
+    if (futurosMonthKeysInOrder.length === 0) {
+      setExpandedFuturosMonths({});
+      return;
+    }
+
+    if (search.trim()) {
+      const nextExpanded = futurosMonthKeysInOrder.reduce<Record<string, boolean>>((acc, key) => {
+        acc[key] = true;
+        return acc;
+      }, {});
+      setExpandedFuturosMonths(nextExpanded);
+      return;
+    }
+
+    setExpandedFuturosMonths((prev) => {
+      const next: Record<string, boolean> = {};
+      futurosMonthKeysInOrder.forEach((key, index) => {
+        if (typeof prev[key] === 'boolean') {
+          next[key] = prev[key];
+          return;
+        }
+        next[key] = index === 0;
+      });
+      return next;
+    });
+  }, [futurosMonthKeysInOrder, search, refreshKey]);
+
   const toggleMonth = (monthKey: string) => {
     setExpandedMonths((prev) => ({
       ...prev,
@@ -265,11 +371,185 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     }));
   };
 
+  const toggleFuturosMonth = (monthKey: string) => {
+    setExpandedFuturosMonths((prev) => ({
+      ...prev,
+      [monthKey]: !prev[monthKey],
+    }));
+  };
+
+  const toggleFuturosSection = () => {
+    meusGastosFuturosCollapse.sectionExpanded = !meusGastosFuturosCollapse.sectionExpanded;
+    setFuturosUiTick((t) => t + 1);
+  };
+
+  const selectFuturosSoloFuturos = () => {
+    setMeusGastosFuturosIncludeRealizados(false);
+    setFuturosUiTick((t) => t + 1);
+  };
+
+  const selectFuturosIncluirRealizados = () => {
+    setMeusGastosFuturosIncludeRealizados(true);
+    setFuturosUiTick((t) => t + 1);
+  };
+
+  const handleFuturosLinhaClick = (linha: LinhaGastoFuturo) => {
+    if (linha.origem === 'perene' && linha.gastoPereneId) {
+      const gp = gastosPerenesAtivos.find((g) => g.id === linha.gastoPereneId);
+      if (gp) onSelectGastoPerene(gp);
+      return;
+    }
+    if (linha.origem === 'rascunho' && linha.compromissoId) {
+      const c = compromissosAtivos.find((x) => x.id === linha.compromissoId);
+      if (c) onSelectCompromisso(c);
+      return;
+    }
+    if ((linha.origem === 'parcelado' || linha.origem === 'realizado') && linha.gastoId) {
+      const g = gastos.find((x) => x.id === linha.gastoId);
+      if (g) onSelectGasto(g);
+    }
+  };
+
+  const futurosSectionExpanded = meusGastosFuturosCollapse.sectionExpanded;
+
+  const renderGastosFuturosSection = () => {
+    const totalItens = gastosFuturosAnos.reduce(
+      (s, a) => s + a.months.reduce((t, m) => t + m.itens.length, 0),
+      0
+    );
+    const totalFuturosCents = gastosFuturosAnos.reduce((s, a) => s + a.totalCents, 0);
+    const isExpanded = futurosSectionExpanded;
+
+    return (
+      <div className="meus-gastos-month-card">
+        <button
+          type="button"
+          className={`meus-gastos-month-header ${isExpanded ? 'meus-gastos-month-header--expanded' : ''}`}
+          onClick={toggleFuturosSection}
+        >
+          <div className="meus-gastos-month-header__left">
+            <span className="meus-gastos-month-header__title">Gastos futuros</span>
+            <span className="meus-gastos-month-header__count">
+              {totalItens} {totalItens === 1 ? 'item' : 'itens'}
+            </span>
+          </div>
+          <div className="meus-gastos-month-header__right">
+            {!isExpanded && totalItens > 0 && (
+              <span className="meus-gastos-month-header__total">{formatCurrency(totalFuturosCents)}</span>
+            )}
+            <span className={`meus-gastos-month-header__icon ${isExpanded ? 'is-expanded' : ''}`}>
+              <ChevronDown size={16} />
+            </span>
+          </div>
+        </button>
+
+        {isExpanded && (
+          <div className="payment-tabs meus-gastos-futuros-toggle">
+            <div className="payment-tabs__row">
+              <button
+                type="button"
+                className={
+                  !includeRealizadosFuturos
+                    ? 'payment-tab payment-tab--active'
+                    : 'payment-tab payment-tab--inactive'
+                }
+                onClick={selectFuturosSoloFuturos}
+              >
+                Só futuros
+              </button>
+              <button
+                type="button"
+                className={
+                  includeRealizadosFuturos
+                    ? 'payment-tab payment-tab--active'
+                    : 'payment-tab payment-tab--inactive'
+                }
+                onClick={selectFuturosIncluirRealizados}
+              >
+                Incluir realizados
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isExpanded && totalItens === 0 && (
+          <div className="meus-gastos-empty meus-gastos-empty--soft">
+            Nenhum lançamento futuro na janela de 12 meses
+          </div>
+        )}
+
+        {isExpanded &&
+          gastosFuturosAnos.map((yearGroup) => (
+            <div key={yearGroup.year}>
+              <div className="meus-gastos-year">
+                <span>{yearGroup.year}</span>
+                <span className="meus-gastos-year__total">{formatCurrency(yearGroup.totalCents)}</span>
+              </div>
+              {yearGroup.months.map((monthGroup) => {
+                const mesExpanded = !!expandedFuturosMonths[monthGroup.key];
+                return (
+                  <div key={monthGroup.key} className="meus-gastos-month-card">
+                    <button
+                      type="button"
+                      className={`meus-gastos-month-header ${mesExpanded ? 'meus-gastos-month-header--expanded' : ''}`}
+                      onClick={() => toggleFuturosMonth(monthGroup.key)}
+                    >
+                      <div className="meus-gastos-month-header__left">
+                        <span className="meus-gastos-month-header__title">{monthGroup.label}</span>
+                        <span className="meus-gastos-month-header__count">
+                          {monthGroup.itens.length}{' '}
+                          {monthGroup.itens.length === 1 ? 'item' : 'itens'}
+                        </span>
+                      </div>
+                      <div className="meus-gastos-month-header__right">
+                        {!mesExpanded && (
+                          <span className="meus-gastos-month-header__total">
+                            {formatCurrency(monthGroup.totalCents)}
+                          </span>
+                        )}
+                        <span className={`meus-gastos-month-header__icon ${mesExpanded ? 'is-expanded' : ''}`}>
+                          <ChevronDown size={16} />
+                        </span>
+                      </div>
+                    </button>
+
+                    {mesExpanded &&
+                      monthGroup.itens.map((linha) => (
+                        <button
+                          key={linha.id}
+                          type="button"
+                          className="gasto-card"
+                          onClick={() => handleFuturosLinhaClick(linha)}
+                        >
+                          <div className="gasto-card__top">
+                            <span className="gasto-card__fornecedor">{linha.titulo}</span>
+                            <span className="gasto-card__total">{formatCurrency(linha.valorCents)}</span>
+                          </div>
+                          <div className="gasto-card__bottom">
+                            <span className="gasto-card__date">{formatDateBR(linha.dataRef)}</span>
+                            <span
+                              className={`gasto-card__badge gasto-card__badge--${linha.origem}`}
+                            >
+                              {linha.origem}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+      </div>
+    );
+  };
+
   const renderGastosPerenesSection = () => {
     if (gastosPerenesParaExibir.length === 0) return null;
 
     const n = gastosPerenesParaExibir.length;
     const isExpanded = displayPerenesExpanded;
+    const { sumCents, byId } = pereneForecast;
 
     return (
       <div className="meus-gastos-month-card">
@@ -285,35 +565,76 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
             </span>
           </div>
           <div className="meus-gastos-month-header__right">
-            {!isExpanded && (
-              <span className="meus-gastos-month-header__total">
-                {formatCurrency(totalPrevistoPerenes)}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-end',
+                gap: 2,
+              }}
+            >
+              <span className="meus-gastos-month-header__count">
+                Próx. {forecastWindowDays} dias:
               </span>
-            )}
+              <span className="meus-gastos-month-header__total">
+                {sumCents > 0 ? formatCurrency(sumCents) : 'nenhum vencimento'}
+              </span>
+            </div>
             <span className={`meus-gastos-month-header__icon ${isExpanded ? 'is-expanded' : ''}`}>
               <ChevronDown size={16} />
             </span>
           </div>
         </button>
 
+        {isExpanded && (
+          <div className="payment-tabs meus-gastos-perene-window-tabs">
+            <div className="payment-tabs__row">
+              {([30, 60, 90] as const).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  className={
+                    forecastWindowDays === d ? 'payment-tab payment-tab--active' : 'payment-tab payment-tab--inactive'
+                  }
+                  onClick={() => selectForecastWindow(d)}
+                >
+                  {d} dias
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {isExpanded &&
-          gastosPerenesParaExibir.map((gp) => (
-            <button
-              key={gp.id}
-              type="button"
-              className="gasto-card"
-              onClick={() => onSelectGastoPerene(gp)}
-            >
-              <div className="gasto-card__top">
-                <span className="gasto-card__fornecedor">{gp.fornecedor}</span>
-                <span className="gasto-card__total">{formatCurrency(gp.valorPrevistoCents)}</span>
-              </div>
-              <div className="gasto-card__bottom">
-                <span className="gasto-card__date">{labelPeriodicidade(gp.periodicidade)}</span>
-                <span className="gasto-card__meio">{formatVencimentoGastoPerene(gp)}</span>
-              </div>
-            </button>
-          ))}
+          gastosPerenesParaExibir.map((gp) => {
+            const meta = byId.get(gp.id);
+            const proximo = meta?.proximo ?? null;
+            const k = meta?.vencimentosNaJanela ?? 0;
+            const subtotalCents = meta?.subtotalCents ?? 0;
+            const vLabel = k === 1 ? '1 vencimento' : `${k} vencimentos`;
+            return (
+              <button
+                key={gp.id}
+                type="button"
+                className="gasto-card"
+                onClick={() => onSelectGastoPerene(gp)}
+              >
+                <div className="gasto-card__top">
+                  <span className="gasto-card__fornecedor">{gp.fornecedor}</span>
+                  <span className="gasto-card__total">{formatCurrency(gp.valorPrevistoCents)}</span>
+                </div>
+                <div className="gasto-card__perene-line">
+                  <span className="gasto-card__perene-line-text">
+                    {labelPeriodicidade(gp.periodicidade)} · Próximo:{' '}
+                    {proximo ? formatDateBR(proximo) : '—'}
+                  </span>
+                </div>
+                <div className="gasto-card__perene-summary">
+                  {vLabel} · Subtotal: {formatCurrency(subtotalCents)}
+                </div>
+              </button>
+            );
+          })}
       </div>
     );
   };
@@ -450,7 +771,8 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     buscaAtiva &&
     filteredGastos.length === 0 &&
     filteredCompromissos.length === 0 &&
-    filteredGastosPerenes.length === 0;
+    filteredGastosPerenes.length === 0 &&
+    gastosFuturosAnos.length === 0;
   const listaGeralVazia =
     !buscaAtiva &&
     gastos.length === 0 &&
@@ -495,6 +817,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
             <>
               {renderGastosPerenesSection()}
               {renderCompromissosSection()}
+              {renderGastosFuturosSection()}
 
               <div className="meus-gastos-search-block">
                 <h3 className="meus-gastos-search-block__title">Gastos realizados</h3>
@@ -532,6 +855,8 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
           {renderGastosPerenesSection()}
 
           {renderCompromissosSection()}
+
+          {renderGastosFuturosSection()}
 
           {gastos.length === 0 ? (
             <div className="meus-gastos-empty meus-gastos-empty--soft">

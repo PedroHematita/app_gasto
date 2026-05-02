@@ -26,6 +26,7 @@ const MESES = [
 interface GastoPereneDetailProps {
   gastoPereneId: string;
   onBack: () => void;
+  onEncerrado: () => void;
   onSelectCompromisso: (c: CompromissoRecord) => void;
   refreshNonce: number;
 }
@@ -33,6 +34,7 @@ interface GastoPereneDetailProps {
 export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
   gastoPereneId,
   onBack,
+  onEncerrado,
   onSelectCompromisso,
   refreshNonce,
 }) => {
@@ -45,6 +47,8 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
   const [mesNome, setMesNome] = useState('Janeiro');
   const [observacoes, setObservacoes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showEncerrarConfirm, setShowEncerrarConfirm] = useState(false);
+  const [encerrando, setEncerrando] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -101,24 +105,18 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
     }
   };
 
-  const handleEncerrar = async () => {
+  const handleConfirmEncerrar = async () => {
     if (!record) return;
-    if (
-      !window.confirm(
-        'Encerrar este gasto perene? Nenhum compromisso novo será gerado automaticamente. Os compromissos pendentes já criados permanecem para quitação.'
-      )
-    ) {
-      return;
-    }
-    setSaving(true);
+    setEncerrando(true);
     try {
       await encerrarGastoPerene(record.id);
-      await load();
+      setShowEncerrarConfirm(false);
+      onEncerrado();
     } catch (e) {
       console.error(e);
       alert('Não foi possível encerrar o gasto perene.');
     } finally {
-      setSaving(false);
+      setEncerrando(false);
     }
   };
 
@@ -283,7 +281,7 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
               <button
                 type="button"
                 className="gasto-perene-detail__encerrar"
-                onClick={handleEncerrar}
+                onClick={() => setShowEncerrarConfirm(true)}
                 disabled={saving}
               >
                 Encerrar gasto perene
@@ -319,6 +317,44 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
           )}
         </div>
       </div>
+
+      {showEncerrarConfirm && (
+        <div
+          className="modal-overlay"
+          style={{ zIndex: 300 }}
+          onClick={() => !encerrando && setShowEncerrarConfirm(false)}
+        >
+          <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-sheet__handle" />
+            <div className="modal-sheet__title">Encerrar gasto perene</div>
+            <div className="compromisso-cancel-confirm__body">
+              <p>
+                Esta ação não pode ser desfeita. O gasto perene será encerrado e não gerará novos
+                compromissos. Os compromissos pendentes já gerados permanecem na lista para
+                quitação.
+              </p>
+            </div>
+            <div className="compromisso-cancel-confirm__actions">
+              <button
+                type="button"
+                className="btn-compromisso-secondary"
+                disabled={encerrando}
+                onClick={() => setShowEncerrarConfirm(false)}
+              >
+                Voltar
+              </button>
+              <button
+                type="button"
+                className="btn-compromisso-secondary"
+                disabled={encerrando}
+                onClick={handleConfirmEncerrar}
+              >
+                {encerrando ? 'Encerrando...' : 'Confirmar encerramento'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

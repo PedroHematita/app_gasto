@@ -663,6 +663,11 @@ function App() {
           setSelectedGastoPereneId(null);
           setScreen('meus_gastos');
         }}
+        onEncerrado={() => {
+          setRefreshKey((k) => k + 1);
+          setSelectedGastoPereneId(null);
+          setScreen('meus_gastos');
+        }}
         onSelectCompromisso={async (c) => {
           const fresh = await fetchCompromissoById(c.id);
           setSelectedCompromisso(fresh ?? c);

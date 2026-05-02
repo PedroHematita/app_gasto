@@ -4,6 +4,7 @@
  */
 
 import type { PeriodicidadePerene } from '../types';
+import { endOfForecastWindowInclusive } from './forecastWindow';
 
 export interface PerenePeriodInput {
   periodicidade: PeriodicidadePerene;
@@ -131,4 +132,133 @@ export function listPeriodsDueThroughToday(input: PerenePeriodInput, todayInput:
     pushIfOk(String(y), compra, due);
   }
   return out;
+}
+
+function sortDatesAsc(dates: Date[]): Date[] {
+  return [...dates].sort((a, b) => sod(a).getTime() - sod(b).getTime());
+}
+
+/** Vencimentos em [rangeStart, rangeEnd], inclusivos (só data local). */
+function vencimentosPereneEntreFechado(
+  input: PerenePeriodInput,
+  rangeStart: Date,
+  rangeEnd: Date
+): Date[] {
+  const inicio = sod(input.dataInicio);
+  const termino = input.dataTermino ? sod(input.dataTermino) : null;
+  const dia = input.diaVencimento;
+  const rs = sod(rangeStart);
+  const re = sod(rangeEnd);
+  const out: Date[] = [];
+
+  if (input.periodicidade === 'mensal') {
+    const inicioMonthStart = new Date(inicio.getFullYear(), inicio.getMonth(), 1);
+    const rangeMonthStart = new Date(rs.getFullYear(), rs.getMonth(), 1);
+    let cursor =
+      rangeMonthStart.getTime() < inicioMonthStart.getTime()
+        ? new Date(inicioMonthStart)
+        : new Date(rangeMonthStart);
+    let guard = 0;
+    while (guard++ < 2400) {
+      const y = cursor.getFullYear();
+      const mi = cursor.getMonth();
+      if (termino && new Date(y, mi, 1) > termino) break;
+      const due = clampDay(y, mi, dia);
+      if (termino && sod(due) > termino) {
+        cursor = addOneMonthFirstDay(cursor);
+        continue;
+      }
+      if (sod(due) < inicio) {
+        cursor = addOneMonthFirstDay(cursor);
+        continue;
+      }
+      if (sod(due) > re) break;
+      if (sod(due) >= rs) out.push(due);
+      cursor = addOneMonthFirstDay(cursor);
+    }
+    return out;
+  }
+
+  const yMin = inicio.getFullYear() - 1;
+  const yMax = Math.max(re.getFullYear(), rs.getFullYear()) + 1;
+  let guard = 0;
+
+  const inRange = (due: Date) =>
+    sod(due) >= inicio &&
+    (!termino || sod(due) <= termino) &&
+    sod(due) >= rs &&
+    sod(due) <= re;
+
+  if (input.periodicidade === 'trimestral') {
+    for (let y = yMin; y <= yMax; y++) {
+      for (let q = 0; q < 4; q++) {
+        guard++;
+        if (guard > 500) return sortDatesAsc(out);
+        const lastMonth = q * 3 + 2;
+        const due = clampDay(y, lastMonth, dia);
+        if (inRange(due)) out.push(due);
+      }
+    }
+    return sortDatesAsc(out);
+  }
+
+  if (input.periodicidade === 'semestral') {
+    for (let y = yMin; y <= yMax; y++) {
+      for (const s of [0, 1] as const) {
+        guard++;
+        if (guard > 500) return sortDatesAsc(out);
+        const due = s === 0 ? clampDay(y, 5, dia) : clampDay(y, 11, dia);
+        if (inRange(due)) out.push(due);
+      }
+    }
+    return sortDatesAsc(out);
+  }
+
+  const mes = input.mesVencimento;
+  if (!mes || mes < 1 || mes > 12) return [];
+  for (let y = yMin; y <= yMax; y++) {
+    guard++;
+    if (guard > 200) return sortDatesAsc(out);
+    const due = clampDay(y, mes - 1, dia);
+    if (inRange(due)) out.push(due);
+  }
+  return sortDatesAsc(out);
+}
+
+/**
+ * Vencimentos no intervalo fechado [rangeStart, rangeEnd] (só data local).
+ * Útil para janelas em calendário (ex.: 12 meses) sem converter para contagem de dias.
+ */
+export function vencimentosPereneNoIntervalo(
+  input: PerenePeriodInput,
+  rangeStart: Date,
+  rangeEndInclusive: Date
+): Date[] {
+  return vencimentosPereneEntreFechado(input, sod(rangeStart), sod(rangeEndInclusive));
+}
+
+/**
+ * Todos os vencimentos do perene na janela de N dias a partir de hoje (incluindo hoje),
+ * alinhada a `endOfForecastWindowInclusive` / `isDateInForecastWindow`.
+ */
+export function vencimentosPereneNaJanela(
+  input: PerenePeriodInput,
+  todayInput: Date = new Date(),
+  windowDays: number
+): Date[] {
+  const today = sod(todayInput);
+  const fim = endOfForecastWindowInclusive(today, windowDays);
+  return vencimentosPereneEntreFechado(input, today, fim);
+}
+
+const PROXIMO_VIA_JANELA_DIAS = 365 * 50;
+
+/**
+ * Primeiro vencimento >= hoje (via janela longa; uma única fonte de regras).
+ */
+export function proximoVencimentoEmOuDepoisDeHoje(
+  input: PerenePeriodInput,
+  todayInput: Date = new Date()
+): Date | null {
+  return vencimentosPereneNaJanela(input, todayInput, PROXIMO_VIA_JANELA_DIAS)[0] ?? null;
 }
