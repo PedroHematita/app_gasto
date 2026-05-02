@@ -1662,13 +1662,18 @@ html, body, #root {
 
 /* Gastos futuros: meses internos sem aparência de cards independentes */
 .meus-gastos-futuros-month {
-  margin: 0;
+  margin: 0 0 0 12px;
   background: transparent;
   border-radius: 0;
+  border-left: 2px solid rgba(61, 47, 160, 0.2);
+}
+
+.meus-gastos-futuros-month--expanded {
+  border-left-color: #3d2fa0;
 }
 
 .meus-gastos-futuros-month + .meus-gastos-futuros-month {
-  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  border-top: 3px solid #0a0a0a;
 }
 
 .meus-gastos-futuros-month--year-first {
@@ -1676,7 +1681,28 @@ html, body, #root {
 }
 
 .meus-gastos-futuros-month .meus-gastos-month-header--expanded::after {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.05);
+}
+
+.meus-gastos-futuros-year {
+  padding-top: 12px;
+  padding-bottom: 4px;
+}
+
+.meus-gastos-futuros-year-header {
+  padding: 0 16px 8px 0;
+}
+
+.meus-gastos-futuros-year-header .meus-gastos-month-header__right {
+  margin-left: auto;
+}
+
+.meus-gastos-futuros-year-header__title {
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: var(--weight-regular);
 }
 
 /* Empty */
@@ -1715,7 +1741,11 @@ html, body, #root {
 }
 
 .meus-gastos-futuros-month .gasto-card + .gasto-card::before {
-  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  border-top: 0.5px solid rgba(255, 255, 255, 0.05);
+}
+
+.meus-gastos-futuros-item {
+  margin-left: 10px;
 }
 
 .gasto-card__top {

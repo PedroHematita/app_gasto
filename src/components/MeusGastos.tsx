@@ -501,14 +501,16 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
         {isExpanded &&
           gastosFuturosAnos.map((yearGroup) => (
             <div key={yearGroup.year}>
-              <div className="meus-gastos-year">
+              <div className="meus-gastos-year meus-gastos-futuros-year">
                 <button
                   type="button"
-                  className={`meus-gastos-month-header ${meusGastosFuturosCollapse.expandedYears[String(yearGroup.year)] ? 'meus-gastos-month-header--expanded' : ''}`}
+                  className={`meus-gastos-month-header meus-gastos-futuros-year-header ${meusGastosFuturosCollapse.expandedYears[String(yearGroup.year)] ? 'meus-gastos-month-header--expanded' : ''}`}
                   onClick={() => toggleFuturosYear(yearGroup.year)}
                 >
                   <div className="meus-gastos-month-header__left">
-                    <span className="meus-gastos-month-header__title">{yearGroup.year}</span>
+                    <span className="meus-gastos-month-header__title meus-gastos-futuros-year-header__title">
+                      {yearGroup.year}
+                    </span>
                   </div>
                   <div className="meus-gastos-month-header__right">
                     <span className="meus-gastos-year__total">{formatCurrency(yearGroup.totalCents)}</span>
@@ -526,7 +528,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                 return (
                   <div
                     key={monthGroup.key}
-                    className={`meus-gastos-month-card meus-gastos-futuros-month ${monthIndex === 0 ? 'meus-gastos-futuros-month--year-first' : ''}`}
+                    className={`meus-gastos-month-card meus-gastos-futuros-month ${monthIndex === 0 ? 'meus-gastos-futuros-month--year-first' : ''} ${mesExpanded ? 'meus-gastos-futuros-month--expanded' : 'meus-gastos-futuros-month--collapsed'}`}
                   >
                     <button
                       type="button"
@@ -557,7 +559,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                         <button
                           key={linha.id}
                           type="button"
-                          className="gasto-card"
+                          className="gasto-card meus-gastos-futuros-item"
                           onClick={() => handleFuturosLinhaClick(linha)}
                         >
                           <div className="gasto-card__top">
