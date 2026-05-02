@@ -42,4 +42,44 @@ export interface GastoRecord {
   items: GastoItem[];
 }
 
-export type Screen = 'main' | 'confirmation' | 'meus_gastos' | 'gasto_detail' | 'gasto_edit';
+export type CompromissoStatus = 'pendente' | 'vencido' | 'quitado' | 'cancelado';
+
+export interface CompromissoRecord {
+  id: string;
+  dataCompra: string; // dd/mm/aaaa — fato gerador
+  dataPrevistaPagamento: string; // dd/mm/aaaa
+  fornecedor: string;
+  status: CompromissoStatus;
+  total: number; // cents
+  createdAt: string;
+  gastoId: string | null;
+  gastoPereneId: string | null;
+  competenciaChave: string | null;
+  items: GastoItem[];
+}
+
+export type PeriodicidadePerene = 'mensal' | 'trimestral' | 'semestral' | 'anual';
+export type StatusGastoPerene = 'ativo' | 'encerrado';
+
+export interface GastoPereneRecord {
+  id: string;
+  fornecedor: string;
+  valorPrevistoCents: number;
+  periodicidade: PeriodicidadePerene;
+  diaVencimento: number;
+  mesVencimento: number | null;
+  dataInicio: string; // dd/mm/aaaa
+  dataTermino: string | null; // dd/mm/aaaa
+  observacoes: string;
+  status: StatusGastoPerene;
+  createdAt: string;
+}
+
+export type Screen =
+  | 'main'
+  | 'confirmation'
+  | 'meus_gastos'
+  | 'gasto_detail'
+  | 'gasto_edit'
+  | 'compromisso_detail'
+  | 'gasto_perene_detail';

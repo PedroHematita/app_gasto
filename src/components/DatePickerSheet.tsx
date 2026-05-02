@@ -1,10 +1,18 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { parseDateBR, startOfDayLocal } from '../utils';
 
 interface DatePickerSheetProps {
   selectedDate: string; // dd/mm/yyyy
   onSelect: (date: string) => void;
   onClose: () => void;
+  /** Permite datas futuras e navegação além do mês corrente (ex.: data prevista de pagamento). */
+  allowFutureDates?: boolean;
+  /**
+   * Data da compra (dd/mm/aaaa): desabilita dias em ou antes desta data.
+   * O primeiro dia clicável é o dia seguinte à compra (uso no modal de compromisso).
+   */
+  disableDatesOnOrBeforeCompraBR?: string;
 }
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -34,6 +42,8 @@ export const DatePickerSheet: React.FC<DatePickerSheetProps> = ({
   selectedDate,
   onSelect,
   onClose,
+  allowFutureDates = false,
+  disableDatesOnOrBeforeCompraBR,
 }) => {
   const today = useMemo(() => {
     const d = new Date();
@@ -53,10 +63,24 @@ export const DatePickerSheet: React.FC<DatePickerSheetProps> = ({
     return d;
   }, [today]);
 
+  const compraCutoffDay = useMemo(() => {
+    if (!disableDatesOnOrBeforeCompraBR || disableDatesOnOrBeforeCompraBR.replace(/\D/g, '').length < 8) {
+      return null;
+    }
+    const d = parseDateBR(disableDatesOnOrBeforeCompraBR);
+    return d ? startOfDayLocal(d) : null;
+  }, [disableDatesOnOrBeforeCompraBR]);
+
   const selected = useMemo(() => parseDDMMYYYY(selectedDate), [selectedDate]);
 
   const [viewYear, setViewYear] = useState(selected.getFullYear());
   const [viewMonth, setViewMonth] = useState(selected.getMonth());
+
+  useEffect(() => {
+    const sel = parseDDMMYYYY(selectedDate);
+    setViewYear(sel.getFullYear());
+    setViewMonth(sel.getMonth());
+  }, [selectedDate]);
 
   // Is viewing current month?
   const isCurrentMonth = viewYear === today.getFullYear() && viewMonth === today.getMonth();
@@ -91,6 +115,15 @@ export const DatePickerSheet: React.FC<DatePickerSheetProps> = ({
   };
 
   const handleNextMonth = () => {
+    if (allowFutureDates) {
+      if (viewMonth === 11) {
+        setViewMonth(0);
+        setViewYear((y) => y + 1);
+      } else {
+        setViewMonth((m) => m + 1);
+      }
+      return;
+    }
     if (isCurrentMonth) return;
     if (viewMonth === 11) {
       setViewMonth(0);
@@ -112,7 +145,10 @@ export const DatePickerSheet: React.FC<DatePickerSheetProps> = ({
   ];
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div
+      className={`modal-overlay${allowFutureDates ? ' modal-overlay--datepicker-front' : ''}`}
+      onClick={onClose}
+    >
       <div className="modal-sheet datepicker-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="modal-sheet__handle" />
 
@@ -120,11 +156,14 @@ export const DatePickerSheet: React.FC<DatePickerSheetProps> = ({
         <div className="datepicker-shortcuts">
           {shortcuts.map((s) => {
             const isActive = isSameDay(selected, s.date);
+            const blockedByCompra =
+              !!compraCutoffDay && startOfDayLocal(s.date).getTime() <= compraCutoffDay.getTime();
             return (
               <button
                 key={s.label}
-                className={`datepicker-shortcut ${isActive ? 'datepicker-shortcut--active' : ''}`}
-                onClick={() => handleSelectDate(s.date)}
+                className={`datepicker-shortcut ${isActive ? 'datepicker-shortcut--active' : ''}${blockedByCompra ? ' datepicker-shortcut--disabled' : ''}`}
+                onClick={() => !blockedByCompra && handleSelectDate(s.date)}
+                disabled={blockedByCompra}
                 type="button"
               >
                 <span className="datepicker-shortcut__label">{s.label}</span>
@@ -143,9 +182,9 @@ export const DatePickerSheet: React.FC<DatePickerSheetProps> = ({
             {MONTHS[viewMonth]} {viewYear}
           </span>
           <button
-            className={`datepicker-nav__btn ${isCurrentMonth ? 'datepicker-nav__btn--disabled' : ''}`}
+            className={`datepicker-nav__btn ${!allowFutureDates && isCurrentMonth ? 'datepicker-nav__btn--disabled' : ''}`}
             onClick={handleNextMonth}
-            disabled={isCurrentMonth}
+            disabled={!allowFutureDates && isCurrentMonth}
             type="button"
           >
             <ChevronRight size={18} />
@@ -164,12 +203,15 @@ export const DatePickerSheet: React.FC<DatePickerSheetProps> = ({
               return <div key={`empty-${i}`} className="datepicker-day datepicker-day--empty" />;
             }
 
-            const isFuture = slot.date > today;
+            const isFuture = !allowFutureDates && slot.date > today;
+            const blockedByCompra =
+              !!compraCutoffDay && startOfDayLocal(slot.date).getTime() <= compraCutoffDay.getTime();
+            const isDisabled = isFuture || blockedByCompra;
             const isToday = isSameDay(slot.date, today);
             const isSelected = isSameDay(slot.date, selected);
 
             let cls = 'datepicker-day';
-            if (isFuture) cls += ' datepicker-day--disabled';
+            if (isDisabled) cls += ' datepicker-day--disabled';
             else if (isSelected) cls += ' datepicker-day--selected';
             else if (isToday) cls += ' datepicker-day--today';
 
@@ -177,8 +219,8 @@ export const DatePickerSheet: React.FC<DatePickerSheetProps> = ({
               <button
                 key={`day-${slot.day}`}
                 className={cls}
-                onClick={() => !isFuture && handleSelectDate(slot.date)}
-                disabled={isFuture}
+                onClick={() => !isDisabled && handleSelectDate(slot.date)}
+                disabled={isDisabled}
                 type="button"
               >
                 {slot.day}

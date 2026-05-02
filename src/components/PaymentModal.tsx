@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { FloatingInput } from './FloatingInput';
 import { FloatingSelect } from './FloatingSelect';
-import { MEIOS_PAGAMENTO, INSTITUICOES, formatCurrency } from '../utils';
+import { MEIOS_PAGAMENTO, INSTITUICOES, formatCurrency, FORNECEDOR_REQUIRED_MSG } from '../utils';
 import { searchFornecedores } from '../lib/supabase';
 import type { PaymentData } from '../types';
 
@@ -14,6 +14,9 @@ interface PaymentModalProps {
   saving: boolean;
   isEditing?: boolean;
   totalCents: number;
+  modalTitle?: string;
+  /** Substitui o rótulo do botão principal quando não está em modo edição de gasto. */
+  saveButtonLabel?: string;
 }
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -24,11 +27,22 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   saving,
   isEditing = false,
   totalCents,
+  modalTitle = 'Dados de pagamento',
+  saveButtonLabel,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [warningParcela, setWarningParcela] = useState<{ valorParcela: number } | null>(null);
+  const [fornecedorError, setFornecedorError] = useState(false);
 
   const handleAttemptSave = () => {
+    if (!payment.fornecedor.trim()) {
+      setFornecedorError(true);
+      alert(FORNECEDOR_REQUIRED_MSG);
+      setTimeout(() => document.getElementById('input-fornecedor')?.focus(), 10);
+      return;
+    }
+    setFornecedorError(false);
+
     // 1. Check max parcelas
     if (payment.formaPagamento === 'parcelado') {
       const p = payment.parcelas;
@@ -71,15 +85,19 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="modal-sheet__handle" />
-        <div className="modal-sheet__title">Dados de pagamento</div>
+        <div className="modal-sheet__title">{modalTitle}</div>
 
         <FloatingInput
           id="input-fornecedor"
           label="Fornecedor / Local do serviço"
           value={payment.fornecedor}
-          onChange={(v) => onChange({ fornecedor: v })}
+          onChange={(v) => {
+            onChange({ fornecedor: v });
+            setFornecedorError(false);
+          }}
           bgVariant="surface"
           autocompleteSearch={searchFornecedores}
+          showError={fornecedorError}
         />
 
         <div className="payment-separator">— pagamento —</div>
@@ -179,7 +197,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           disabled={saving}
           type="button"
         >
-          {saving ? 'Salvando...' : isEditing ? 'Confirmar alterações' : 'Salvar gasto'}
+          {saving
+            ? 'Salvando...'
+            : isEditing
+              ? 'Confirmar alterações'
+              : saveButtonLabel ?? 'Salvar gasto'}
         </button>
       </div>
 

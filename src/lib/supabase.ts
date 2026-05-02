@@ -1,4 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import type { GastoRecord, CompromissoRecord, CompromissoStatus, GastoPereneRecord, PeriodicidadePerene, StatusGastoPerene } from '../types';
+import { requireFornecedorTrimmed } from '../utils';
+import { listPeriodsDueThroughToday } from './gastosPerenePeriods';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -38,12 +41,14 @@ export async function saveGasto(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Usuário não autenticado');
 
+  const fornecedorOk = requireFornecedorTrimmed(fornecedor);
+
   const { data: gasto, error: gastoError } = await supabase
     .from('gastos')
     .insert({
       user_id: user.id,
       data_compra: dataISO,
-      fornecedor: fornecedor || null,
+      fornecedor: fornecedorOk,
       forma_pagamento: formaPagamento,
       meio_pagamento: meioPagamento,
       instituicao_financeira: instituicaoFinanceira,
@@ -178,8 +183,6 @@ function brToISO(br: string): string {
   return `${y}-${m}-${d}`;
 }
 
-import type { GastoRecord } from '../types';
-
 // Fetch all gastos with items (for search across fornecedor AND item descriptions)
 export async function fetchGastos(): Promise<GastoRecord[]> {
   if (!supabase) return [];
@@ -291,9 +294,11 @@ export async function updateGasto(
 ) {
   if (!supabase) return null;
 
+  const fornecedorOk = requireFornecedorTrimmed(fornecedor);
+
   const updateData: any = {
     data_compra: brToISO(dataCompra),
-    fornecedor: fornecedor || null,
+    fornecedor: fornecedorOk,
     forma_pagamento: formaPagamento,
     meio_pagamento: meioPagamento,
     instituicao_financeira: instituicaoFinanceira,
@@ -384,4 +389,457 @@ export async function fetchPriceHistory(descricao: string, unidade: string): Pro
       valorUnitarioCentavos: Math.round(totalCents / qty),
     };
   });
+}
+
+// ----- Compromissos financeiros -----
+
+function effectiveStatusFromPrevistaISO(iso: string): 'pendente' | 'vencido' {
+  const [y, m, d] = iso.split('-').map(Number);
+  const prev = new Date(y, m - 1, d);
+  prev.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return prev < today ? 'vencido' : 'pendente';
+}
+
+function mapCompromissoRow(row: any): CompromissoRecord {
+  const items = ((row.compromisso_itens || []) as any[])
+    .sort((a: any, b: any) => a.ordem - b.ordem)
+    .map((item: any) => ({
+      id: item.id,
+      ordem: item.ordem,
+      descricao: item.descricao_produto_servico,
+      quantidade: item.quantidade_adquirida,
+      unidade: item.unidade_medida,
+      valorCentavos: Math.round((item.valor_total || 0) * 100),
+    }));
+
+  const total = items.reduce((s, i) => s + i.valorCentavos, 0);
+
+  return {
+    id: row.id,
+    dataCompra: isoToBR(row.data_compra),
+    dataPrevistaPagamento: isoToBR(row.data_prevista_pagamento),
+    fornecedor: row.fornecedor || '',
+    status: row.status as CompromissoStatus,
+    total,
+    createdAt: row.created_at,
+    gastoId: row.gasto_id || null,
+    gastoPereneId: row.gasto_perene_id || null,
+    competenciaChave: row.competencia_chave || null,
+    items,
+  };
+}
+
+/** Atualiza pendente ↔ vencido conforme data prevista (não altera quitado/cancelado). */
+export async function syncCompromissosStatus(): Promise<void> {
+  if (!supabase) return;
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: rows, error } = await supabase
+    .from('compromissos')
+    .select('id, status, data_prevista_pagamento')
+    .eq('user_id', user.id)
+    .in('status', ['pendente', 'vencido']);
+
+  if (error || !rows?.length) return;
+
+  for (const row of rows) {
+    const expected = effectiveStatusFromPrevistaISO(row.data_prevista_pagamento as string);
+    if (expected !== row.status) {
+      await supabase.from('compromissos').update({ status: expected }).eq('id', row.id);
+    }
+  }
+}
+
+export async function fetchCompromissosAtivos(): Promise<CompromissoRecord[]> {
+  if (!supabase) return [];
+
+  await syncCompromissosStatus();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from('compromissos')
+    .select(`
+      id, data_compra, data_prevista_pagamento, fornecedor, status, created_at, gasto_id, gasto_perene_id, competencia_chave,
+      compromisso_itens ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total )
+    `)
+    .eq('user_id', user.id)
+    .in('status', ['pendente', 'vencido']);
+
+  if (error || !data) return [];
+
+  const records = data.map(mapCompromissoRow);
+
+  const byPrevista = (a: CompromissoRecord, b: CompromissoRecord) =>
+    brToISO(a.dataPrevistaPagamento).localeCompare(brToISO(b.dataPrevistaPagamento));
+
+  const vencidos = records.filter((c) => c.status === 'vencido').sort(byPrevista);
+
+  const pendentes = records.filter((c) => c.status === 'pendente').sort(byPrevista);
+
+  return [...vencidos, ...pendentes];
+}
+
+export async function fetchCompromissoIndicatorCounts(): Promise<{ vencidos: number; pendentes: number }> {
+  const list = await fetchCompromissosAtivos();
+  let vencidos = 0;
+  let pendentes = 0;
+  for (const c of list) {
+    if (c.status === 'vencido') vencidos++;
+    else if (c.status === 'pendente') pendentes++;
+  }
+  return { vencidos, pendentes };
+}
+
+export async function fetchCompromissoById(compromissoId: string): Promise<CompromissoRecord | null> {
+  if (!supabase) return null;
+
+  await syncCompromissosStatus();
+
+  const { data, error } = await supabase
+    .from('compromissos')
+    .select(`
+      id, data_compra, data_prevista_pagamento, fornecedor, status, created_at, gasto_id, gasto_perene_id, competencia_chave,
+      compromisso_itens ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total )
+    `)
+    .eq('id', compromissoId)
+    .single();
+
+  if (error || !data) return null;
+
+  return mapCompromissoRow(data);
+}
+
+export async function saveCompromisso(
+  dataCompraBR: string,
+  dataPrevistaBR: string,
+  fornecedor: string,
+  items: Array<{
+    ordem: number;
+    descricao: string;
+    quantidade: number;
+    unidade: string;
+    valorCentavos: number;
+  }>
+): Promise<string | null> {
+  if (!supabase) {
+    console.warn('Supabase not configured.');
+    return null;
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuário não autenticado');
+
+  const fornecedorOk = requireFornecedorTrimmed(fornecedor);
+
+  const prevISO = brToISO(dataPrevistaBR);
+  const statusInicial = effectiveStatusFromPrevistaISO(prevISO);
+
+  const { data: row, error } = await supabase
+    .from('compromissos')
+    .insert({
+      user_id: user.id,
+      data_compra: brToISO(dataCompraBR),
+      data_prevista_pagamento: prevISO,
+      fornecedor: fornecedorOk,
+      status: statusInicial,
+    })
+    .select('id')
+    .single();
+
+  if (error || !row) throw error;
+
+  const itensData = items.map((item) => ({
+    compromisso_id: row.id,
+    ordem: item.ordem,
+    descricao_produto_servico: item.descricao,
+    quantidade_adquirida: item.quantidade,
+    unidade_medida: item.unidade,
+    valor_total: item.valorCentavos / 100,
+  }));
+
+  const { error: itensError } = await supabase.from('compromisso_itens').insert(itensData);
+
+  if (itensError) throw itensError;
+
+  return row.id as string;
+}
+
+export async function cancelCompromisso(compromissoId: string): Promise<void> {
+  if (!supabase) throw new Error('Supabase não configurado');
+
+  const { error } = await supabase
+    .from('compromissos')
+    .update({ status: 'cancelado' })
+    .eq('id', compromissoId);
+
+  if (error) throw error;
+}
+
+export async function linkCompromissoQuitado(compromissoId: string, gastoId: string): Promise<void> {
+  if (!supabase) throw new Error('Supabase não configurado');
+
+  const { error } = await supabase
+    .from('compromissos')
+    .update({ status: 'quitado', gasto_id: gastoId })
+    .eq('id', compromissoId);
+
+  if (error) throw error;
+}
+
+// ----- Gastos perenes -----
+
+function mapGastoPereneRow(row: any): GastoPereneRecord {
+  return {
+    id: row.id,
+    fornecedor: row.fornecedor || '',
+    valorPrevistoCents: Math.round((Number(row.valor_previsto) || 0) * 100),
+    periodicidade: row.periodicidade as PeriodicidadePerene,
+    diaVencimento: Number(row.dia_vencimento),
+    mesVencimento: row.mes_vencimento != null ? Number(row.mes_vencimento) : null,
+    dataInicio: isoToBR(row.data_inicio),
+    dataTermino: row.data_termino ? isoToBR(row.data_termino) : null,
+    observacoes: row.observacoes || '',
+    status: row.status as StatusGastoPerene,
+    createdAt: row.created_at,
+  };
+}
+
+export async function fetchGastosPerenesAtivos(): Promise<GastoPereneRecord[]> {
+  if (!supabase) return [];
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from('gastos_perenes')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('status', 'ativo')
+    .order('fornecedor', { ascending: true });
+
+  if (error || !data) return [];
+  return data.map(mapGastoPereneRow);
+}
+
+export async function fetchGastoPereneById(id: string): Promise<GastoPereneRecord | null> {
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from('gastos_perenes')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !data) return null;
+  return mapGastoPereneRow(data);
+}
+
+export async function createGastoPerene(payload: {
+  fornecedor: string;
+  valorPrevistoCents: number;
+  periodicidade: PeriodicidadePerene;
+  diaVencimento: number;
+  mesVencimento: number | null;
+  dataInicioBR: string;
+  dataTerminoBR: string | null;
+  observacoes: string;
+}): Promise<string | null> {
+  if (!supabase) return null;
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuário não autenticado');
+
+  const fornecedorOk = requireFornecedorTrimmed(payload.fornecedor);
+
+  const mesDb =
+    payload.periodicidade === 'anual'
+      ? payload.mesVencimento
+      : null;
+
+  const { data: row, error } = await supabase
+    .from('gastos_perenes')
+    .insert({
+      user_id: user.id,
+      fornecedor: fornecedorOk,
+      valor_previsto: payload.valorPrevistoCents / 100,
+      periodicidade: payload.periodicidade,
+      dia_vencimento: payload.diaVencimento,
+      mes_vencimento: mesDb,
+      data_inicio: brToISO(payload.dataInicioBR),
+      data_termino: payload.dataTerminoBR ? brToISO(payload.dataTerminoBR) : null,
+      observacoes: payload.observacoes.trim() || null,
+      status: 'ativo',
+    })
+    .select('id')
+    .single();
+
+  if (error || !row) throw error;
+  return row.id as string;
+}
+
+export async function updateGastoPereneEdicao(
+  id: string,
+  patch: {
+    valorPrevistoCents: number;
+    diaVencimento: number;
+    mesVencimento: number | null;
+    observacoes: string;
+  }
+): Promise<void> {
+  if (!supabase) throw new Error('Supabase não configurado');
+
+  const current = await fetchGastoPereneById(id);
+  if (!current) throw new Error('Gasto perene não encontrado');
+
+  const mesDb =
+    current.periodicidade === 'anual'
+      ? patch.mesVencimento
+      : null;
+
+  const { error } = await supabase
+    .from('gastos_perenes')
+    .update({
+      valor_previsto: patch.valorPrevistoCents / 100,
+      dia_vencimento: patch.diaVencimento,
+      mes_vencimento: mesDb,
+      observacoes: patch.observacoes.trim() || null,
+    })
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
+export async function encerrarGastoPerene(id: string): Promise<void> {
+  if (!supabase) throw new Error('Supabase não configurado');
+
+  const { error } = await supabase
+    .from('gastos_perenes')
+    .update({ status: 'encerrado' })
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
+export async function fetchCompromissosByGastoPereneId(gastoPereneId: string): Promise<CompromissoRecord[]> {
+  if (!supabase) return [];
+
+  await syncCompromissosStatus();
+
+  const { data, error } = await supabase
+    .from('compromissos')
+    .select(`
+      id, data_compra, data_prevista_pagamento, fornecedor, status, created_at, gasto_id, gasto_perene_id, competencia_chave,
+      compromisso_itens ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total )
+    `)
+    .eq('gasto_perene_id', gastoPereneId)
+    .order('data_prevista_pagamento', { ascending: false });
+
+  if (error || !data) return [];
+  return data.map(mapCompromissoRow);
+}
+
+async function insertCompromissoGerado(input: {
+  userId: string;
+  fornecedor: string;
+  valorCentavos: number;
+  dataCompraISO: string;
+  dataPrevistaISO: string;
+  gastoPereneId: string;
+  competenciaChave: string;
+}): Promise<void> {
+  if (!supabase) return;
+
+  const statusInicial = effectiveStatusFromPrevistaISO(input.dataPrevistaISO);
+
+  const { data: row, error } = await supabase
+    .from('compromissos')
+    .insert({
+      user_id: input.userId,
+      data_compra: input.dataCompraISO,
+      data_prevista_pagamento: input.dataPrevistaISO,
+      fornecedor: input.fornecedor,
+      status: statusInicial,
+      gasto_perene_id: input.gastoPereneId,
+      competencia_chave: input.competenciaChave,
+    })
+    .select('id')
+    .single();
+
+  if (error || !row) throw error;
+
+  const { error: itensError } = await supabase.from('compromisso_itens').insert({
+    compromisso_id: row.id,
+    ordem: 1,
+    descricao_produto_servico: input.fornecedor || 'Gasto perene',
+    quantidade_adquirida: 1,
+    unidade_medida: 'Contrato',
+    valor_total: input.valorCentavos / 100,
+  });
+
+  if (itensError) throw itensError;
+}
+
+export async function ensureCompromissosFromGastosPerenes(): Promise<void> {
+  if (!supabase) return;
+
+  await syncCompromissosStatus();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: perenes, error } = await supabase
+    .from('gastos_perenes')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('status', 'ativo');
+
+  if (error || !perenes?.length) return;
+
+  const today = new Date();
+
+  for (const row of perenes) {
+    const dataInicio = new Date(row.data_inicio as string);
+    const dataTermino = row.data_termino ? new Date(row.data_termino as string) : null;
+
+    const periods = listPeriodsDueThroughToday(
+      {
+        periodicidade: row.periodicidade as PeriodicidadePerene,
+        diaVencimento: Number(row.dia_vencimento),
+        mesVencimento: row.mes_vencimento != null ? Number(row.mes_vencimento) : null,
+        dataInicio,
+        dataTermino,
+      },
+      today
+    );
+
+    const valorCentavos = Math.round((Number(row.valor_previsto) || 0) * 100);
+    const fornecedorOk = (row.fornecedor as string) || 'Gasto perene';
+
+    for (const p of periods) {
+      const { data: existing } = await supabase
+        .from('compromissos')
+        .select('id')
+        .eq('gasto_perene_id', row.id)
+        .eq('competencia_chave', p.competenciaChave)
+        .maybeSingle();
+
+      if (existing) continue;
+
+      await insertCompromissoGerado({
+        userId: user.id,
+        fornecedor: fornecedorOk,
+        valorCentavos,
+        dataCompraISO: p.dataCompraISO,
+        dataPrevistaISO: p.dataPrevistaISO,
+        gastoPereneId: row.id as string,
+        competenciaChave: p.competenciaChave,
+      });
+    }
+  }
 }

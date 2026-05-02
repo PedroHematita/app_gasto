@@ -81,7 +81,7 @@ export const GastoDetail: React.FC<GastoDetailProps> = ({
         ))}
 
         {/* Total */}
-        <div className="total-bar" style={{ borderRadius: 8, margin: '16px 0' }}>
+        <div className="total-bar total-bar--panel">
           <span className="total-bar__label">Gasto total</span>
           <span className="total-bar__value">{formatCurrency(gasto.total)}</span>
         </div>

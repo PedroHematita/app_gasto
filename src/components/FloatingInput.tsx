@@ -16,6 +16,8 @@ interface FloatingInputProps {
   id?: string;
   autocompleteSearch?: (query: string) => Promise<AutocompleteResult[]>;
   onSelectSuggestion?: (value: string, payload?: any) => void;
+  /** Borda/estado de erro até o usuário corrigir. */
+  showError?: boolean;
 }
 
 export const FloatingInput: React.FC<FloatingInputProps> = ({
@@ -32,6 +34,7 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
   id,
   autocompleteSearch,
   onSelectSuggestion,
+  showError = false,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -106,14 +109,18 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
   }, []);
 
   return (
-    <div className={`floating-field ${bgClass} ${className}`} ref={containerRef} style={{ position: 'relative' }}>
+    <div
+      className={`floating-field ${bgClass} ${className}${showError ? ' floating-field--error' : ''}`}
+      ref={containerRef}
+      style={{ position: 'relative' }}
+    >
       <input
         ref={inputRef}
         id={id}
         type={type}
         value={value}
         onChange={(e) => handleChange(e.target.value)}
-        className={`floating-field__input ${value ? 'has-value' : ''} ${inputClassName}`}
+        className={`floating-field__input ${value ? 'has-value' : ''}${showError ? ' floating-field__input--error' : ''} ${inputClassName}`}
         readOnly={readOnly}
         onClick={onClick}
         inputMode={inputMode}

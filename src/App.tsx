@@ -11,10 +11,26 @@ import { DatePickerSheet } from './components/DatePickerSheet';
 import { BottomNav } from './components/BottomNav';
 import { MeusGastos } from './components/MeusGastos';
 import { GastoDetail } from './components/GastoDetail';
+import { CompromissoDetail } from './components/CompromissoDetail';
+import { GastoPereneDetail } from './components/GastoPereneDetail';
+import { GastoPereneFormModal } from './components/GastoPereneFormModal';
+import { SalvarCompromissoModal } from './components/SalvarCompromissoModal';
+import { CompromissosSummaryStrip } from './components/CompromissosSummaryStrip';
 import { PriceWarningModal } from './components/PriceWarningModal';
 import { formatDateBR, generateId } from './utils';
-import { supabase, saveGasto, updateGasto, fetchPriceHistory } from './lib/supabase';
-import type { GastoItem, PaymentData, Screen, GastoRecord } from './types';
+import {
+  supabase,
+  saveGasto,
+  updateGasto,
+  fetchPriceHistory,
+  saveCompromisso,
+  fetchCompromissoIndicatorCounts,
+  fetchCompromissoById,
+  linkCompromissoQuitado,
+  uploadComprovante,
+  ensureCompromissosFromGastosPerenes,
+} from './lib/supabase';
+import type { GastoItem, PaymentData, Screen, GastoRecord, CompromissoRecord, GastoPereneRecord } from './types';
 
 const defaultPayment: PaymentData = {
   fornecedor: '',
@@ -102,6 +118,42 @@ function App() {
   // Meus Gastos
   const [selectedGasto, setSelectedGasto] = useState<GastoRecord | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const [selectedCompromisso, setSelectedCompromisso] = useState<CompromissoRecord | null>(null);
+  const [showSalvarCompromissoModal, setShowSalvarCompromissoModal] = useState(false);
+  const [showQuitPaymentModal, setShowQuitPaymentModal] = useState(false);
+  const [compromissoIndicatorCounts, setCompromissoIndicatorCounts] = useState({
+    vencidos: 0,
+    pendentes: 0,
+  });
+  const [focusCompromissosNonce, setFocusCompromissosNonce] = useState(0);
+
+  const [showGastoPereneModal, setShowGastoPereneModal] = useState(false);
+  const [selectedGastoPereneId, setSelectedGastoPereneId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authenticated || !supabase) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        await ensureCompromissosFromGastosPerenes();
+        if (!cancelled) setRefreshKey((k) => k + 1);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authenticated]);
+
+  useEffect(() => {
+    if (!authenticated || !supabase) return;
+    if (screen !== 'main' && screen !== 'gasto_edit') return;
+    fetchCompromissoIndicatorCounts()
+      .then(setCompromissoIndicatorCounts)
+      .catch(() => {});
+  }, [authenticated, screen, refreshKey]);
 
   // Computed total
   const totalCents = useMemo(
@@ -441,6 +493,117 @@ function App() {
     }
   }, [resetAll, selectedGasto]);
 
+  const handleSalvarRascunhoClick = useCallback(() => {
+    if (items.length === 0) return;
+    setShowSalvarCompromissoModal(true);
+  }, [items.length]);
+
+  const handleConfirmSalvarCompromisso = useCallback(
+    async (fornecedor: string, dataPrevistaBR: string) => {
+      try {
+        const payload = items.map((item) => ({
+          ordem: item.ordem,
+          descricao: item.descricao,
+          quantidade: item.quantidade,
+          unidade: item.unidade,
+          valorCentavos: item.valorCentavos,
+        }));
+        await saveCompromisso(dataCompra, dataPrevistaBR, fornecedor, payload);
+        setShowSalvarCompromissoModal(false);
+        resetAll();
+        setRefreshKey((k) => k + 1);
+        const c = await fetchCompromissoIndicatorCounts();
+        setCompromissoIndicatorCounts(c);
+      } catch (error) {
+        console.error(error);
+        alert('Erro ao salvar compromisso. Verifique o console.');
+      }
+    },
+    [dataCompra, items, resetAll]
+  );
+
+  const handleOpenCompromissosFromStrip = useCallback(() => {
+    setFocusCompromissosNonce((n) => n + 1);
+    setScreen('meus_gastos');
+  }, []);
+
+  const handleSelectCompromisso = useCallback(async (c: CompromissoRecord) => {
+    const fresh = await fetchCompromissoById(c.id);
+    setSelectedCompromisso(fresh ?? c);
+    setScreen('compromisso_detail');
+  }, []);
+
+  const handleSelectGastoPerene = useCallback((gp: GastoPereneRecord) => {
+    setSelectedGastoPereneId(gp.id);
+    setScreen('gasto_perene_detail');
+  }, []);
+
+  const handleSavedGastoPereneModal = useCallback(async () => {
+    try {
+      await ensureCompromissosFromGastosPerenes();
+    } catch {
+      /* ignore */
+    }
+    setRefreshKey((k) => k + 1);
+    const c = await fetchCompromissoIndicatorCounts();
+    setCompromissoIndicatorCounts(c);
+  }, []);
+
+  const handleQuitCompromissoSave = useCallback(async () => {
+    if (!selectedCompromisso) return;
+    setSaving(true);
+    try {
+      const forma = payment.formaPagamento === 'a_vista' ? 'À Vista' : 'Parcelado';
+      const parcelasFinal = payment.formaPagamento === 'a_vista' ? 1 : payment.parcelas;
+      const itemsPayload = selectedCompromisso.items.map((item) => ({
+        ordem: item.ordem,
+        descricao: item.descricao,
+        quantidade: item.quantidade,
+        unidade: item.unidade,
+        valorCentavos: item.valorCentavos,
+      }));
+
+      const gastoResult = await saveGasto(
+        selectedCompromisso.dataCompra,
+        payment.fornecedor,
+        forma,
+        payment.meioPagamento,
+        payment.instituicaoFinanceira,
+        payment.observacoes,
+        selectedCompromisso.total,
+        payment.comprovanteUrl,
+        parcelasFinal,
+        itemsPayload
+      );
+
+      const inserted = gastoResult as { id?: string } | null;
+      if (!inserted?.id) throw new Error('Falha ao criar gasto');
+
+      if (payment.comprovanteFile && supabase) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const url = await uploadComprovante(user.id, inserted.id, payment.comprovanteFile);
+          await supabase.from('gastos').update({ comprovante_url: url }).eq('id', inserted.id);
+        }
+      }
+
+      await linkCompromissoQuitado(selectedCompromisso.id, inserted.id);
+
+      setShowQuitPaymentModal(false);
+      setPayment({ ...defaultPayment });
+      setSelectedCompromisso(null);
+      setScreen('meus_gastos');
+      setRefreshKey((k) => k + 1);
+      const counts = await fetchCompromissoIndicatorCounts();
+      setCompromissoIndicatorCounts(counts);
+    } catch (error) {
+      console.error('Error quitting compromisso:', error);
+      alert('Erro ao quitar. Verifique o console.');
+    } finally {
+      setSaving(false);
+    }
+  }, [selectedCompromisso, payment]);
+
   // Loading
   if (checkingAuth) {
     return (
@@ -474,10 +637,75 @@ function App() {
       <>
         <MeusGastos
           onSelectGasto={handleSelectGasto}
+          onSelectCompromisso={handleSelectCompromisso}
+          onSelectGastoPerene={handleSelectGastoPerene}
           onNewGasto={() => handleNavigate('main')}
+          onNovoGastoPerene={() => setShowGastoPereneModal(true)}
           refreshKey={refreshKey}
+          focusCompromissosNonce={focusCompromissosNonce}
         />
+        {showGastoPereneModal && (
+          <GastoPereneFormModal
+            onClose={() => setShowGastoPereneModal(false)}
+            onSaved={handleSavedGastoPereneModal}
+          />
+        )}
         <BottomNav active="meus_gastos" onNavigate={handleNavigate} />
+      </>
+    );
+  }
+
+  if (screen === 'gasto_perene_detail' && selectedGastoPereneId) {
+    return (
+      <GastoPereneDetail
+        gastoPereneId={selectedGastoPereneId}
+        onBack={() => {
+          setSelectedGastoPereneId(null);
+          setScreen('meus_gastos');
+        }}
+        onSelectCompromisso={async (c) => {
+          const fresh = await fetchCompromissoById(c.id);
+          setSelectedCompromisso(fresh ?? c);
+          setSelectedGastoPereneId(null);
+          setScreen('compromisso_detail');
+        }}
+        refreshNonce={refreshKey}
+      />
+    );
+  }
+
+  // Detalhe compromisso
+  if (screen === 'compromisso_detail' && selectedCompromisso) {
+    return (
+      <>
+        <CompromissoDetail
+          compromisso={selectedCompromisso}
+          onBack={() => {
+            setSelectedCompromisso(null);
+            setScreen('meus_gastos');
+          }}
+          onRequestQuit={() => {
+            setPayment({ ...defaultPayment });
+            setShowQuitPaymentModal(true);
+          }}
+          onCancelled={() => {
+            setRefreshKey((k) => k + 1);
+            setSelectedCompromisso(null);
+            setScreen('meus_gastos');
+          }}
+        />
+        {showQuitPaymentModal && (
+          <PaymentModal
+            payment={payment}
+            onChange={handlePaymentChange}
+            onSave={handleQuitCompromissoSave}
+            onClose={() => setShowQuitPaymentModal(false)}
+            saving={saving}
+            totalCents={selectedCompromisso.total}
+            modalTitle="Quitar compromisso"
+            saveButtonLabel="Confirmar quitação"
+          />
+        )}
       </>
     );
   }
@@ -592,6 +820,14 @@ function App() {
 
       <TotalBar totalCents={totalCents} />
 
+      {!isEditMode && (
+        <CompromissosSummaryStrip
+          vencidos={compromissoIndicatorCounts.vencidos}
+          pendentes={compromissoIndicatorCounts.pendentes}
+          onOpenMeusGastosCompromissos={handleOpenCompromissosFromStrip}
+        />
+      )}
+
       <ItemForm
         descricao={descricao}
         quantidade={quantidade}
@@ -615,14 +851,43 @@ function App() {
         onDelete={handleDelete}
       />
 
-      <button
-        className="btn-save-main"
-        disabled={items.length === 0}
-        onClick={handleOpenPayment}
-        type="button"
-      >
-        {isEditMode ? 'Salvar alterações' : 'Salvar gasto'}
-      </button>
+      {!isEditMode ? (
+        <div className="btn-save-actions-row">
+          <button
+            className="btn-save-main"
+            disabled={items.length === 0}
+            onClick={handleOpenPayment}
+            type="button"
+          >
+            Salvar gasto
+          </button>
+          <button
+            className="btn-save-draft"
+            disabled={items.length === 0}
+            onClick={handleSalvarRascunhoClick}
+            type="button"
+          >
+            Salvar rascunho
+          </button>
+        </div>
+      ) : (
+        <button
+          className="btn-save-main"
+          disabled={items.length === 0}
+          onClick={handleOpenPayment}
+          type="button"
+        >
+          Salvar alterações
+        </button>
+      )}
+
+      {showSalvarCompromissoModal && (
+        <SalvarCompromissoModal
+          dataCompraBR={dataCompra}
+          onClose={() => setShowSalvarCompromissoModal(false)}
+          onConfirm={handleConfirmSalvarCompromisso}
+        />
+      )}
 
       {showPaymentModal && (
         <PaymentModal
