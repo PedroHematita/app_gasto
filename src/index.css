@@ -2121,53 +2121,6 @@ html, body, #root {
   border-color: var(--accent);
 }
 
-.gastos-perenes-section {
-  padding: 0 20px 8px;
-}
-
-.gasto-perene-card {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  text-align: left;
-  padding: 14px 16px;
-  margin-bottom: 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-medium);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  cursor: pointer;
-}
-
-.gasto-perene-card__top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.gasto-perene-card__title {
-  font-size: var(--font-secondary);
-  font-weight: var(--weight-medium);
-}
-
-.gasto-perene-card__total {
-  font-size: var(--font-secondary);
-  font-weight: var(--weight-semibold);
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
-
-.gasto-perene-card__bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 8px;
-  font-size: 11px;
-  color: var(--text-secondary);
-}
-
 .gasto-perene-detail__meta {
   font-size: 12px;
   color: var(--text-secondary);

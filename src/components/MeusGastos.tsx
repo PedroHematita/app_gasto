@@ -10,6 +10,7 @@ import {
   formatVencimentoGastoPerene,
 } from '../utils';
 import type { GastoRecord, CompromissoRecord, GastoPereneRecord } from '../types';
+import { meusGastosSectionCollapse } from '../meusGastosSectionCollapse';
 
 interface MeusGastosProps {
   onSelectGasto: (gasto: GastoRecord) => void;
@@ -85,6 +86,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
+  const [, setCollapseTick] = useState(0);
   const compromissosSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -131,6 +133,30 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
   const compromissosParaExibir = search.trim() ? filteredCompromissos : compromissosAtivos;
   const gastosPerenesParaExibir = search.trim() ? filteredGastosPerenes : gastosPerenesAtivos;
 
+  const buscaAtiva = !!search.trim();
+
+  const displayPerenesExpanded =
+    buscaAtiva && filteredGastosPerenes.length > 0
+      ? true
+      : meusGastosSectionCollapse.perenesExpanded;
+
+  const displayCompromissosExpanded =
+    buscaAtiva && filteredCompromissos.length > 0
+      ? true
+      : meusGastosSectionCollapse.compromissosExpanded;
+
+  const togglePerenesHeader = () => {
+    if (buscaAtiva && filteredGastosPerenes.length > 0) return;
+    meusGastosSectionCollapse.perenesExpanded = !meusGastosSectionCollapse.perenesExpanded;
+    setCollapseTick((t) => t + 1);
+  };
+
+  const toggleCompromissosHeader = () => {
+    if (buscaAtiva && filteredCompromissos.length > 0) return;
+    meusGastosSectionCollapse.compromissosExpanded = !meusGastosSectionCollapse.compromissosExpanded;
+    setCollapseTick((t) => t + 1);
+  };
+
   const totalPagoSum = useMemo(() => {
     if (search.trim()) return filteredGastos.reduce((s, g) => s + g.total, 0);
     return gastos.reduce((s, g) => s + g.total, 0);
@@ -139,6 +165,11 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
   const totalComprometido = useMemo(
     () => compromissosParaExibir.reduce((s, c) => s + c.total, 0),
     [compromissosParaExibir]
+  );
+
+  const totalPrevistoPerenes = useMemo(
+    () => gastosPerenesParaExibir.reduce((s, gp) => s + gp.valorPrevistoCents, 0),
+    [gastosPerenesParaExibir]
   );
 
   const countGastosExibicao = search.trim() ? filteredGastos.length : gastos.length;
@@ -237,26 +268,52 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
   const renderGastosPerenesSection = () => {
     if (gastosPerenesParaExibir.length === 0) return null;
 
+    const n = gastosPerenesParaExibir.length;
+    const isExpanded = displayPerenesExpanded;
+
     return (
-      <div className="gastos-perenes-section">
-        <h2 className="compromissos-section__title">Gastos perenes</h2>
-        {gastosPerenesParaExibir.map((gp) => (
-          <button
-            key={gp.id}
-            type="button"
-            className="gasto-perene-card"
-            onClick={() => onSelectGastoPerene(gp)}
-          >
-            <div className="gasto-perene-card__top">
-              <span className="gasto-perene-card__title">{gp.fornecedor}</span>
-              <span className="gasto-perene-card__total">{formatCurrency(gp.valorPrevistoCents)}</span>
-            </div>
-            <div className="gasto-perene-card__bottom">
-              <span>{labelPeriodicidade(gp.periodicidade)}</span>
-              <span>{formatVencimentoGastoPerene(gp)}</span>
-            </div>
-          </button>
-        ))}
+      <div className="meus-gastos-month-card">
+        <button
+          type="button"
+          className={`meus-gastos-month-header ${isExpanded ? 'meus-gastos-month-header--expanded' : ''}`}
+          onClick={togglePerenesHeader}
+        >
+          <div className="meus-gastos-month-header__left">
+            <span className="meus-gastos-month-header__title">Gastos perenes</span>
+            <span className="meus-gastos-month-header__count">
+              {n} {n === 1 ? 'gasto perene' : 'gastos perenes'}
+            </span>
+          </div>
+          <div className="meus-gastos-month-header__right">
+            {!isExpanded && (
+              <span className="meus-gastos-month-header__total">
+                {formatCurrency(totalPrevistoPerenes)}
+              </span>
+            )}
+            <span className={`meus-gastos-month-header__icon ${isExpanded ? 'is-expanded' : ''}`}>
+              <ChevronDown size={16} />
+            </span>
+          </div>
+        </button>
+
+        {isExpanded &&
+          gastosPerenesParaExibir.map((gp) => (
+            <button
+              key={gp.id}
+              type="button"
+              className="gasto-card"
+              onClick={() => onSelectGastoPerene(gp)}
+            >
+              <div className="gasto-card__top">
+                <span className="gasto-card__fornecedor">{gp.fornecedor}</span>
+                <span className="gasto-card__total">{formatCurrency(gp.valorPrevistoCents)}</span>
+              </div>
+              <div className="gasto-card__bottom">
+                <span className="gasto-card__date">{labelPeriodicidade(gp.periodicidade)}</span>
+                <span className="gasto-card__meio">{formatVencimentoGastoPerene(gp)}</span>
+              </div>
+            </button>
+          ))}
       </div>
     );
   };
@@ -264,43 +321,59 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
   const renderCompromissosSection = () => {
     if (compromissosParaExibir.length === 0) return null;
 
+    const n = compromissosParaExibir.length;
+    const isExpanded = displayCompromissosExpanded;
+
     return (
-      <div className="compromissos-section" ref={compromissosSectionRef}>
-        <div className="compromissos-section__header">
-          <h2 className="compromissos-section__title">Compromissos pendentes</h2>
-          <div className="compromissos-section__subtotal">
-            <span className="compromissos-section__subtotal-label">Total comprometido</span>
-            <span className="compromissos-section__subtotal-value">{formatCurrency(totalComprometido)}</span>
+      <div className="meus-gastos-month-card" ref={compromissosSectionRef}>
+        <button
+          type="button"
+          className={`meus-gastos-month-header ${isExpanded ? 'meus-gastos-month-header--expanded' : ''}`}
+          onClick={toggleCompromissosHeader}
+        >
+          <div className="meus-gastos-month-header__left">
+            <span className="meus-gastos-month-header__title">Compromissos pendentes</span>
+            <span className="meus-gastos-month-header__count">
+              {n} {n === 1 ? 'compromisso' : 'compromissos'}
+            </span>
           </div>
-        </div>
-        {compromissosParaExibir.map((c) => {
-          const diasVenc = daysOverdueFromPrevistaBR(c.dataPrevistaPagamento);
-          return (
-            <button
-              key={c.id}
-              type="button"
-              className="compromisso-card"
-              onClick={() => onSelectCompromisso(c)}
-            >
-              <div className="compromisso-card__top">
-                <span className="compromisso-card__title">{compromissoDisplayTitle(c)}</span>
-                <span className="compromisso-card__total">{formatCurrency(c.total)}</span>
-              </div>
-              <div className="compromisso-card__bottom">
-                <span className="compromisso-card__date">{c.dataPrevistaPagamento}</span>
-                {c.status === 'vencido' ? (
-                  <span className="compromisso-card__status compromisso-card__status--danger">
-                    vencido há {diasVenc} dia{diasVenc === 1 ? '' : 's'}
-                  </span>
-                ) : (
-                  <span className="compromisso-card__status compromisso-card__status--purple">
-                    pendente
-                  </span>
-                )}
-              </div>
-            </button>
-          );
-        })}
+          <div className="meus-gastos-month-header__right">
+            {!isExpanded && (
+              <span className="meus-gastos-month-header__total">
+                {formatCurrency(totalComprometido)}
+              </span>
+            )}
+            <span className={`meus-gastos-month-header__icon ${isExpanded ? 'is-expanded' : ''}`}>
+              <ChevronDown size={16} />
+            </span>
+          </div>
+        </button>
+
+        {isExpanded &&
+          compromissosParaExibir.map((c) => {
+            const diasVenc = daysOverdueFromPrevistaBR(c.dataPrevistaPagamento);
+            const statusMeio =
+              c.status === 'vencido'
+                ? `vencido há ${diasVenc} dia${diasVenc === 1 ? '' : 's'}`
+                : 'pendente';
+            return (
+              <button
+                key={c.id}
+                type="button"
+                className="gasto-card"
+                onClick={() => onSelectCompromisso(c)}
+              >
+                <div className="gasto-card__top">
+                  <span className="gasto-card__fornecedor">{compromissoDisplayTitle(c)}</span>
+                  <span className="gasto-card__total">{formatCurrency(c.total)}</span>
+                </div>
+                <div className="gasto-card__bottom">
+                  <span className="gasto-card__date">{c.dataPrevistaPagamento}</span>
+                  <span className="gasto-card__meio">{statusMeio}</span>
+                </div>
+              </button>
+            );
+          })}
       </div>
     );
   };
@@ -373,7 +446,6 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     ));
   };
 
-  const buscaAtiva = !!search.trim();
   const nenhumResultadoBusca =
     buscaAtiva &&
     filteredGastos.length === 0 &&
@@ -421,78 +493,8 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
             <div className="meus-gastos-empty">Nenhum resultado para esta busca</div>
           ) : (
             <>
-              {filteredGastosPerenes.length > 0 && (
-                <div className="meus-gastos-search-block">
-                  <h3 className="meus-gastos-search-block__title">Gastos perenes</h3>
-                  {filteredGastosPerenes.map((gp) => (
-                    <button
-                      key={gp.id}
-                      type="button"
-                      className="gasto-perene-card"
-                      onClick={() => onSelectGastoPerene(gp)}
-                    >
-                      <div className="gasto-perene-card__top">
-                        <span className="gasto-perene-card__title">{gp.fornecedor}</span>
-                        <span className="gasto-perene-card__total">
-                          {formatCurrency(gp.valorPrevistoCents)}
-                        </span>
-                      </div>
-                      <div className="gasto-perene-card__bottom">
-                        <span>{labelPeriodicidade(gp.periodicidade)}</span>
-                        <span>{formatVencimentoGastoPerene(gp)}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {filteredCompromissos.length > 0 && (
-                <div className="meus-gastos-search-block meus-gastos-search-block--compromissos">
-                  <h3 className="meus-gastos-search-block__title">Compromissos pendentes</h3>
-                  <div className="meus-gastos-summary meus-gastos-summary--stack">
-                    <span>
-                      {filteredCompromissos.length}{' '}
-                      {filteredCompromissos.length === 1 ? 'compromisso' : 'compromissos'}
-                    </span>
-                    <div className="meus-gastos-summary__paid-row">
-                      <span className="meus-gastos-summary__paid-label">Total comprometido</span>
-                      <span className="meus-gastos-summary__total compromissos-money">
-                        {formatCurrency(
-                          filteredCompromissos.reduce((s, c) => s + c.total, 0)
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                  {filteredCompromissos.map((c) => {
-                    const diasVenc = daysOverdueFromPrevistaBR(c.dataPrevistaPagamento);
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        className="compromisso-card"
-                        onClick={() => onSelectCompromisso(c)}
-                      >
-                        <div className="compromisso-card__top">
-                          <span className="compromisso-card__title">{compromissoDisplayTitle(c)}</span>
-                          <span className="compromisso-card__total">{formatCurrency(c.total)}</span>
-                        </div>
-                        <div className="compromisso-card__bottom">
-                          <span className="compromisso-card__date">{c.dataPrevistaPagamento}</span>
-                          {c.status === 'vencido' ? (
-                            <span className="compromisso-card__status compromisso-card__status--danger">
-                              vencido há {diasVenc} dia{diasVenc === 1 ? '' : 's'}
-                            </span>
-                          ) : (
-                            <span className="compromisso-card__status compromisso-card__status--purple">
-                              pendente
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+              {renderGastosPerenesSection()}
+              {renderCompromissosSection()}
 
               <div className="meus-gastos-search-block">
                 <h3 className="meus-gastos-search-block__title">Gastos realizados</h3>
