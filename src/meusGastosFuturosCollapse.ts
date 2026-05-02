@@ -3,4 +3,5 @@
  */
 export const meusGastosFuturosCollapse = {
   sectionExpanded: false,
+  expandedYears: {} as Record<string, boolean>,
 };

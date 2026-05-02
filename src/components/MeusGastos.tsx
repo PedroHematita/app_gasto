@@ -378,6 +378,26 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     }));
   };
 
+  useEffect(() => {
+    if (gastosFuturosAnos.length === 0) return;
+    let changed = false;
+    gastosFuturosAnos.forEach((yearGroup, index) => {
+      const key = String(yearGroup.year);
+      if (typeof meusGastosFuturosCollapse.expandedYears[key] !== 'boolean') {
+        meusGastosFuturosCollapse.expandedYears[key] = index === 0;
+        changed = true;
+      }
+    });
+    if (changed) setFuturosUiTick((t) => t + 1);
+  }, [gastosFuturosAnos]);
+
+  const toggleFuturosYear = (year: number) => {
+    const key = String(year);
+    const current = meusGastosFuturosCollapse.expandedYears[key];
+    meusGastosFuturosCollapse.expandedYears[key] = !current;
+    setFuturosUiTick((t) => t + 1);
+  };
+
   const toggleFuturosSection = () => {
     meusGastosFuturosCollapse.sectionExpanded = !meusGastosFuturosCollapse.sectionExpanded;
     setFuturosUiTick((t) => t + 1);
@@ -482,13 +502,32 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
           gastosFuturosAnos.map((yearGroup) => (
             <div key={yearGroup.year}>
               <div className="meus-gastos-year">
-                <span>{yearGroup.year}</span>
-                <span className="meus-gastos-year__total">{formatCurrency(yearGroup.totalCents)}</span>
+                <button
+                  type="button"
+                  className={`meus-gastos-month-header ${meusGastosFuturosCollapse.expandedYears[String(yearGroup.year)] ? 'meus-gastos-month-header--expanded' : ''}`}
+                  onClick={() => toggleFuturosYear(yearGroup.year)}
+                >
+                  <div className="meus-gastos-month-header__left">
+                    <span className="meus-gastos-month-header__title">{yearGroup.year}</span>
+                  </div>
+                  <div className="meus-gastos-month-header__right">
+                    <span className="meus-gastos-year__total">{formatCurrency(yearGroup.totalCents)}</span>
+                    <span
+                      className={`meus-gastos-month-header__icon ${meusGastosFuturosCollapse.expandedYears[String(yearGroup.year)] ? 'is-expanded' : ''}`}
+                    >
+                      <ChevronDown size={16} />
+                    </span>
+                  </div>
+                </button>
               </div>
-              {yearGroup.months.map((monthGroup) => {
+              {meusGastosFuturosCollapse.expandedYears[String(yearGroup.year)] &&
+                yearGroup.months.map((monthGroup, monthIndex) => {
                 const mesExpanded = !!expandedFuturosMonths[monthGroup.key];
                 return (
-                  <div key={monthGroup.key} className="meus-gastos-month-card">
+                  <div
+                    key={monthGroup.key}
+                    className={`meus-gastos-month-card meus-gastos-futuros-month ${monthIndex === 0 ? 'meus-gastos-futuros-month--year-first' : ''}`}
+                  >
                     <button
                       type="button"
                       className={`meus-gastos-month-header ${mesExpanded ? 'meus-gastos-month-header--expanded' : ''}`}
