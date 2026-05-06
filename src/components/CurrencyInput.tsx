@@ -55,6 +55,7 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
     <div className={`floating-field ${bgClass} ${className}`}>
       <input
         id={id}
+        name={id}
         type="text"
         value={displayValue}
         onKeyDown={handleKeyDown}
@@ -62,6 +63,8 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
         className={`floating-field__input floating-field__input--currency ${displayValue ? 'has-value' : ''}`}
         inputMode="numeric"
         autoComplete="off"
+        autoCorrect="off"
+        spellCheck={false}
         readOnly={false}
       />
       <label className="floating-field__label">{label}</label>

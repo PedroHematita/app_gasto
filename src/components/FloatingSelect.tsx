@@ -99,6 +99,8 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
           className="floating-field__input has-value"
           style={{ caretColor: 'var(--accent)' }}
           autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
         />
       )}
 

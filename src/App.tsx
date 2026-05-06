@@ -764,6 +764,31 @@ function App() {
         </div>
       )}
 
+      {/* Formulário de lançamento: autocomplete off + campo decoy reduz atalhos (senha/cartão/local) acima do teclado no Android */}
+      <form autoComplete="off" onSubmit={(e) => e.preventDefault()} style={{ display: 'contents' }}>
+        <input
+          type="text"
+          name="autofill-decoy"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          defaultValue=""
+          tabIndex={-1}
+          aria-hidden="true"
+          readOnly
+          style={{
+            position: 'absolute',
+            width: 1,
+            height: 1,
+            padding: 0,
+            margin: -1,
+            overflow: 'hidden',
+            clip: 'rect(0,0,0,0)',
+            whiteSpace: 'nowrap',
+            border: 0,
+          }}
+        />
+
       {/* Date header */}
       <div className="date-header" style={{ paddingTop: (!isEditMode && hasDraft) ? 8 : 16 }}>
         <div className="date-header__row">
@@ -886,6 +911,8 @@ function App() {
           Salvar alterações
         </button>
       )}
+
+      </form>
 
       {showSalvarCompromissoModal && (
         <SalvarCompromissoModal

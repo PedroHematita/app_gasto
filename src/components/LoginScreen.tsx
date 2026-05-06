@@ -63,21 +63,27 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
       <div onKeyDown={handleKeyDown}>
         <FloatingInput
           id="input-email"
+          name="username"
           label="Email"
           value={email}
           onChange={setEmail}
           type="email"
           bgVariant="main"
           autoComplete="email"
+          autoCorrect="on"
+          spellCheck
         />
         <FloatingInput
           id="input-senha"
+          name="password"
           label="Senha"
           value={senha}
           onChange={setSenha}
           type="password"
           bgVariant="main"
           autoComplete="current-password"
+          autoCorrect="off"
+          spellCheck={false}
         />
       </div>
 

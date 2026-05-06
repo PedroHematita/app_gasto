@@ -20,6 +20,12 @@ interface FloatingInputProps {
   showError?: boolean;
   /** Sinaliza ao navegador/Android como tratar preenchimento automático (padrão "off"). */
   autoComplete?: string;
+  /** iOS/Android: reduz sugestões do teclado (padrão "off"). Sobrescreva no login se precisar. */
+  autoCorrect?: 'on' | 'off';
+  /** Desativa corretor ortográfico no DOM (padrão false — ajuda a suprimir atalhos no Android). */
+  spellCheck?: boolean;
+  /** Nome do campo no DOM — útil para heurísticas de autofill (usa `id` quando omitido). */
+  name?: string;
 }
 
 export const FloatingInput: React.FC<FloatingInputProps> = ({
@@ -38,6 +44,9 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
   onSelectSuggestion,
   showError = false,
   autoComplete = 'off',
+  autoCorrect = 'off',
+  spellCheck = false,
+  name,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -120,6 +129,7 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
       <input
         ref={inputRef}
         id={id}
+        name={name ?? id}
         type={type}
         value={value}
         onChange={(e) => handleChange(e.target.value)}
@@ -128,6 +138,8 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
         onClick={onClick}
         inputMode={inputMode}
         autoComplete={autoComplete}
+        autoCorrect={autoCorrect}
+        spellCheck={spellCheck}
         onFocus={() => {
           if (suggestions.length > 0) setShowSuggestions(true);
         }}
