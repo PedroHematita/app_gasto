@@ -926,6 +926,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="meus-gastos-search__input"
+          autoComplete="off"
         />
       </div>
 

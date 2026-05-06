@@ -797,6 +797,7 @@ function App() {
               setDataCompra(formatted);
             }}
             inputMode="numeric"
+            autoComplete="off"
             bgVariant="main"
           />
           <button

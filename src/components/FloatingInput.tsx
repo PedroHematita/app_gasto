@@ -18,6 +18,8 @@ interface FloatingInputProps {
   onSelectSuggestion?: (value: string, payload?: any) => void;
   /** Borda/estado de erro até o usuário corrigir. */
   showError?: boolean;
+  /** Sinaliza ao navegador/Android como tratar preenchimento automático (padrão "off"). */
+  autoComplete?: string;
 }
 
 export const FloatingInput: React.FC<FloatingInputProps> = ({
@@ -35,6 +37,7 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
   autocompleteSearch,
   onSelectSuggestion,
   showError = false,
+  autoComplete = 'off',
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -124,7 +127,7 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
         readOnly={readOnly}
         onClick={onClick}
         inputMode={inputMode}
-        autoComplete="off"
+        autoComplete={autoComplete}
         onFocus={() => {
           if (suggestions.length > 0) setShowSuggestions(true);
         }}

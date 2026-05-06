@@ -215,6 +215,7 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
               value={diaStr}
               onChange={(v) => setDiaStr(v.replace(/\D/g, '').slice(0, 2))}
               inputMode="numeric"
+              autoComplete="off"
               bgVariant="surface"
             />
             <div className="floating-field" style={{ marginBottom: 16 }}>
@@ -223,6 +224,7 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
                 value={observacoes}
                 onChange={(e) => setObservacoes(e.target.value)}
                 rows={3}
+                autoComplete="off"
                 style={{ resize: 'vertical', minHeight: 72 }}
               />
               <label

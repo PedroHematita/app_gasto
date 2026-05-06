@@ -96,6 +96,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             setFornecedorError(false);
           }}
           bgVariant="surface"
+          autoComplete="off"
           autocompleteSearch={searchFornecedores}
           showError={fornecedorError}
         />
@@ -139,6 +140,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             }}
             type="number"
             inputMode="numeric"
+            autoComplete="off"
             bgVariant="surface"
           />
         )}
@@ -167,6 +169,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           value={payment.observacoes}
           onChange={(v) => onChange({ observacoes: v })}
           bgVariant="surface"
+          autoComplete="off"
         />
 
         <input
@@ -174,6 +177,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           type="file"
           accept="image/*"
           style={{ display: 'none' }}
+          autoComplete="off"
           onChange={handleFileChange}
         />
 

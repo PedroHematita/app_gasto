@@ -139,6 +139,7 @@ export const GastoPereneFormModal: React.FC<GastoPereneFormModalProps> = ({ onCl
               setFornecedorError(false);
             }}
             bgVariant="surface"
+            autoComplete="off"
             autocompleteSearch={searchFornecedores}
             showError={fornecedorError}
           />
@@ -176,6 +177,7 @@ export const GastoPereneFormModal: React.FC<GastoPereneFormModalProps> = ({ onCl
             value={diaStr}
             onChange={(v) => setDiaStr(v.replace(/\D/g, '').slice(0, 2))}
             inputMode="numeric"
+            autoComplete="off"
             bgVariant="surface"
           />
 
@@ -202,6 +204,7 @@ export const GastoPereneFormModal: React.FC<GastoPereneFormModalProps> = ({ onCl
                 setDataInicio(formatted);
               }}
               inputMode="numeric"
+              autoComplete="off"
               bgVariant="surface"
             />
             <button
@@ -233,6 +236,7 @@ export const GastoPereneFormModal: React.FC<GastoPereneFormModalProps> = ({ onCl
                 setDataTermino(formatted);
               }}
               inputMode="numeric"
+              autoComplete="off"
               bgVariant="surface"
             />
             <button
@@ -257,6 +261,7 @@ export const GastoPereneFormModal: React.FC<GastoPereneFormModalProps> = ({ onCl
               value={observacoes}
               onChange={(e) => setObservacoes(e.target.value)}
               rows={3}
+              autoComplete="off"
               style={{ resize: 'vertical', minHeight: 72 }}
             />
             <label className="floating-field__label" htmlFor="input-gp-obs" style={{

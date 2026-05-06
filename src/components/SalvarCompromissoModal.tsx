@@ -92,6 +92,7 @@ export const SalvarCompromissoModal: React.FC<SalvarCompromissoModalProps> = ({
               setFornecedorError(false);
             }}
             bgVariant="surface"
+            autoComplete="off"
             autocompleteSearch={searchFornecedores}
             showError={fornecedorError}
           />
@@ -114,6 +115,7 @@ export const SalvarCompromissoModal: React.FC<SalvarCompromissoModalProps> = ({
                 setDataPrevista(formatted);
               }}
               inputMode="numeric"
+              autoComplete="off"
               bgVariant="surface"
             />
             <button

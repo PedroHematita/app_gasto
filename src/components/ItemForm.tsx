@@ -55,6 +55,7 @@ export const ItemForm: React.FC<ItemFormProps> = ({
         value={descricao}
         onChange={onDescricaoChange}
         bgVariant={bgVariant}
+        autoComplete="new-password"
         autocompleteSearch={searchDescricoes}
         onSelectSuggestion={(_, payload) => {
           if (payload && payload.unidade) {
@@ -71,7 +72,8 @@ export const ItemForm: React.FC<ItemFormProps> = ({
           value={quantidade}
           onChange={onQuantidadeChange}
           type="text"
-          inputMode="decimal"
+          inputMode="numeric"
+          autoComplete="off"
           bgVariant={bgVariant}
         />
         <FloatingSelect

@@ -68,6 +68,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           onChange={setEmail}
           type="email"
           bgVariant="main"
+          autoComplete="email"
         />
         <FloatingInput
           id="input-senha"
@@ -76,6 +77,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           onChange={setSenha}
           type="password"
           bgVariant="main"
+          autoComplete="current-password"
         />
       </div>
 
