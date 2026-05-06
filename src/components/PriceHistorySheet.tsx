@@ -2,6 +2,58 @@ import { useState, useMemo } from 'react';
 import { formatCurrency } from '../utils';
 import type { PriceHistoryRecord } from '../lib/supabase';
 
+const PH_TOOLTIP_MIN_W = 80;
+const PH_TOOLTIP_H = 16;
+const PH_TOOLTIP_PAD_X = 8;
+const PH_TOOLTIP_PAD_Y = 3;
+const PH_TOOLTIP_FONT_SIZE = 9;
+const PH_TOOLTIP_GAP = 8;
+
+function clamp(n: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, n));
+}
+
+/** Rótulo do ponto: posição adaptativa dentro da área do gráfico (SVG). */
+function getPricePointTooltipBox(
+  px: number,
+  py: number,
+  tooltipW: number,
+  tooltipH: number,
+  chartW: number,
+  chartH: number,
+  padX: number,
+  padY: number,
+  innerW: number,
+  innerH: number
+): { rx: number; ry: number; textX: number; textY: number; textAnchor: 'start' } {
+  const thirdY = padY + innerH / 3;
+  const midX = padX + innerW / 2;
+  const inTopThird = py <= thirdY;
+  const inRightHalf = px >= midX;
+
+  let rx: number;
+  if (inRightHalf) {
+    rx = px - PH_TOOLTIP_GAP - tooltipW;
+  } else {
+    rx = px + PH_TOOLTIP_GAP;
+  }
+
+  let ry: number;
+  if (inTopThird) {
+    ry = py + PH_TOOLTIP_GAP;
+  } else {
+    ry = py - PH_TOOLTIP_GAP - tooltipH;
+  }
+
+  rx = clamp(rx, 0, chartW - tooltipW);
+  ry = clamp(ry, 0, chartH - tooltipH);
+
+  const textX = rx + PH_TOOLTIP_PAD_X;
+  const textY = ry + PH_TOOLTIP_PAD_Y + PH_TOOLTIP_FONT_SIZE;
+
+  return { rx, ry, textX, textY, textAnchor: 'start' };
+}
+
 interface PriceHistorySheetProps {
   descricao: string;
   records: PriceHistoryRecord[];
@@ -111,6 +163,23 @@ export const PriceHistorySheet: React.FC<PriceHistorySheetProps> = ({
               {chartData.points.map((p, i) => {
                 const isLast = i === chartData.points.length - 1;
                 const isHovered = hoveredIndex === i;
+                const label = `${p.record.data} • ${formatCurrency(p.record.valorUnitarioCentavos)}`;
+                const tooltipW = Math.max(
+                  PH_TOOLTIP_MIN_W,
+                  Math.ceil(label.length * 5.2 + PH_TOOLTIP_PAD_X * 2)
+                );
+                const tip = getPricePointTooltipBox(
+                  p.x,
+                  p.y,
+                  tooltipW,
+                  PH_TOOLTIP_H,
+                  chartW,
+                  chartH,
+                  padX,
+                  padY,
+                  innerW,
+                  innerH
+                );
                 return (
                   <g key={i}>
                     <circle
@@ -128,17 +197,24 @@ export const PriceHistorySheet: React.FC<PriceHistorySheetProps> = ({
                     {isHovered && (
                       <g>
                         <rect
-                          x={p.x - 40}
-                          y={p.y - 32}
-                          width={80}
-                          height={22}
-                          rx={4}
-                          fill="var(--bg-surface)"
-                          stroke="var(--border-medium)"
+                          x={tip.rx}
+                          y={tip.ry}
+                          width={tooltipW}
+                          height={PH_TOOLTIP_H}
+                          rx={6}
+                          fill="#1e1a3a"
+                          stroke="#3d2fa0"
                           strokeWidth="0.5"
                         />
-                        <text x={p.x} y={p.y - 18} textAnchor="middle" fill="var(--accent)" fontSize="9" fontFamily="Inter">
-                          {p.record.data} • {formatCurrency(p.record.valorUnitarioCentavos)}
+                        <text
+                          x={tip.textX}
+                          y={tip.textY}
+                          textAnchor={tip.textAnchor}
+                          fill="#e0e0e0"
+                          fontSize={PH_TOOLTIP_FONT_SIZE}
+                          fontFamily="Inter"
+                        >
+                          {label}
                         </text>
                       </g>
                     )}

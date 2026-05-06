@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { ChevronDown, Plus, Search } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, Search } from 'lucide-react';
 import { fetchGastos, fetchCompromissosAtivos, fetchGastosPerenesAtivos } from '../lib/supabase';
 import {
   formatCurrency,
@@ -105,7 +105,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
-  const [, setCollapseTick] = useState(0);
+  const [collapseTick, setCollapseTick] = useState(0);
   const [forecastWindowTick, setForecastWindowTick] = useState(0);
   const [futurosUiTick, setFuturosUiTick] = useState(0);
   const [expandedFuturosMonths, setExpandedFuturosMonths] = useState<Record<string, boolean>>({});
@@ -306,6 +306,52 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     [grouped]
   );
 
+  const collapseAllMeusGastos = () => {
+    meusGastosSectionCollapse.perenesExpanded = false;
+    meusGastosSectionCollapse.compromissosExpanded = false;
+    meusGastosFuturosCollapse.sectionExpanded = false;
+    gastosFuturosAnos.forEach((yg) => {
+      meusGastosFuturosCollapse.expandedYears[String(yg.year)] = false;
+    });
+    setExpandedMonths(
+      monthKeysInOrder.reduce<Record<string, boolean>>((acc, key) => {
+        acc[key] = false;
+        return acc;
+      }, {})
+    );
+    setExpandedFuturosMonths(
+      futurosMonthKeysInOrder.reduce<Record<string, boolean>>((acc, key) => {
+        acc[key] = false;
+        return acc;
+      }, {})
+    );
+    setCollapseTick((t) => t + 1);
+    setFuturosUiTick((t) => t + 1);
+  };
+
+  const expandAllMeusGastos = () => {
+    meusGastosSectionCollapse.perenesExpanded = true;
+    meusGastosSectionCollapse.compromissosExpanded = true;
+    meusGastosFuturosCollapse.sectionExpanded = true;
+    gastosFuturosAnos.forEach((yg) => {
+      meusGastosFuturosCollapse.expandedYears[String(yg.year)] = true;
+    });
+    setExpandedMonths(
+      monthKeysInOrder.reduce<Record<string, boolean>>((acc, key) => {
+        acc[key] = true;
+        return acc;
+      }, {})
+    );
+    setExpandedFuturosMonths(
+      futurosMonthKeysInOrder.reduce<Record<string, boolean>>((acc, key) => {
+        acc[key] = true;
+        return acc;
+      }, {})
+    );
+    setCollapseTick((t) => t + 1);
+    setFuturosUiTick((t) => t + 1);
+  };
+
   useEffect(() => {
     if (monthKeysInOrder.length === 0) {
       setExpandedMonths({});
@@ -431,6 +477,49 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
   };
 
   const futurosSectionExpanded = meusGastosFuturosCollapse.sectionExpanded;
+
+  const collapseMajorityExpanded = useMemo(() => {
+    const units: boolean[] = [];
+    if (gastosPerenesParaExibir.length > 0) {
+      units.push(displayPerenesExpanded);
+    }
+    if (compromissosParaExibir.length > 0) {
+      units.push(displayCompromissosExpanded);
+    }
+    units.push(meusGastosFuturosCollapse.sectionExpanded);
+    gastosFuturosAnos.forEach((yg) => {
+      units.push(!!meusGastosFuturosCollapse.expandedYears[String(yg.year)]);
+    });
+    futurosMonthKeysInOrder.forEach((k) => {
+      units.push(!!expandedFuturosMonths[k]);
+    });
+    monthKeysInOrder.forEach((k) => {
+      units.push(!!expandedMonths[k]);
+    });
+    if (units.length === 0) return false;
+    const expandedCount = units.filter(Boolean).length;
+    return expandedCount > units.length / 2;
+  }, [
+    collapseTick,
+    futurosUiTick,
+    gastosPerenesParaExibir.length,
+    compromissosParaExibir.length,
+    displayPerenesExpanded,
+    displayCompromissosExpanded,
+    gastosFuturosAnos,
+    expandedFuturosMonths,
+    expandedMonths,
+    futurosMonthKeysInOrder,
+    monthKeysInOrder,
+  ]);
+
+  const toggleGlobalExpandCollapse = () => {
+    if (collapseMajorityExpanded) {
+      collapseAllMeusGastos();
+    } else {
+      expandAllMeusGastos();
+    }
+  };
 
   const renderGastosFuturosSection = () => {
     const totalItens = gastosFuturosAnos.reduce(
@@ -869,6 +958,26 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                   </span>
                   <div className="meus-gastos-summary__paid-row">
                     <span className="meus-gastos-summary__paid-label">Total pago</span>
+                    <div className="meus-gastos-summary__paid-center">
+                      <button
+                        type="button"
+                        className="meus-gastos-summary__toggle-all-btn"
+                        onClick={toggleGlobalExpandCollapse}
+                        aria-label={
+                          collapseMajorityExpanded ? 'Recolher todas as seções' : 'Expandir todas as seções'
+                        }
+                      >
+                        {collapseMajorityExpanded ? (
+                          <>
+                            Recolher <ChevronUp size={14} strokeWidth={2} aria-hidden />
+                          </>
+                        ) : (
+                          <>
+                            Expandir <ChevronDown size={14} strokeWidth={2} aria-hidden />
+                          </>
+                        )}
+                      </button>
+                    </div>
                     <span className="meus-gastos-summary__total">
                       {formatCurrency(
                         filteredGastos.reduce((s, g) => s + g.total, 0)
@@ -889,6 +998,26 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
             </span>
             <div className="meus-gastos-summary__paid-row">
               <span className="meus-gastos-summary__paid-label">Total pago</span>
+              <div className="meus-gastos-summary__paid-center">
+                <button
+                  type="button"
+                  className="meus-gastos-summary__toggle-all-btn"
+                  onClick={toggleGlobalExpandCollapse}
+                  aria-label={
+                    collapseMajorityExpanded ? 'Recolher todas as seções' : 'Expandir todas as seções'
+                  }
+                >
+                  {collapseMajorityExpanded ? (
+                    <>
+                      Recolher <ChevronUp size={14} strokeWidth={2} aria-hidden />
+                    </>
+                  ) : (
+                    <>
+                      Expandir <ChevronDown size={14} strokeWidth={2} aria-hidden />
+                    </>
+                  )}
+                </button>
+              </div>
               <span className="meus-gastos-summary__total">{formatCurrency(totalPagoSum)}</span>
             </div>
           </div>

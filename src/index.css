@@ -551,14 +551,53 @@ html, body, #root {
 
 .meus-gastos-summary__paid-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
   width: 100%;
 }
 
 .meus-gastos-summary__paid-label {
+  flex-shrink: 0;
   font-size: 11px;
   color: var(--text-secondary);
+}
+
+.meus-gastos-summary__paid-center {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.meus-gastos-summary__toggle-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  margin: 0;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.2px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.meus-gastos-summary__toggle-all-btn:hover {
+  color: var(--text-primary);
+}
+
+.meus-gastos-summary__toggle-all-btn:active {
+  transform: scale(0.98);
+}
+
+.meus-gastos-summary__paid-row .meus-gastos-summary__total {
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .meus-gastos-search-block {
@@ -1665,15 +1704,15 @@ html, body, #root {
   margin: 0 0 0 12px;
   background: transparent;
   border-radius: 0;
-  border-left: 2px solid rgba(61, 47, 160, 0.2);
+  border-left: none;
 }
 
 .meus-gastos-futuros-month--expanded {
-  border-left-color: #3d2fa0;
+  border-left: none;
 }
 
 .meus-gastos-futuros-month + .meus-gastos-futuros-month {
-  border-top: 3px solid #0a0a0a;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.06);
 }
 
 .meus-gastos-futuros-month--year-first {
@@ -1681,12 +1720,16 @@ html, body, #root {
 }
 
 .meus-gastos-futuros-month .meus-gastos-month-header--expanded::after {
-  border-bottom: 0.5px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.06);
 }
 
 .meus-gastos-futuros-year {
   padding-top: 12px;
   padding-bottom: 4px;
+}
+
+.meus-gastos-futuros-year + .meus-gastos-futuros-year {
+  border-top: 0.5px solid rgba(255, 255, 255, 0.06);
 }
 
 .meus-gastos-futuros-year-header {
@@ -1703,6 +1746,11 @@ html, body, #root {
   text-transform: uppercase;
   color: var(--text-secondary);
   font-weight: var(--weight-regular);
+}
+
+.meus-gastos-futuros-month .meus-gastos-month-header {
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 /* Empty */
@@ -1741,7 +1789,7 @@ html, body, #root {
 }
 
 .meus-gastos-futuros-month .gasto-card + .gasto-card::before {
-  border-top: 0.5px solid rgba(255, 255, 255, 0.05);
+  border-top: 0.5px solid rgba(255, 255, 255, 0.06);
 }
 
 .meus-gastos-futuros-item {
