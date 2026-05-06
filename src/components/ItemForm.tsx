@@ -55,7 +55,9 @@ export const ItemForm: React.FC<ItemFormProps> = ({
         value={descricao}
         onChange={onDescricaoChange}
         bgVariant={bgVariant}
-        autoComplete="new-password"
+        autoComplete="on"
+        autoCorrect="on"
+        spellCheck
         autocompleteSearch={searchDescricoes}
         onSelectSuggestion={(_, payload) => {
           if (payload && payload.unidade) {

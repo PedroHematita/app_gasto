@@ -18,13 +18,11 @@ interface FloatingInputProps {
   onSelectSuggestion?: (value: string, payload?: any) => void;
   /** Borda/estado de erro até o usuário corrigir. */
   showError?: boolean;
-  /** Sinaliza ao navegador/Android como tratar preenchimento automático (padrão "off"). */
+  /** Preenchimento automático do navegador (padrão "off"; use "on" em texto livre quando fizer sentido). */
   autoComplete?: string;
-  /** iOS/Android: reduz sugestões do teclado (padrão "off"). Sobrescreva no login se precisar. */
   autoCorrect?: 'on' | 'off';
-  /** Desativa corretor ortográfico no DOM (padrão false — ajuda a suprimir atalhos no Android). */
   spellCheck?: boolean;
-  /** Nome do campo no DOM — útil para heurísticas de autofill (usa `id` quando omitido). */
+  /** Nome do campo no DOM (usa `id` quando omitido). */
   name?: string;
 }
 
