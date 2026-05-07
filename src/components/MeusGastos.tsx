@@ -32,6 +32,7 @@ import {
 } from '../meusGastosPereneForecastWindow';
 
 interface MeusGastosProps {
+  orgId: string;
   onSelectGasto: (gasto: GastoRecord) => void;
   onSelectCompromisso: (c: CompromissoRecord) => void;
   onSelectGastoPerene: (gp: GastoPereneRecord) => void;
@@ -91,6 +92,7 @@ function sortCompromissosSubset(list: CompromissoRecord[]): CompromissoRecord[] 
 }
 
 export const MeusGastos: React.FC<MeusGastosProps> = ({
+  orgId,
   onSelectGasto,
   onSelectCompromisso,
   onSelectGastoPerene,
@@ -113,7 +115,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([fetchGastos(), fetchCompromissosAtivos(), fetchGastosPerenesAtivos()])
+    Promise.all([fetchGastos(orgId), fetchCompromissosAtivos(orgId), fetchGastosPerenesAtivos(orgId)])
       .then(([g, c, p]) => {
         setGastos(g);
         setCompromissosAtivos(c);
@@ -121,7 +123,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [refreshKey]);
+  }, [refreshKey, orgId]);
 
   useEffect(() => {
     if (focusCompromissosNonce > 0 && compromissosSectionRef.current) {

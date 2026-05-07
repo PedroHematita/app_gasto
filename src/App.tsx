@@ -17,6 +17,10 @@ import { GastoPereneFormModal } from './components/GastoPereneFormModal';
 import { SalvarCompromissoModal } from './components/SalvarCompromissoModal';
 import { CompromissosSummaryStrip } from './components/CompromissosSummaryStrip';
 import { PriceWarningModal } from './components/PriceWarningModal';
+import { OrgSelector } from './components/OrgSelector';
+import { AdminGateway } from './components/admin/AdminGateway';
+import { AdminPanel } from './components/admin/AdminPanel';
+import { OrgProvider, useOrg } from './contexts/OrgContext';
 import { formatDateBR, generateId } from './utils';
 import {
   supabase,
@@ -43,28 +47,49 @@ const defaultPayment: PaymentData = {
   parcelas: 1,
 };
 
-function App() {
-  // Auth state
-  const [authenticated, setAuthenticated] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+function AppInner() {
+  const { currentOrg, orgs, switchOrg, loading: orgLoading, isSuperAdmin } = useOrg();
+  const orgId = currentOrg?.id || '';
 
+  // AppInner is only rendered when authenticated
+  const authenticated = true;
+
+  // --- DIAGNOSTICS ---
   useEffect(() => {
-    if (!supabase) {
-      setCheckingAuth(false);
-      return;
+    async function runDiagnostics() {
+      console.log('--- DIAGNOSTICS START ---');
+      console.log('1. Active orgId:', orgId);
+      console.log('2. currentOrg object:', currentOrg);
+      
+      if (!orgId) {
+        console.log('3. orgId is empty, skipping DB check');
+        return;
+      }
+
+      console.log('3. Testing fetchGastos with orgId:', orgId);
+      const { data, error } = await supabase!
+        .from('gastos')
+        .select('id, fornecedor, total, org_id')
+        .eq('org_id', orgId)
+        .limit(5);
+        
+      if (error) {
+        console.error('4. ERROR fetching gastos:', error);
+      } else {
+        console.log(`4. SUCCESS! Found ${data?.length} gastos:`, data);
+      }
+      console.log('--- DIAGNOSTICS END ---');
     }
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setAuthenticated(!!session);
-      setCheckingAuth(false);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setAuthenticated(!!session);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+    
+    if (currentOrg) {
+      runDiagnostics();
+    }
+  }, [currentOrg, orgId]);
+  // -------------------
 
   // Screen state
   const [screen, setScreen] = useState<Screen>('main');
+  const [adminChoice, setAdminChoice] = useState<'admin' | 'user' | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -132,11 +157,11 @@ function App() {
   const [selectedGastoPereneId, setSelectedGastoPereneId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authenticated || !supabase) return;
+    if (!authenticated || !supabase || !orgId) return;
     let cancelled = false;
     (async () => {
       try {
-        await ensureCompromissosFromGastosPerenes();
+        await ensureCompromissosFromGastosPerenes(orgId);
         if (!cancelled) setRefreshKey((k) => k + 1);
       } catch {
         /* ignore */
@@ -145,15 +170,15 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, [authenticated]);
+  }, [authenticated, orgId]);
 
   useEffect(() => {
-    if (!authenticated || !supabase) return;
+    if (!authenticated || !supabase || !orgId) return;
     if (screen !== 'main' && screen !== 'gasto_edit') return;
-    fetchCompromissoIndicatorCounts()
+    fetchCompromissoIndicatorCounts(orgId)
       .then(setCompromissoIndicatorCounts)
       .catch(() => {});
-  }, [authenticated, screen, refreshKey]);
+  }, [authenticated, screen, refreshKey, orgId]);
 
   // Computed total
   const totalCents = useMemo(
@@ -209,7 +234,7 @@ function App() {
 
       // 2. Check DB
       const { checkUnidadeForDescricao } = await import('./lib/supabase');
-      const dbUnit = await checkUnidadeForDescricao(descricao);
+      const dbUnit = await checkUnidadeForDescricao(orgId, descricao);
       if (dbUnit) {
         setLockedUnit(dbUnit);
         setUnidade(dbUnit);
@@ -253,7 +278,7 @@ function App() {
 
     // 2. Validar no banco de dados
     const { checkUnidadeForDescricao } = await import('./lib/supabase');
-    const unidadeNoBanco = await checkUnidadeForDescricao(descricao);
+    const unidadeNoBanco = await checkUnidadeForDescricao(orgId, descricao);
     
     if (unidadeNoBanco && unidadeNoBanco !== unidade) {
       alert(`Esta descrição já está cadastrada com a unidade de medida "${unidadeNoBanco}".\nPara usar outra unidade, altere a descrição do item.\nExemplo: "${descricao.trim()} sem controle de litros".`);
@@ -289,7 +314,7 @@ function App() {
     const checkPriceDeviationAndCommit = async () => {
       // Price deviation check
       if (qty > 0 && valorCentavos > 0) {
-        const history = await fetchPriceHistory(descricao.trim(), unidade);
+        const history = await fetchPriceHistory(orgId, descricao.trim(), unidade);
 
         if (history.length > 0) {
           const totalHistCents = history.reduce((s, r) => s + r.valorCentavos, 0);
@@ -392,6 +417,7 @@ function App() {
       } else {
         // INSERT mode
         await saveGasto(
+          orgId,
           dataCompra,
           payment.fornecedor,
           forma,
@@ -508,11 +534,11 @@ function App() {
           unidade: item.unidade,
           valorCentavos: item.valorCentavos,
         }));
-        await saveCompromisso(dataCompra, dataPrevistaBR, fornecedor, payload);
+        await saveCompromisso(orgId, dataCompra, dataPrevistaBR, fornecedor, payload);
         setShowSalvarCompromissoModal(false);
         resetAll();
         setRefreshKey((k) => k + 1);
-        const c = await fetchCompromissoIndicatorCounts();
+        const c = await fetchCompromissoIndicatorCounts(orgId);
         setCompromissoIndicatorCounts(c);
       } catch (error) {
         console.error(error);
@@ -540,14 +566,14 @@ function App() {
 
   const handleSavedGastoPereneModal = useCallback(async () => {
     try {
-      await ensureCompromissosFromGastosPerenes();
+      await ensureCompromissosFromGastosPerenes(orgId);
     } catch {
       /* ignore */
     }
     setRefreshKey((k) => k + 1);
-    const c = await fetchCompromissoIndicatorCounts();
+    const c = await fetchCompromissoIndicatorCounts(orgId);
     setCompromissoIndicatorCounts(c);
-  }, []);
+  }, [orgId]);
 
   const handleQuitCompromissoSave = useCallback(async () => {
     if (!selectedCompromisso) return;
@@ -564,6 +590,7 @@ function App() {
       }));
 
       const gastoResult = await saveGasto(
+        orgId,
         selectedCompromisso.dataCompra,
         payment.fornecedor,
         forma,
@@ -594,7 +621,7 @@ function App() {
       setSelectedCompromisso(null);
       setScreen('meus_gastos');
       setRefreshKey((k) => k + 1);
-      const counts = await fetchCompromissoIndicatorCounts();
+      const counts = await fetchCompromissoIndicatorCounts(orgId);
       setCompromissoIndicatorCounts(counts);
     } catch (error) {
       console.error('Error quitting compromisso:', error);
@@ -604,18 +631,37 @@ function App() {
     }
   }, [selectedCompromisso, payment]);
 
-  // Loading
-  if (checkingAuth) {
+  // Org loading
+  if (orgLoading) {
     return (
       <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <p style={{ color: 'var(--text-inactive)', fontSize: 13 }}>Carregando...</p>
+        <p style={{ color: 'var(--text-inactive)', fontSize: 13 }}>Carregando organizações...</p>
       </div>
     );
   }
 
-  // Login
-  if (!authenticated) {
-    return <LoginScreen onLogin={() => setAuthenticated(true)} />;
+  // Admin Gateway
+  if (isSuperAdmin && !adminChoice) {
+    return (
+      <AdminGateway
+        onSelect={(choice) => {
+          setAdminChoice(choice);
+          if (choice === 'admin') {
+            setScreen('admin_panel');
+          }
+        }}
+      />
+    );
+  }
+
+  // Org selection (multiple orgs, none selected)
+  if (!currentOrg && adminChoice !== 'admin') {
+    return <OrgSelector orgs={orgs} onSelect={switchOrg} />;
+  }
+
+  // Admin Panel
+  if (screen === 'admin_panel' && isSuperAdmin) {
+    return <AdminPanel onClose={() => setScreen('main')} />;
   }
 
   // Confirmation screen
@@ -636,6 +682,7 @@ function App() {
     return (
       <>
         <MeusGastos
+          orgId={orgId}
           onSelectGasto={handleSelectGasto}
           onSelectCompromisso={handleSelectCompromisso}
           onSelectGastoPerene={handleSelectGastoPerene}
@@ -646,6 +693,7 @@ function App() {
         />
         {showGastoPereneModal && (
           <GastoPereneFormModal
+            orgId={orgId}
             onClose={() => setShowGastoPereneModal(false)}
             onSaved={handleSavedGastoPereneModal}
           />
@@ -658,6 +706,7 @@ function App() {
   if (screen === 'gasto_perene_detail' && selectedGastoPereneId) {
     return (
       <GastoPereneDetail
+        orgId={orgId}
         gastoPereneId={selectedGastoPereneId}
         onBack={() => {
           setSelectedGastoPereneId(null);
@@ -701,6 +750,7 @@ function App() {
         />
         {showQuitPaymentModal && (
           <PaymentModal
+            orgId={orgId}
             payment={payment}
             onChange={handlePaymentChange}
             onSave={handleQuitCompromissoSave}
@@ -835,6 +885,7 @@ function App() {
       )}
 
       <ItemForm
+        orgId={orgId}
         descricao={descricao}
         quantidade={quantidade}
         unidade={unidade}
@@ -889,6 +940,7 @@ function App() {
 
       {showSalvarCompromissoModal && (
         <SalvarCompromissoModal
+          orgId={orgId}
           dataCompraBR={dataCompra}
           onClose={() => setShowSalvarCompromissoModal(false)}
           onConfirm={handleConfirmSalvarCompromisso}
@@ -897,6 +949,7 @@ function App() {
 
       {showPaymentModal && (
         <PaymentModal
+          orgId={orgId}
           payment={payment}
           onChange={handlePaymentChange}
           onSave={handleSaveGasto}
@@ -996,4 +1049,47 @@ function App() {
   );
 }
 
+function App() {
+  return <AppContent />;
+}
+
+function AppContent() {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    if (!supabase) {
+      setCheckingAuth(false);
+      return;
+    }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setAuthenticated(!!session);
+      setCheckingAuth(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAuthenticated(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (checkingAuth) {
+    return (
+      <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <p style={{ color: 'var(--text-inactive)', fontSize: 13 }}>Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!authenticated) {
+    return <LoginScreen onLogin={() => setAuthenticated(true)} />;
+  }
+
+  return (
+    <OrgProvider authenticated={authenticated}>
+      <AppInner />
+    </OrgProvider>
+  );
+}
+
 export default App;
+

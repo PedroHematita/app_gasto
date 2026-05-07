@@ -75,6 +75,21 @@ export interface GastoPereneRecord {
   createdAt: string;
 }
 
+// Organization (multi-tenant)
+export interface OrgRecord {
+  id: string;
+  nome: string;
+  role: 'owner' | 'member';
+  createdAt: string;
+}
+
+// Admin Panel Types
+export interface AdminUserRecord {
+  id: string;
+  email: string;
+  createdAt: string;
+}
+
 export type Screen =
   | 'main'
   | 'confirmation'
@@ -82,4 +97,7 @@ export type Screen =
   | 'gasto_detail'
   | 'gasto_edit'
   | 'compromisso_detail'
-  | 'gasto_perene_detail';
+  | 'gasto_perene_detail'
+  | 'org_selector'
+  | 'admin_gateway'
+  | 'admin_panel';

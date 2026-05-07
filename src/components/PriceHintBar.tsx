@@ -5,11 +5,12 @@ import { PriceHistorySheet } from './PriceHistorySheet';
 import type { PriceHistoryRecord } from '../lib/supabase';
 
 interface PriceHintBarProps {
+  orgId: string;
   descricao: string;
   unidade: string;
 }
 
-export const PriceHintBar: React.FC<PriceHintBarProps> = ({ descricao, unidade }) => {
+export const PriceHintBar: React.FC<PriceHintBarProps> = ({ orgId, descricao, unidade }) => {
   const [records, setRecords] = useState<PriceHistoryRecord[]>([]);
   const [showSheet, setShowSheet] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -31,7 +32,7 @@ export const PriceHintBar: React.FC<PriceHintBarProps> = ({ descricao, unidade }
 
     debounceRef.current = setTimeout(async () => {
       lastQuery.current = queryKey;
-      const data = await fetchPriceHistory(trimmed, unidade);
+      const data = await fetchPriceHistory(orgId, trimmed, unidade);
       setRecords(data);
     }, 500);
 

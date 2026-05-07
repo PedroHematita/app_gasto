@@ -8,6 +8,7 @@ import { formatDateBR, parseDateBR, FORNECEDOR_REQUIRED_MSG } from '../utils';
 import type { PeriodicidadePerene } from '../types';
 
 interface GastoPereneFormModalProps {
+  orgId: string;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -26,7 +27,7 @@ const MESES = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
 
-export const GastoPereneFormModal: React.FC<GastoPereneFormModalProps> = ({ onClose, onSaved }) => {
+export const GastoPereneFormModal: React.FC<GastoPereneFormModalProps> = ({ orgId, onClose, onSaved }) => {
   const [fornecedor, setFornecedor] = useState('');
   const [fornecedorError, setFornecedorError] = useState(false);
   const [valorCents, setValorCents] = useState(0);
@@ -103,7 +104,7 @@ export const GastoPereneFormModal: React.FC<GastoPereneFormModalProps> = ({ onCl
 
     setSaving(true);
     try {
-      await createGastoPerene({
+      await createGastoPerene(orgId, {
         fornecedor: fornecedor.trim(),
         valorPrevistoCents: valorCents,
         periodicidade,
@@ -140,7 +141,7 @@ export const GastoPereneFormModal: React.FC<GastoPereneFormModalProps> = ({ onCl
             }}
             bgVariant="surface"
             autoComplete="off"
-            autocompleteSearch={searchFornecedores}
+            autocompleteSearch={(q) => searchFornecedores(orgId, q)}
             showError={fornecedorError}
           />
 

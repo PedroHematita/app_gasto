@@ -9,6 +9,7 @@ import { searchDescricoes } from '../lib/supabase';
 import type { GastoItem } from '../types';
 
 interface ItemFormProps {
+  orgId: string;
   descricao: string;
   quantidade: string;
   unidade: string;
@@ -24,6 +25,7 @@ interface ItemFormProps {
 }
 
 export const ItemForm: React.FC<ItemFormProps> = ({
+  orgId,
   descricao,
   quantidade,
   unidade,
@@ -58,14 +60,14 @@ export const ItemForm: React.FC<ItemFormProps> = ({
         autoComplete="on"
         autoCorrect="on"
         spellCheck
-        autocompleteSearch={searchDescricoes}
+        autocompleteSearch={(q) => searchDescricoes(orgId, q)}
         onSelectSuggestion={(_, payload) => {
           if (payload && payload.unidade) {
             onUnidadeChange(payload.unidade);
           }
         }}
       />
-      <PriceHintBar descricao={descricao} unidade={unidade} />
+      <PriceHintBar orgId={orgId} descricao={descricao} unidade={unidade} />
 
       <div className="form-row">
         <FloatingInput

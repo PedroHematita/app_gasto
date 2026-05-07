@@ -7,6 +7,7 @@ import { searchFornecedores } from '../lib/supabase';
 import type { PaymentData } from '../types';
 
 interface PaymentModalProps {
+  orgId: string;
   payment: PaymentData;
   onChange: (data: Partial<PaymentData>) => void;
   onSave: () => void;
@@ -20,6 +21,7 @@ interface PaymentModalProps {
 }
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({
+  orgId,
   payment,
   onChange,
   onSave,
@@ -97,7 +99,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           }}
           bgVariant="surface"
           autoComplete="off"
-          autocompleteSearch={searchFornecedores}
+          autocompleteSearch={(q) => searchFornecedores(orgId, q)}
           showError={fornecedorError}
         />
 

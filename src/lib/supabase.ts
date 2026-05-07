@@ -11,6 +11,7 @@ export const supabase = supabaseUrl && supabaseAnonKey
   : null;
 
 export async function saveGasto(
+  orgId: string,
   dataCompra: string,
   fornecedor: string,
   formaPagamento: string,
@@ -47,6 +48,7 @@ export async function saveGasto(
     .from('gastos')
     .insert({
       user_id: user.id,
+      org_id: orgId,
       data_compra: dataISO,
       fornecedor: fornecedorOk,
       forma_pagamento: formaPagamento,
@@ -101,12 +103,13 @@ export async function uploadComprovante(
   return data.publicUrl;
 }
 
-export async function searchDescricoes(query: string): Promise<{ label: string; payload: any }[]> {
+export async function searchDescricoes(orgId: string, query: string): Promise<{ label: string; payload: any }[]> {
   if (!supabase || query.length < 2) return [];
 
   const { data, error } = await supabase
     .from('itens_gasto')
-    .select('descricao_produto_servico, unidade_medida')
+    .select('descricao_produto_servico, unidade_medida, gastos!inner(org_id)')
+    .eq('gastos.org_id', orgId)
     .ilike('descricao_produto_servico', `%${query}%`)
     .order('created_at', { ascending: false })
     .limit(20);
@@ -128,7 +131,7 @@ export async function searchDescricoes(query: string): Promise<{ label: string; 
   return unique.slice(0, 5);
 }
 
-export async function checkUnidadeForDescricao(descricao: string): Promise<string | null> {
+export async function checkUnidadeForDescricao(orgId: string, descricao: string): Promise<string | null> {
   if (!supabase || !descricao.trim()) return null;
 
   // Use % instead of spaces to catch spacing variations in the DB
@@ -136,7 +139,8 @@ export async function checkUnidadeForDescricao(descricao: string): Promise<strin
 
   const { data, error } = await supabase
     .from('itens_gasto')
-    .select('descricao_produto_servico, unidade_medida')
+    .select('descricao_produto_servico, unidade_medida, gastos!inner(org_id)')
+    .eq('gastos.org_id', orgId)
     .ilike('descricao_produto_servico', `%${queryDesc}%`)
     .order('created_at', { ascending: false });
 
@@ -154,12 +158,13 @@ export async function checkUnidadeForDescricao(descricao: string): Promise<strin
   return null;
 }
 
-export async function searchFornecedores(query: string): Promise<string[]> {
+export async function searchFornecedores(orgId: string, query: string): Promise<string[]> {
   if (!supabase || query.length < 2) return [];
 
   const { data, error } = await supabase
     .from('gastos')
     .select('fornecedor')
+    .eq('org_id', orgId)
     .not('fornecedor', 'is', null)
     .ilike('fornecedor', `%${query}%`)
     .order('created_at', { ascending: false })
@@ -184,7 +189,7 @@ function brToISO(br: string): string {
 }
 
 // Fetch all gastos with items (for search across fornecedor AND item descriptions)
-export async function fetchGastos(): Promise<GastoRecord[]> {
+export async function fetchGastos(orgId: string): Promise<GastoRecord[]> {
   if (!supabase) return [];
 
   const { data, error } = await supabase
@@ -194,6 +199,7 @@ export async function fetchGastos(): Promise<GastoRecord[]> {
       instituicao_financeira, observacoes, total, comprovante_url, numero_parcelas, created_at,
       itens_gasto ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total, created_at )
     `)
+    .eq('org_id', orgId)
     .order('created_at', { ascending: false });
 
   if (error || !data) return [];
@@ -355,7 +361,7 @@ export interface PriceHistoryRecord {
   valorUnitarioCentavos: number;
 }
 
-export async function fetchPriceHistory(descricao: string, unidade: string): Promise<PriceHistoryRecord[]> {
+export async function fetchPriceHistory(orgId: string, descricao: string, unidade: string): Promise<PriceHistoryRecord[]> {
   if (!supabase || !descricao.trim() || !unidade) return [];
 
   // Query itens_gasto with their parent gasto for date and fornecedor
@@ -366,8 +372,9 @@ export async function fetchPriceHistory(descricao: string, unidade: string): Pro
       quantidade_adquirida,
       unidade_medida,
       created_at,
-      gastos!inner ( data_compra, fornecedor )
+      gastos!inner ( data_compra, fornecedor, org_id )
     `)
+    .eq('gastos.org_id', orgId)
     .ilike('descricao_produto_servico', descricao.trim())
     .eq('unidade_medida', unidade)
     .order('created_at', { ascending: false });
@@ -432,16 +439,13 @@ function mapCompromissoRow(row: any): CompromissoRecord {
 }
 
 /** Atualiza pendente ↔ vencido conforme data prevista (não altera quitado/cancelado). */
-export async function syncCompromissosStatus(): Promise<void> {
+export async function syncCompromissosStatus(orgId: string): Promise<void> {
   if (!supabase) return;
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
 
   const { data: rows, error } = await supabase
     .from('compromissos')
     .select('id, status, data_prevista_pagamento')
-    .eq('user_id', user.id)
+    .eq('org_id', orgId)
     .in('status', ['pendente', 'vencido']);
 
   if (error || !rows?.length) return;
@@ -454,13 +458,10 @@ export async function syncCompromissosStatus(): Promise<void> {
   }
 }
 
-export async function fetchCompromissosAtivos(): Promise<CompromissoRecord[]> {
+export async function fetchCompromissosAtivos(orgId: string): Promise<CompromissoRecord[]> {
   if (!supabase) return [];
 
-  await syncCompromissosStatus();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
+  await syncCompromissosStatus(orgId);
 
   const { data, error } = await supabase
     .from('compromissos')
@@ -468,7 +469,7 @@ export async function fetchCompromissosAtivos(): Promise<CompromissoRecord[]> {
       id, data_compra, data_prevista_pagamento, fornecedor, status, created_at, gasto_id, gasto_perene_id, competencia_chave,
       compromisso_itens ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total )
     `)
-    .eq('user_id', user.id)
+    .eq('org_id', orgId)
     .in('status', ['pendente', 'vencido']);
 
   if (error || !data) return [];
@@ -485,8 +486,8 @@ export async function fetchCompromissosAtivos(): Promise<CompromissoRecord[]> {
   return [...vencidos, ...pendentes];
 }
 
-export async function fetchCompromissoIndicatorCounts(): Promise<{ vencidos: number; pendentes: number }> {
-  const list = await fetchCompromissosAtivos();
+export async function fetchCompromissoIndicatorCounts(orgId: string): Promise<{ vencidos: number; pendentes: number }> {
+  const list = await fetchCompromissosAtivos(orgId);
   let vencidos = 0;
   let pendentes = 0;
   for (const c of list) {
@@ -499,7 +500,7 @@ export async function fetchCompromissoIndicatorCounts(): Promise<{ vencidos: num
 export async function fetchCompromissoById(compromissoId: string): Promise<CompromissoRecord | null> {
   if (!supabase) return null;
 
-  await syncCompromissosStatus();
+  // syncCompromissosStatus is called by the caller if needed
 
   const { data, error } = await supabase
     .from('compromissos')
@@ -516,6 +517,7 @@ export async function fetchCompromissoById(compromissoId: string): Promise<Compr
 }
 
 export async function saveCompromisso(
+  orgId: string,
   dataCompraBR: string,
   dataPrevistaBR: string,
   fornecedor: string,
@@ -544,6 +546,7 @@ export async function saveCompromisso(
     .from('compromissos')
     .insert({
       user_id: user.id,
+      org_id: orgId,
       data_compra: brToISO(dataCompraBR),
       data_prevista_pagamento: prevISO,
       fornecedor: fornecedorOk,
@@ -610,16 +613,13 @@ function mapGastoPereneRow(row: any): GastoPereneRecord {
   };
 }
 
-export async function fetchGastosPerenesAtivos(): Promise<GastoPereneRecord[]> {
+export async function fetchGastosPerenesAtivos(orgId: string): Promise<GastoPereneRecord[]> {
   if (!supabase) return [];
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
 
   const { data, error } = await supabase
     .from('gastos_perenes')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('org_id', orgId)
     .eq('status', 'ativo')
     .order('fornecedor', { ascending: true });
 
@@ -640,7 +640,7 @@ export async function fetchGastoPereneById(id: string): Promise<GastoPereneRecor
   return mapGastoPereneRow(data);
 }
 
-export async function createGastoPerene(payload: {
+export async function createGastoPerene(orgId: string, payload: {
   fornecedor: string;
   valorPrevistoCents: number;
   periodicidade: PeriodicidadePerene;
@@ -666,6 +666,7 @@ export async function createGastoPerene(payload: {
     .from('gastos_perenes')
     .insert({
       user_id: user.id,
+      org_id: orgId,
       fornecedor: fornecedorOk,
       valor_previsto: payload.valorPrevistoCents / 100,
       periodicidade: payload.periodicidade,
@@ -726,10 +727,10 @@ export async function encerrarGastoPerene(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function fetchCompromissosByGastoPereneId(gastoPereneId: string): Promise<CompromissoRecord[]> {
+export async function fetchCompromissosByGastoPereneId(orgId: string, gastoPereneId: string): Promise<CompromissoRecord[]> {
   if (!supabase) return [];
 
-  await syncCompromissosStatus();
+  await syncCompromissosStatus(orgId);
 
   const { data, error } = await supabase
     .from('compromissos')
@@ -746,6 +747,7 @@ export async function fetchCompromissosByGastoPereneId(gastoPereneId: string): P
 
 async function insertCompromissoGerado(input: {
   userId: string;
+  orgId: string;
   fornecedor: string;
   valorCentavos: number;
   dataCompraISO: string;
@@ -761,6 +763,7 @@ async function insertCompromissoGerado(input: {
     .from('compromissos')
     .insert({
       user_id: input.userId,
+      org_id: input.orgId,
       data_compra: input.dataCompraISO,
       data_prevista_pagamento: input.dataPrevistaISO,
       fornecedor: input.fornecedor,
@@ -785,10 +788,10 @@ async function insertCompromissoGerado(input: {
   if (itensError) throw itensError;
 }
 
-export async function ensureCompromissosFromGastosPerenes(): Promise<void> {
+export async function ensureCompromissosFromGastosPerenes(orgId: string): Promise<void> {
   if (!supabase) return;
 
-  await syncCompromissosStatus();
+  await syncCompromissosStatus(orgId);
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
@@ -796,7 +799,7 @@ export async function ensureCompromissosFromGastosPerenes(): Promise<void> {
   const { data: perenes, error } = await supabase
     .from('gastos_perenes')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('org_id', orgId)
     .eq('status', 'ativo');
 
   if (error || !perenes?.length) return;
@@ -833,6 +836,7 @@ export async function ensureCompromissosFromGastosPerenes(): Promise<void> {
 
       await insertCompromissoGerado({
         userId: user.id,
+        orgId,
         fornecedor: fornecedorOk,
         valorCentavos,
         dataCompraISO: p.dataCompraISO,
@@ -842,4 +846,104 @@ export async function ensureCompromissosFromGastosPerenes(): Promise<void> {
       });
     }
   }
+}
+
+// =========================================================================
+// ADMIN FUNCTIONS
+// =========================================================================
+
+export async function adminFetchOrgs() {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('organizacoes')
+    .select(`
+      id,
+      nome,
+      created_at,
+      organizacao_membros ( count )
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map((org: any) => ({
+    id: org.id,
+    nome: org.nome,
+    createdAt: org.created_at,
+    memberCount: org.organizacao_membros[0]?.count || 0,
+  }));
+}
+
+export async function adminFetchUsers() {
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc('admin_get_all_users');
+  if (error || !data) return [];
+  return data;
+}
+
+export async function adminSearchUserByEmail(email: string) {
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc('admin_search_user_by_email', { p_email: email });
+  if (error || !data || data.length === 0) return null;
+  return data[0];
+}
+
+export async function adminFetchLinks() {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('organizacao_membros')
+    .select(`
+      id,
+      org_id,
+      user_id,
+      role,
+      created_at,
+      organizacoes ( nome )
+    `)
+    .order('created_at', { ascending: false });
+    
+  if (error || !data) return [];
+  return data;
+}
+
+export async function adminCreateOrg(nome: string) {
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('organizacoes')
+    .insert({ nome })
+    .select('id, nome, created_at')
+    .single();
+
+  if (error) {
+    console.error('Error creating org:', error);
+    return null;
+  }
+  return data;
+}
+
+export async function adminLinkUserToOrg(userId: string, orgId: string, role: 'owner' | 'member') {
+  if (!supabase) return false;
+  const { error } = await supabase
+    .from('organizacao_membros')
+    .insert({ user_id: userId, org_id: orgId, role });
+
+  if (error) {
+    console.error('Error linking user to org:', error);
+    return false;
+  }
+  return true;
+}
+
+export async function adminUnlinkUser(linkId: string) {
+  if (!supabase) return false;
+  const { error } = await supabase
+    .from('organizacao_membros')
+    .delete()
+    .eq('id', linkId);
+
+  if (error) {
+    console.error('Error unlinking user:', error);
+    return false;
+  }
+  return true;
 }

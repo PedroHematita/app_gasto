@@ -11,12 +11,14 @@ import {
 } from '../utils';
 
 interface SalvarCompromissoModalProps {
+  orgId: string;
   dataCompraBR: string;
   onClose: () => void;
   onConfirm: (fornecedor: string, dataPrevistaPagamentoBR: string) => void;
 }
 
 export const SalvarCompromissoModal: React.FC<SalvarCompromissoModalProps> = ({
+  orgId,
   dataCompraBR,
   onClose,
   onConfirm,
@@ -93,7 +95,7 @@ export const SalvarCompromissoModal: React.FC<SalvarCompromissoModalProps> = ({
             }}
             bgVariant="surface"
             autoComplete="off"
-            autocompleteSearch={searchFornecedores}
+            autocompleteSearch={(q) => searchFornecedores(orgId, q)}
             showError={fornecedorError}
           />
 

@@ -24,6 +24,7 @@ const MESES = [
 ];
 
 interface GastoPereneDetailProps {
+  orgId: string;
   gastoPereneId: string;
   onBack: () => void;
   onEncerrado: () => void;
@@ -32,6 +33,7 @@ interface GastoPereneDetailProps {
 }
 
 export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
+  orgId,
   gastoPereneId,
   onBack,
   onEncerrado,
@@ -55,7 +57,7 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
     try {
       const [gp, hist] = await Promise.all([
         fetchGastoPereneById(gastoPereneId),
-        fetchCompromissosByGastoPereneId(gastoPereneId),
+        fetchCompromissosByGastoPereneId(orgId, gastoPereneId),
       ]);
       setRecord(gp);
       setHistorico(hist);
