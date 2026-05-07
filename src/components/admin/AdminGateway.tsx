@@ -1,4 +1,5 @@
 import { ShieldAlert, User } from 'lucide-react';
+import { LogoutButton } from '../LogoutButton';
 
 
 interface AdminGatewayProps {
@@ -7,7 +8,11 @@ interface AdminGatewayProps {
 
 export const AdminGateway: React.FC<AdminGatewayProps> = ({ onSelect }) => {
   return (
-    <div className="app-container" style={{ justifyContent: 'center', padding: '0 24px' }}>
+    <div className="app-container" style={{ justifyContent: 'center', padding: '0 24px', position: 'relative' }}>
+      <div style={{ position: 'absolute', top: 24, right: 24 }}>
+        <LogoutButton onLogoutComplete={() => window.location.reload()} />
+      </div>
+
       <div style={{ textAlign: 'center', marginBottom: 36 }}>
         <div style={{
           width: 56, height: 56, borderRadius: '50%',

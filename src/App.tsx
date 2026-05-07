@@ -20,6 +20,7 @@ import { PriceWarningModal } from './components/PriceWarningModal';
 import { OrgSelector } from './components/OrgSelector';
 import { AdminGateway } from './components/admin/AdminGateway';
 import { AdminPanel } from './components/admin/AdminPanel';
+import { LogoutButton } from './components/LogoutButton';
 import { OrgProvider, useOrg } from './contexts/OrgContext';
 import { formatDateBR, generateId } from './utils';
 import {
@@ -793,7 +794,7 @@ function AppInner() {
 
       {/* Draft Clear Button */}
       {!isEditMode && hasDraft && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px 20px 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px 20px 0', position: 'relative', zIndex: 11 }}>
           <button
             onClick={() => setShowClearDraftWarning(true)}
             type="button"
@@ -814,9 +815,14 @@ function AppInner() {
         </div>
       )}
 
-      {/* Date header */}
-      <div className="date-header" style={{ paddingTop: (!isEditMode && hasDraft) ? 8 : 16 }}>
-        <div className="date-header__row">
+      {/* Date header & Logout */}
+      <div className="date-header" style={{ paddingTop: (!isEditMode && hasDraft) ? 8 : 16, position: 'relative' }}>
+        {!isEditMode && (
+          <div style={{ position: 'absolute', top: (!isEditMode && hasDraft) ? 8 : 16, right: 16, zIndex: 10 }}>
+            <LogoutButton onLogoutComplete={() => window.location.reload()} />
+          </div>
+        )}
+        <div className="date-header__row" style={{ paddingRight: !isEditMode ? 40 : 0 }}>
           <FloatingInput
             id="input-data"
             label="Data da compra"

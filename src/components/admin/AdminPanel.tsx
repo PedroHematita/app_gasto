@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { LogOut, Building2, Users, Link as LinkIcon } from 'lucide-react';
+import { Building2, Users, Link as LinkIcon, X } from 'lucide-react';
 import { AdminOrgs } from './AdminOrgs';
 import { AdminUsers } from './AdminUsers';
 import { AdminLinks } from './AdminLinks';
+import { LogoutButton } from '../LogoutButton';
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -24,23 +25,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
               Gerenciamento central do sistema
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: 'var(--card-bg)',
-              border: '1px solid var(--border)',
-              borderRadius: '50%',
-              width: 36,
-              height: 36,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-            }}
-          >
-            <LogOut size={16} color="var(--text-primary)" />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <LogoutButton onLogoutComplete={() => window.location.reload()} />
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: 'var(--card-bg)',
+                border: '1px solid var(--border)',
+                borderRadius: '50%',
+                width: 36,
+                height: 36,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <X size={16} color="var(--text-primary)" />
+            </button>
+          </div>
         </div>
       </header>
 

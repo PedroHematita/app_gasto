@@ -1,0 +1,86 @@
+import { useState } from 'react';
+import { LogOut } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+
+interface LogoutButtonProps {
+  onLogoutComplete?: () => void;
+  style?: React.CSSProperties;
+}
+
+export const LogoutButton: React.FC<LogoutButtonProps> = ({ onLogoutComplete, style }) => {
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      // Clear persistence
+      localStorage.removeItem('app_gasto_last_org_id');
+      localStorage.removeItem('app_gasto_draft');
+      // Sign out
+      await supabase?.auth.signOut();
+      
+      if (onLogoutComplete) {
+        onLogoutComplete();
+      }
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
+  };
+
+  return (
+    <>
+      <button
+        onClick={() => setShowConfirm(true)}
+        type="button"
+        style={{
+          background: 'transparent',
+          border: 'none',
+          color: 'var(--text-inactive)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 32,
+          height: 32,
+          borderRadius: 8,
+          ...style
+        }}
+        aria-label="Sair da aplicação"
+      >
+        <LogOut size={16} />
+      </button>
+
+      {showConfirm && (
+        <div
+          className="modal-overlay"
+          style={{ zIndex: 1000 }}
+          onClick={() => setShowConfirm(false)}
+        >
+          <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-sheet__handle" />
+            <div className="modal-sheet__title">Deseja sair da aplicação?</div>
+            <div className="compromisso-cancel-confirm__body">
+              <p>Você será desconectado da sua conta atual.</p>
+            </div>
+            <div className="compromisso-cancel-confirm__actions">
+              <button
+                type="button"
+                className="btn-compromisso-secondary"
+                onClick={() => setShowConfirm(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn-compromisso-secondary"
+                style={{ color: '#f87171' }}
+                onClick={handleLogout}
+              >
+                Sair
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
