@@ -113,8 +113,11 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
   const [expandedFuturosMonths, setExpandedFuturosMonths] = useState<Record<string, boolean>>({});
   const compromissosSectionRef = useRef<HTMLDivElement>(null);
 
+  const hasAutoCollapsedRef = useRef(false);
+
   useEffect(() => {
     setLoading(true);
+    hasAutoCollapsedRef.current = false;
     Promise.all([fetchGastos(orgId), fetchCompromissosAtivos(orgId), fetchGastosPerenesAtivos(orgId)])
       .then(([g, c, p]) => {
         setGastos(g);
@@ -383,6 +386,14 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
       return nextExpanded;
     });
   }, [monthKeysInOrder, search]);
+
+  // Auto-recolher tudo ao montar a tela (após dados carregarem)
+  useEffect(() => {
+    if (!loading && !hasAutoCollapsedRef.current) {
+      hasAutoCollapsedRef.current = true;
+      collapseAllMeusGastos();
+    }
+  }, [loading]);
 
   useEffect(() => {
     if (futurosMonthKeysInOrder.length === 0) {
@@ -965,20 +976,10 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                       <button
                         type="button"
                         className="meus-gastos-summary__toggle-all-btn"
-                        onClick={toggleGlobalExpandCollapse}
-                        aria-label={
-                          collapseMajorityExpanded ? 'Recolher todas as seções' : 'Expandir todas as seções'
-                        }
+                        onClick={collapseAllMeusGastos}
+                        aria-label="Recolher todas as seções"
                       >
-                        {collapseMajorityExpanded ? (
-                          <>
-                            Recolher <ChevronUp size={14} strokeWidth={2} aria-hidden />
-                          </>
-                        ) : (
-                          <>
-                            Expandir <ChevronDown size={14} strokeWidth={2} aria-hidden />
-                          </>
-                        )}
+                        Recolher <ChevronUp size={14} strokeWidth={2} aria-hidden />
                       </button>
                     </div>
                     <span className="meus-gastos-summary__total">
@@ -1005,20 +1006,10 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                 <button
                   type="button"
                   className="meus-gastos-summary__toggle-all-btn"
-                  onClick={toggleGlobalExpandCollapse}
-                  aria-label={
-                    collapseMajorityExpanded ? 'Recolher todas as seções' : 'Expandir todas as seções'
-                  }
+                  onClick={collapseAllMeusGastos}
+                  aria-label="Recolher todas as seções"
                 >
-                  {collapseMajorityExpanded ? (
-                    <>
-                      Recolher <ChevronUp size={14} strokeWidth={2} aria-hidden />
-                    </>
-                  ) : (
-                    <>
-                      Expandir <ChevronDown size={14} strokeWidth={2} aria-hidden />
-                    </>
-                  )}
+                  Recolher <ChevronUp size={14} strokeWidth={2} aria-hidden />
                 </button>
               </div>
               <span className="meus-gastos-summary__total">{formatCurrency(totalPagoSum)}</span>
