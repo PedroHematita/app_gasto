@@ -12,6 +12,11 @@ export function requireFornecedorTrimmed(fornecedor: string): string {
   return t;
 }
 
+/** Trim + lower + colapsar espaços — alinhado a `normalize_cotacao_descricao` no Postgres. */
+export function normalizeDescricao(input: string): string {
+  return input.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
 export function formatCurrency(cents: number): string {
   const value = cents / 100;
   return value.toLocaleString('pt-BR', {

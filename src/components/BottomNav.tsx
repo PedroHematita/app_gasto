@@ -1,8 +1,8 @@
-import { PlusCircle, List } from 'lucide-react';
+import { PlusCircle, List, Scale } from 'lucide-react';
 import type { Screen } from '../types';
 
 interface BottomNavProps {
-  active: 'main' | 'meus_gastos';
+  active: 'main' | 'meus_gastos' | 'cotacoes';
   onNavigate: (screen: Screen) => void;
 }
 
@@ -24,6 +24,14 @@ export const BottomNav: React.FC<BottomNavProps> = ({ active, onNavigate }) => {
       >
         <List size={20} />
         <span>Meus Gastos</span>
+      </button>
+      <button
+        className={`bottom-nav__item ${active === 'cotacoes' ? 'bottom-nav__item--active' : ''}`}
+        onClick={() => onNavigate('cotacoes')}
+        type="button"
+      >
+        <Scale size={20} />
+        <span>Cotações</span>
       </button>
     </nav>
   );

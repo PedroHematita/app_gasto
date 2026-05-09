@@ -107,7 +107,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
-  const [collapseTick, setCollapseTick] = useState(0);
+  const [, setCollapseTick] = useState(0);
   const [forecastWindowTick, setForecastWindowTick] = useState(0);
   const [futurosUiTick, setFuturosUiTick] = useState(0);
   const [expandedFuturosMonths, setExpandedFuturosMonths] = useState<Record<string, boolean>>({});
@@ -334,29 +334,6 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     setFuturosUiTick((t) => t + 1);
   };
 
-  const expandAllMeusGastos = () => {
-    meusGastosSectionCollapse.perenesExpanded = true;
-    meusGastosSectionCollapse.compromissosExpanded = true;
-    meusGastosFuturosCollapse.sectionExpanded = true;
-    gastosFuturosAnos.forEach((yg) => {
-      meusGastosFuturosCollapse.expandedYears[String(yg.year)] = true;
-    });
-    setExpandedMonths(
-      monthKeysInOrder.reduce<Record<string, boolean>>((acc, key) => {
-        acc[key] = true;
-        return acc;
-      }, {})
-    );
-    setExpandedFuturosMonths(
-      futurosMonthKeysInOrder.reduce<Record<string, boolean>>((acc, key) => {
-        acc[key] = true;
-        return acc;
-      }, {})
-    );
-    setCollapseTick((t) => t + 1);
-    setFuturosUiTick((t) => t + 1);
-  };
-
   useEffect(() => {
     if (monthKeysInOrder.length === 0) {
       setExpandedMonths({});
@@ -490,49 +467,6 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
   };
 
   const futurosSectionExpanded = meusGastosFuturosCollapse.sectionExpanded;
-
-  const collapseMajorityExpanded = useMemo(() => {
-    const units: boolean[] = [];
-    if (gastosPerenesParaExibir.length > 0) {
-      units.push(displayPerenesExpanded);
-    }
-    if (compromissosParaExibir.length > 0) {
-      units.push(displayCompromissosExpanded);
-    }
-    units.push(meusGastosFuturosCollapse.sectionExpanded);
-    gastosFuturosAnos.forEach((yg) => {
-      units.push(!!meusGastosFuturosCollapse.expandedYears[String(yg.year)]);
-    });
-    futurosMonthKeysInOrder.forEach((k) => {
-      units.push(!!expandedFuturosMonths[k]);
-    });
-    monthKeysInOrder.forEach((k) => {
-      units.push(!!expandedMonths[k]);
-    });
-    if (units.length === 0) return false;
-    const expandedCount = units.filter(Boolean).length;
-    return expandedCount > units.length / 2;
-  }, [
-    collapseTick,
-    futurosUiTick,
-    gastosPerenesParaExibir.length,
-    compromissosParaExibir.length,
-    displayPerenesExpanded,
-    displayCompromissosExpanded,
-    gastosFuturosAnos,
-    expandedFuturosMonths,
-    expandedMonths,
-    futurosMonthKeysInOrder,
-    monthKeysInOrder,
-  ]);
-
-  const toggleGlobalExpandCollapse = () => {
-    if (collapseMajorityExpanded) {
-      collapseAllMeusGastos();
-    } else {
-      expandAllMeusGastos();
-    }
-  };
 
   const renderGastosFuturosSection = () => {
     const totalItens = gastosFuturosAnos.reduce(

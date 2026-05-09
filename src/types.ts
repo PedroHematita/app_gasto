@@ -98,6 +98,39 @@ export type Screen =
   | 'gasto_edit'
   | 'compromisso_detail'
   | 'gasto_perene_detail'
+  | 'cotacoes'
+  | 'cotacao_detail'
   | 'org_selector'
   | 'admin_gateway'
   | 'admin_panel';
+
+/** Cotação de preços (produto) por organização */
+export interface CotacaoRecord {
+  id: string;
+  orgId: string;
+  descricao: string;
+  quantidade: number;
+  unidadeMedida: string;
+  createdAt: string;
+}
+
+/** Linha na listagem de cotações (card) */
+export interface CotacaoListCard {
+  id: string;
+  descricao: string;
+  quantidade: number;
+  unidadeMedida: string;
+  menorPrecoUnitarioCentavos: number | null;
+  fornecedorMenorPreco: string | null;
+  qtdRegistrosPreco: number;
+  ultimaAtualizacaoISO: string;
+}
+
+/** Preço registrado em uma cotação */
+export interface CotacaoPrecoRow {
+  id: string;
+  fornecedor: string;
+  valorCentavos: number;
+  dataRegistroBR: string;
+  createdAtISO: string;
+}

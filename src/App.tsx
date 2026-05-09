@@ -10,6 +10,8 @@ import { LoginScreen } from './components/LoginScreen';
 import { DatePickerSheet } from './components/DatePickerSheet';
 import { BottomNav } from './components/BottomNav';
 import { MeusGastos } from './components/MeusGastos';
+import { CotacoesScreen } from './components/cotacoes/CotacoesScreen';
+import { CotacaoDetailScreen } from './components/cotacoes/CotacaoDetailScreen';
 import { GastoDetail } from './components/GastoDetail';
 import { CompromissoDetail } from './components/CompromissoDetail';
 import { GastoPereneDetail } from './components/GastoPereneDetail';
@@ -156,6 +158,7 @@ function AppInner() {
 
   const [showGastoPereneModal, setShowGastoPereneModal] = useState(false);
   const [selectedGastoPereneId, setSelectedGastoPereneId] = useState<string | null>(null);
+  const [selectedCotacaoId, setSelectedCotacaoId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authenticated || !supabase || !orgId) return;
@@ -473,6 +476,7 @@ function AppInner() {
   // Navigate from bottom nav
   const handleNavigate = useCallback((target: Screen) => {
     setScreen(target);
+    if (target === 'cotacoes') setSelectedCotacaoId(null);
   }, []);
 
   // Select gasto from list
@@ -674,6 +678,38 @@ function AppInner() {
         payment={savedData.payment}
         totalCents={savedData.totalCents}
         onNewExpense={handleNewExpense}
+      />
+    );
+  }
+
+  // Cotações
+  if (screen === 'cotacoes') {
+    return (
+      <>
+        <CotacoesScreen
+          orgId={orgId}
+          refreshKey={refreshKey}
+          onOpenDetail={(id) => {
+            setSelectedCotacaoId(id);
+            setScreen('cotacao_detail');
+          }}
+        />
+        <BottomNav active="cotacoes" onNavigate={handleNavigate} />
+      </>
+    );
+  }
+
+  if (screen === 'cotacao_detail' && selectedCotacaoId) {
+    return (
+      <CotacaoDetailScreen
+        orgId={orgId}
+        cotacaoId={selectedCotacaoId}
+        refreshNonce={refreshKey}
+        onBack={() => {
+          setSelectedCotacaoId(null);
+          setScreen('cotacoes');
+        }}
+        onChanged={() => setRefreshKey((k) => k + 1)}
       />
     );
   }
