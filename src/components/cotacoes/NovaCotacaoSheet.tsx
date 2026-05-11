@@ -12,7 +12,6 @@ interface NovaCotacaoSheetProps {
 
 export function NovaCotacaoSheet({ orgId, onClose, onSaved }: NovaCotacaoSheetProps) {
   const [descricao, setDescricao] = useState('');
-  const [quantidade, setQuantidade] = useState('1');
   const [unidade, setUnidade] = useState('Unidade');
   const [saving, setSaving] = useState(false);
 
@@ -27,15 +26,9 @@ export function NovaCotacaoSheet({ orgId, onClose, onSaved }: NovaCotacaoSheetPr
       alert('Use ao menos 3 caracteres na descrição do produto.');
       return;
     }
-    const qtyStr = quantidade.replace(',', '.');
-    const qty = parseFloat(qtyStr);
-    if (isNaN(qty) || qty <= 0) {
-      alert('Informe uma quantidade válida maior que zero.');
-      return;
-    }
     setSaving(true);
     try {
-      const res = await createCotacao(orgId, d, qty, unidade);
+      const res = await createCotacao(orgId, d, 1, unidade);
       if ('error' in res) {
         alert(res.error);
         return;
@@ -62,15 +55,6 @@ export function NovaCotacaoSheet({ orgId, onClose, onSaved }: NovaCotacaoSheetPr
             autocompleteSearch={searchAuto}
           />
           <div className="form-row">
-            <FloatingInput
-              id="cotacao-nova-qty"
-              label="Quantidade"
-              value={quantidade}
-              onChange={setQuantidade}
-              type="text"
-              inputMode="decimal"
-              bgVariant="surface"
-            />
             <FloatingSelect
               id="cotacao-nova-un"
               label="Unidade de medida"

@@ -9,7 +9,7 @@ import {
   compareDataBR,
 } from '../../lib/cotacoesDb';
 import type { CotacaoRecord, CotacaoPrecoRow } from '../../types';
-import { CotacaoStatsBar } from './CotacaoStatsBar';
+import { formatCurrency } from '../../utils';
 import { CotacaoLineChart, type CotacaoChartPoint } from './CotacaoLineChart';
 import { CotacaoPrecosTable } from './CotacaoPrecosTable';
 import { EditCotacaoSheet } from './EditCotacaoSheet';
@@ -81,6 +81,21 @@ export function CotacaoDetailScreen({
     }));
   }, [cotacao, filtered]);
 
+  const tendenciaNode = useMemo(() => {
+    if (chartPoints.length < 2) return <span style={{ color: 'var(--text-inactive)' }}>—</span>;
+    const last = chartPoints[chartPoints.length - 1];
+    const prev = chartPoints[chartPoints.length - 2];
+    if (last.valorUnitarioCentavos > prev.valorUnitarioCentavos) {
+      const pct = ((last.valorUnitarioCentavos - prev.valorUnitarioCentavos) / prev.valorUnitarioCentavos) * 100;
+      return <span style={{ color: '#ff6b6b' }}>↑ +{pct.toFixed(0)}%</span>;
+    }
+    if (last.valorUnitarioCentavos < prev.valorUnitarioCentavos) {
+      const pct = ((prev.valorUnitarioCentavos - last.valorUnitarioCentavos) / prev.valorUnitarioCentavos) * 100;
+      return <span style={{ color: '#4ade80' }}>↓ -{pct.toFixed(0)}%</span>;
+    }
+    return <span style={{ color: 'var(--text-inactive)' }}>—</span>;
+  }, [chartPoints]);
+
   const handleDeletePreco = async (id: string) => {
     const res = await deleteCotacaoPreco(id);
     if ('error' in res) {
@@ -110,10 +125,6 @@ export function CotacaoDetailScreen({
     );
   }
 
-  const qtyLabel = Number.isInteger(cotacao.quantidade)
-    ? String(cotacao.quantidade)
-    : cotacao.quantidade.toLocaleString('pt-BR');
-
   return (
     <div className="app-container" style={{ paddingBottom: 24 }}>
       <div className="detail-header">
@@ -141,15 +152,13 @@ export function CotacaoDetailScreen({
         <div className="cotacao-detail__product">
           <div className="cotacao-detail__product-title">{cotacao.descricao}</div>
           <div className="cotacao-detail__product-meta">
-            {qtyLabel} {cotacao.unidadeMedida}
+            {cotacao.unidadeMedida}
           </div>
         </div>
 
-        <CotacaoStatsBar
-          menorCentavos={stats.min}
-          mediaCentavos={stats.avg}
-          diferencaCentavos={stats.diff}
-        />
+        <div style={{ padding: '0 16px 16px', fontSize: 'var(--font-auxiliary)', color: 'var(--text-inactive)', textAlign: 'center' }}>
+          Menor: {stats.min != null ? formatCurrency(stats.min) : '—'} &middot; Média: {stats.avg != null ? formatCurrency(stats.avg) : '—'} &middot; Tendência: {tendenciaNode}
+        </div>
 
         <div style={{ padding: '12px 16px 0' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
@@ -165,9 +174,21 @@ export function CotacaoDetailScreen({
             {filterForn.trim() ? (
               <button
                 type="button"
-                className="cotacao-filter-clear"
                 onClick={() => setFilterForn('')}
                 aria-label="Limpar filtro"
+                style={{
+                  flexShrink: 0,
+                  width: 44,
+                  height: 44,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'transparent',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--text-inactive)',
+                  cursor: 'pointer'
+                }}
               >
                 <X size={18} />
               </button>
@@ -176,7 +197,13 @@ export function CotacaoDetailScreen({
         </div>
 
         <div style={{ padding: '8px 16px 0' }}>
-          <CotacaoLineChart pointsChrono={chartPoints} />
+          {chartPoints.length >= 2 ? (
+            <CotacaoLineChart pointsChrono={chartPoints} />
+          ) : (
+            <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-inactive)', fontSize: 'var(--font-auxiliary)' }}>
+              Adicione mais registros para ver a evolução do preço
+            </div>
+          )}
         </div>
 
         <div style={{ padding: '0 16px' }}>
@@ -203,6 +230,7 @@ export function CotacaoDetailScreen({
       {showAddPreco && (
         <AddPrecoSheet
           cotacaoId={cotacao.id}
+          unidade={cotacao.unidadeMedida}
           onClose={() => setShowAddPreco(false)}
           onSaved={() => {
             onChanged();

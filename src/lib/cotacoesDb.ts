@@ -39,10 +39,8 @@ export function compareDataBR(a: string, b: string): number {
 }
 
 /** Preço unitário (centavos) para uma observação: valor total / quantidade da cotação */
-export function valorUnitarioCentavos(valorTotalCentavos: number, quantidadeCotacao: number): number {
-  const q = Number(quantidadeCotacao);
-  if (!q || q <= 0) return 0;
-  return Math.round(valorTotalCentavos / q);
+export function valorUnitarioCentavos(valorTotalCentavos: number, _quantidadeCotacao: number): number {
+  return valorTotalCentavos;
 }
 
 /** Stats sobre observações filtradas (preços já restritos ao filtro). */
@@ -199,8 +197,10 @@ export async function fetchCotacoesList(orgId: string, searchRaw: string): Promi
     let fornecedorMenor: string | null = null;
     let ultima = c.created_at;
 
+    const unitCentavosArr: number[] = [];
     for (const r of bucket) {
       const unitCents = valorUnitarioCentavos(reaisToCentavos(r.valor), qtd);
+      unitCentavosArr.push(unitCents);
       if (menorUnit === null || unitCents < menorUnit) {
         menorUnit = unitCents;
         fornecedorMenor = r.fornecedor;
@@ -208,12 +208,15 @@ export async function fetchCotacoesList(orgId: string, searchRaw: string): Promi
       if (r.created_at > ultima) ultima = r.created_at;
     }
 
+    const stats = statsPrecosUnitarios(unitCentavosArr);
+
     return {
       id: c.id,
       descricao: c.descricao,
       quantidade: qtd,
       unidadeMedida: c.unidade_medida,
       menorPrecoUnitarioCentavos: menorUnit,
+      precoMedioCentavos: stats.avg,
       fornecedorMenorPreco: fornecedorMenor,
       qtdRegistrosPreco: bucket.length,
       ultimaAtualizacaoISO: ultima,

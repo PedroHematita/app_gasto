@@ -24,14 +24,7 @@ export function CotacoesScreen({ orgId, refreshKey, onOpenDetail }: CotacoesScre
       .finally(() => setLoading(false));
   }, [orgId, search, refreshKey]);
 
-  const fmtDate = (iso: string) => {
-    try {
-      const d = new Date(iso);
-      return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
-    } catch {
-      return '—';
-    }
-  };
+
 
   return (
     <div className="app-container" style={{ paddingBottom: 72 }}>
@@ -69,30 +62,41 @@ export function CotacoesScreen({ orgId, refreshKey, onOpenDetail }: CotacoesScre
         </div>
       ) : (
         <div className="meus-gastos-month-card" style={{ marginTop: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 16px 8px' }}>
+            <span className="detail-items-title" style={{ marginBottom: 0 }}>Descrição</span>
+            <span className="detail-items-title" style={{ marginBottom: 0 }}>Valor médio</span>
+          </div>
+          
           {list.map((c) => (
             <button
               key={c.id}
               type="button"
-              className="gasto-card cotacao-card-btn"
+              className="gasto-card"
               onClick={() => onOpenDetail(c.id)}
             >
-              <div className="gasto-card__top">
-                <span className="gasto-card__fornecedor" style={{ whiteSpace: 'normal' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                <span style={{
+                  flex: 1,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  paddingRight: 16,
+                  fontSize: 'var(--font-primary)',
+                  color: 'var(--text-secondary)',
+                  fontWeight: 'var(--weight-medium)'
+                }}>
                   {c.descricao}
                 </span>
-              </div>
-              <div className="cotacao-card__meta">
-                {Number.isInteger(c.quantidade) ? c.quantidade : c.quantidade.toLocaleString('pt-BR')}{' '}
-                {c.unidadeMedida}
-              </div>
-              <div className="gasto-card__bottom">
-                <span className="gasto-card__date">
-                  {c.menorPrecoUnitarioCentavos != null && c.fornecedorMenorPreco
-                    ? `${formatCurrency(c.menorPrecoUnitarioCentavos)} · ${c.fornecedorMenorPreco}`
-                    : 'Sem preços'}
-                </span>
-                <span className="gasto-card__meio">
-                  {c.qtdRegistrosPreco} reg. · {fmtDate(c.ultimaAtualizacaoISO)}
+                <span style={{
+                  fontVariantNumeric: 'tabular-nums',
+                  fontSize: 'var(--font-primary)',
+                  fontWeight: 'var(--weight-medium)',
+                  color: c.precoMedioCentavos != null ? 'var(--text-secondary)' : 'var(--text-inactive)',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {c.precoMedioCentavos != null
+                    ? formatCurrency(c.precoMedioCentavos)
+                    : '—'}
                 </span>
               </div>
             </button>

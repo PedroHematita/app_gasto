@@ -121,6 +121,7 @@ export interface CotacaoListCard {
   quantidade: number;
   unidadeMedida: string;
   menorPrecoUnitarioCentavos: number | null;
+  precoMedioCentavos: number | null;
   fornecedorMenorPreco: string | null;
   qtdRegistrosPreco: number;
   ultimaAtualizacaoISO: string;

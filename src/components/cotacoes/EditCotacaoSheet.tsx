@@ -14,7 +14,6 @@ interface EditCotacaoSheetProps {
 
 export function EditCotacaoSheet({ orgId, cotacao, onClose, onSaved }: EditCotacaoSheetProps) {
   const [descricao, setDescricao] = useState(cotacao.descricao);
-  const [quantidade, setQuantidade] = useState(String(cotacao.quantidade));
   const [unidade, setUnidade] = useState(cotacao.unidadeMedida);
   const [saving, setSaving] = useState(false);
 
@@ -29,15 +28,9 @@ export function EditCotacaoSheet({ orgId, cotacao, onClose, onSaved }: EditCotac
       alert('Use ao menos 3 caracteres na descrição do produto.');
       return;
     }
-    const qtyStr = quantidade.replace(',', '.');
-    const qty = parseFloat(qtyStr);
-    if (isNaN(qty) || qty <= 0) {
-      alert('Informe uma quantidade válida maior que zero.');
-      return;
-    }
     setSaving(true);
     try {
-      const res = await updateCotacao(cotacao.id, orgId, d, qty, unidade);
+      const res = await updateCotacao(cotacao.id, orgId, d, cotacao.quantidade, unidade);
       if ('error' in res) {
         alert(res.error);
         return;
@@ -64,15 +57,6 @@ export function EditCotacaoSheet({ orgId, cotacao, onClose, onSaved }: EditCotac
             autocompleteSearch={searchAuto}
           />
           <div className="form-row">
-            <FloatingInput
-              id="cotacao-edit-qty"
-              label="Quantidade"
-              value={quantidade}
-              onChange={setQuantidade}
-              type="text"
-              inputMode="decimal"
-              bgVariant="surface"
-            />
             <FloatingSelect
               id="cotacao-edit-un"
               label="Unidade de medida"

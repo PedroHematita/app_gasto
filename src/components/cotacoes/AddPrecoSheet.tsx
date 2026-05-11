@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { Calendar } from 'lucide-react';
 import { FloatingInput } from '../FloatingInput';
 import { CurrencyInput } from '../CurrencyInput';
 import { DatePickerSheet } from '../DatePickerSheet';
@@ -12,11 +13,12 @@ import { formatDateBR, parseDateBR } from '../../utils';
 
 interface AddPrecoSheetProps {
   cotacaoId: string;
+  unidade: string;
   onClose: () => void;
   onSaved: () => void;
 }
 
-export function AddPrecoSheet({ cotacaoId, onClose, onSaved }: AddPrecoSheetProps) {
+export function AddPrecoSheet({ cotacaoId, unidade, onClose, onSaved }: AddPrecoSheetProps) {
   const [fornecedor, setFornecedor] = useState('');
   const [valorCentavos, setValorCentavos] = useState(0);
   const [dataBR, setDataBR] = useState(formatDateBR(new Date()));
@@ -132,22 +134,24 @@ export function AddPrecoSheet({ cotacaoId, onClose, onSaved }: AddPrecoSheetProp
             />
             <CurrencyInput
               id="cotacao-preco-valor"
-              label="Valor"
+              label={`Valor por ${unidade}`}
               valueCents={valorCentavos}
               onChange={setValorCentavos}
               bgVariant="surface"
             />
-            <FloatingInput
-              id="cotacao-preco-data"
-              label="Data do registro"
-              value={dataBR}
-              onChange={handleDataChange}
-              inputMode="numeric"
-              bgVariant="surface"
-            />
-            <button type="button" className="date-header__calendar-btn" style={{ marginBottom: 12 }} onClick={() => setShowPicker(true)}>
-              Calendário
-            </button>
+            <div className="date-header__row" style={{ marginBottom: 12 }}>
+              <FloatingInput
+                id="cotacao-preco-data"
+                label="Data do registro"
+                value={dataBR}
+                onChange={handleDataChange}
+                inputMode="numeric"
+                bgVariant="surface"
+              />
+              <button type="button" className="date-header__calendar-btn" onClick={() => setShowPicker(true)} aria-label="Abrir calendário">
+                <Calendar size={18} />
+              </button>
+            </div>
             <button
               type="button"
               className="btn-save-main"
