@@ -18,12 +18,15 @@ import {
   rotuloFiltroDataClassificacao,
   rotuloFiltroFornecedorClassificacao,
   rotuloFiltroPagamentoClassificacao,
+  rotuloFiltroClassificacaoRapida,
+  CLASSIFICAR_FILTRO_CLASSIFICACAO_OPCOES,
   temFiltroDataClassificacaoAtivo,
   temFiltroFornecedorClassificacaoAtivo,
   temFiltroPagamentoClassificacaoAtivo,
   temFiltrosClassificacaoAtivos,
 } from '../../utils';
 import type {
+  ClassificarFiltroClassificacao,
   ClassificarFiltroData,
   ClassificarFiltroPagamento,
   ClassificarFiltrosState,
@@ -132,6 +135,7 @@ export const ClassificarGastosScreen: React.FC<ClassificarGastosScreenProps> = (
   const rotuloDataAtivo = rotuloFiltroDataClassificacao(filtros.data);
   const rotuloFornecedorAtivo = rotuloFiltroFornecedorClassificacao(filtros.fornecedores);
   const rotuloPagamentoAtivo = rotuloFiltroPagamentoClassificacao(filtros.pagamento);
+  const rotuloClassificacaoAtivo = rotuloFiltroClassificacaoRapida(filtros.classificacao);
 
   const selectionMode = selectedIds.size > 0;
 
@@ -159,6 +163,14 @@ export const ClassificarGastosScreen: React.FC<ClassificarGastosScreenProps> = (
       setFiltros((prev) => ({ ...prev, pagamento }));
       clearSelection();
       setPagamentoSheetOpen(false);
+    },
+    [clearSelection]
+  );
+
+  const applyFiltroClassificacao = useCallback(
+    (classificacao: ClassificarFiltroClassificacao) => {
+      setFiltros((prev) => ({ ...prev, classificacao }));
+      clearSelection();
     },
     [clearSelection]
   );
@@ -291,6 +303,29 @@ export const ClassificarGastosScreen: React.FC<ClassificarGastosScreenProps> = (
             Total: <strong>{formatCurrency(totalVisivelCents)}</strong>
           </p>
         )}
+        {!loading && gastosBrutos.length > 0 && (
+          <div
+            className="classificar-gastos-screen__classificacao-filtro"
+            role="group"
+            aria-label="Filtrar por classificação"
+          >
+            {CLASSIFICAR_FILTRO_CLASSIFICACAO_OPCOES.map((opcao) => (
+              <button
+                key={opcao.id}
+                type="button"
+                className={`classificar-gastos-screen__classificacao-chip ${
+                  filtros.classificacao === opcao.id
+                    ? 'classificar-gastos-screen__classificacao-chip--active'
+                    : ''
+                }`}
+                aria-pressed={filtros.classificacao === opcao.id}
+                onClick={() => applyFiltroClassificacao(opcao.id)}
+              >
+                {opcao.label}
+              </button>
+            ))}
+          </div>
+        )}
         {!loading && filtrosAtivos && gastosBrutos.length > 0 && (
           <div className="classificar-gastos-screen__filtros-bar">
             <p className="classificar-gastos-screen__filtros-count">
@@ -311,6 +346,12 @@ export const ClassificarGastosScreen: React.FC<ClassificarGastosScreenProps> = (
                 <span className="classificar-gastos-screen__filtros-label">
                   {' '}
                   · {rotuloPagamentoAtivo}
+                </span>
+              ) : null}
+              {rotuloClassificacaoAtivo ? (
+                <span className="classificar-gastos-screen__filtros-label">
+                  {' '}
+                  · {rotuloClassificacaoAtivo}
                 </span>
               ) : null}
             </p>

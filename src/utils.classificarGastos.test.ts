@@ -8,6 +8,8 @@ import {
   filtrarGastosClassificacaoPorData,
   filtrarGastosClassificacaoPorFornecedor,
   filtrarGastosClassificacaoPorPagamento,
+  filtrarGastosClassificacaoPorClassificacao,
+  gastoPassaFiltroClassificacaoRapida,
   formaPagamentoChaveClassificacao,
   fornecedorChaveClassificacao,
   gastoPassaFiltroPagamentoClassificacao,
@@ -668,6 +670,112 @@ describe('proximaOrdenacaoValorClassificacao', () => {
   });
 });
 
+describe('gastoPassaFiltroClassificacaoRapida', () => {
+  it('todos aceita qualquer gasto', () => {
+    expect(
+      gastoPassaFiltroClassificacaoRapida(
+        { tipoGasto: TIPO_GASTO_NAO_CLASSIFICADO, quemGastou: null },
+        'todos'
+      )
+    ).toBe(true);
+    expect(
+      gastoPassaFiltroClassificacaoRapida(
+        { tipoGasto: 'Pessoal', quemGastou: 'Pedro' },
+        'todos'
+      )
+    ).toBe(true);
+  });
+
+  it('não classificados usa gastoEstaClassificado', () => {
+    expect(
+      gastoPassaFiltroClassificacaoRapida(
+        { tipoGasto: TIPO_GASTO_NAO_CLASSIFICADO, quemGastou: null },
+        'nao_classificados'
+      )
+    ).toBe(true);
+    expect(
+      gastoPassaFiltroClassificacaoRapida(
+        { tipoGasto: '', quemGastou: null },
+        'nao_classificados'
+      )
+    ).toBe(true);
+    expect(
+      gastoPassaFiltroClassificacaoRapida(
+        { tipoGasto: 'Pessoal', quemGastou: 'Pedro' },
+        'nao_classificados'
+      )
+    ).toBe(false);
+  });
+
+  it('pessoal exige tipo Pessoal e quem Pedro quando preenchido', () => {
+    expect(
+      gastoPassaFiltroClassificacaoRapida(
+        { tipoGasto: 'Pessoal', quemGastou: 'Pedro' },
+        'pessoal'
+      )
+    ).toBe(true);
+    expect(
+      gastoPassaFiltroClassificacaoRapida(
+        { tipoGasto: 'Pessoal', quemGastou: null },
+        'pessoal'
+      )
+    ).toBe(true);
+    expect(
+      gastoPassaFiltroClassificacaoRapida(
+        { tipoGasto: 'Pessoal', quemGastou: 'Madrigal' },
+        'pessoal'
+      )
+    ).toBe(false);
+    expect(
+      gastoPassaFiltroClassificacaoRapida(
+        { tipoGasto: 'Empresarial', quemGastou: 'Pedro' },
+        'pessoal'
+      )
+    ).toBe(false);
+  });
+
+  it('empresa exige tipo Empresarial e quem Madrigal quando preenchido', () => {
+    expect(
+      gastoPassaFiltroClassificacaoRapida(
+        { tipoGasto: 'Empresarial', quemGastou: 'Madrigal' },
+        'empresa'
+      )
+    ).toBe(true);
+    expect(
+      gastoPassaFiltroClassificacaoRapida(
+        { tipoGasto: 'Empresarial', quemGastou: null },
+        'empresa'
+      )
+    ).toBe(true);
+    expect(
+      gastoPassaFiltroClassificacaoRapida(
+        { tipoGasto: 'Empresarial', quemGastou: 'Pedro' },
+        'empresa'
+      )
+    ).toBe(false);
+  });
+});
+
+describe('filtrarGastosClassificacaoPorClassificacao', () => {
+  it('retorna todos quando filtro é todos', () => {
+    const gastos = [
+      row({ id: 'a', tipoGasto: TIPO_GASTO_NAO_CLASSIFICADO }),
+      row({ id: 'b', tipoGasto: 'Pessoal', quemGastou: 'Pedro' }),
+    ];
+    expect(filtrarGastosClassificacaoPorClassificacao(gastos, 'todos')).toHaveLength(2);
+  });
+
+  it('filtra apenas não classificados', () => {
+    const gastos = [
+      row({ id: 'a', tipoGasto: TIPO_GASTO_NAO_CLASSIFICADO }),
+      row({ id: 'b', tipoGasto: 'Pessoal', quemGastou: 'Pedro' }),
+    ];
+    expect(
+      filtrarGastosClassificacaoPorClassificacao(gastos, 'nao_classificados').map((g) => g.id)
+    ).toEqual(['a']);
+  });
+});
+
 describe('aplicarFiltrosEOrdenacaoClassificacao', () => {
   it('aplica filtro de data e ordenação por valor', () => {
     const gastos = [
@@ -681,6 +789,7 @@ describe('aplicarFiltrosEOrdenacaoClassificacao', () => {
         data: { preset: 'hoje', dataInicial: null, dataFinal: null },
         fornecedores: [],
         pagamento: CLASSIFICAR_FILTRO_PAGAMENTO_VAZIO,
+        classificacao: 'todos',
       },
       { modo: 'valor', direcao: 'asc' },
       REF_MAY_25_2026
@@ -700,6 +809,7 @@ describe('aplicarFiltrosEOrdenacaoClassificacao', () => {
         data: { preset: 'hoje', dataInicial: null, dataFinal: null },
         fornecedores: ['Vivo'],
         pagamento: CLASSIFICAR_FILTRO_PAGAMENTO_VAZIO,
+        classificacao: 'todos',
       },
       CLASSIFICAR_ORDENACAO_PADRAO,
       REF_MAY_25_2026
@@ -746,11 +856,26 @@ describe('aplicarFiltrosEOrdenacaoClassificacao', () => {
           meios: ['Cartão de Crédito'],
           instituicoes: ['Nubank PJ'],
         },
+        classificacao: 'todos',
       },
       { modo: 'valor', direcao: 'asc' },
       REF_MAY_25_2026
     );
     expect(result.map((g) => g.id)).toEqual(['a']);
+  });
+
+  it('aplica filtro rápido de classificação pessoal', () => {
+    const gastos = [
+      row({ id: 'a', tipoGasto: TIPO_GASTO_NAO_CLASSIFICADO }),
+      row({ id: 'b', tipoGasto: 'Pessoal', quemGastou: 'Pedro' }),
+      row({ id: 'c', tipoGasto: 'Empresarial', quemGastou: 'Madrigal' }),
+    ];
+    const result = aplicarFiltrosEOrdenacaoClassificacao(
+      gastos,
+      { ...CLASSIFICAR_FILTROS_VAZIO, classificacao: 'pessoal' },
+      CLASSIFICAR_ORDENACAO_PADRAO
+    );
+    expect(result.map((g) => g.id)).toEqual(['b']);
   });
 
   it('sem filtro usa ordenação padrão por data', () => {

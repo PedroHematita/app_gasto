@@ -1559,6 +1559,43 @@ html, body, #root {
   color: var(--text-primary);
 }
 
+.classificar-gastos-screen__classificacao-filtro {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.classificar-gastos-screen__classificacao-filtro::-webkit-scrollbar {
+  display: none;
+}
+
+.classificar-gastos-screen__classificacao-chip {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif;
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+  background: transparent;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.classificar-gastos-screen__classificacao-chip--active {
+  border-color: var(--accent);
+  background: var(--accent-dark);
+  color: var(--text-primary);
+}
+
 .classificar-gastos-screen__filtros-bar {
   margin-top: var(--space-3);
   display: flex;

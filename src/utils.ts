@@ -7,6 +7,7 @@ import {
   type GastoClassificacaoRow,
 } from './types';
 import type {
+  ClassificarFiltroClassificacao,
   ClassificarFiltroData,
   ClassificarFiltroDataPreset,
   ClassificarFiltroFormaChave,
@@ -309,10 +310,23 @@ export const CLASSIFICAR_FILTRO_PAGAMENTO_VAZIO: ClassificarFiltroPagamento = {
   instituicoes: [],
 };
 
+export const CLASSIFICAR_FILTRO_CLASSIFICACAO_PADRAO = 'todos' as const;
+
+export const CLASSIFICAR_FILTRO_CLASSIFICACAO_OPCOES: {
+  id: ClassificarFiltroClassificacao;
+  label: string;
+}[] = [
+  { id: 'todos', label: 'Todos' },
+  { id: 'nao_classificados', label: 'Não classificados' },
+  { id: 'pessoal', label: 'Pessoal' },
+  { id: 'empresa', label: 'Empresa' },
+];
+
 export const CLASSIFICAR_FILTROS_VAZIO: ClassificarFiltrosState = {
   data: CLASSIFICAR_FILTRO_DATA_VAZIO,
   fornecedores: [],
   pagamento: CLASSIFICAR_FILTRO_PAGAMENTO_VAZIO,
+  classificacao: CLASSIFICAR_FILTRO_CLASSIFICACAO_PADRAO,
 };
 
 export const CLASSIFICAR_ORDENACAO_PADRAO: ClassificarOrdenacaoState = {
@@ -417,11 +431,55 @@ export function temFiltroDataClassificacaoAtivo(filtro: ClassificarFiltroData): 
   return filtro.preset !== null || !!(filtro.dataInicial && filtro.dataFinal);
 }
 
+export function temFiltroClassificacaoRapidaAtivo(
+  classificacao: ClassificarFiltrosState['classificacao']
+): boolean {
+  return classificacao !== CLASSIFICAR_FILTRO_CLASSIFICACAO_PADRAO;
+}
+
+export function rotuloFiltroClassificacaoRapida(
+  classificacao: ClassificarFiltrosState['classificacao']
+): string | null {
+  const opcao = CLASSIFICAR_FILTRO_CLASSIFICACAO_OPCOES.find((o) => o.id === classificacao);
+  if (!opcao || classificacao === CLASSIFICAR_FILTRO_CLASSIFICACAO_PADRAO) return null;
+  return opcao.label;
+}
+
+export function gastoPassaFiltroClassificacaoRapida(
+  gasto: Pick<GastoClassificacaoRow, 'tipoGasto' | 'quemGastou'>,
+  filtro: ClassificarFiltrosState['classificacao']
+): boolean {
+  if (filtro === 'todos') return true;
+  if (filtro === 'nao_classificados') return !gastoEstaClassificado(gasto);
+  if (filtro === 'pessoal') {
+    if (tipoGastoNormalizado(gasto.tipoGasto) !== 'Pessoal') return false;
+    const quem = gasto.quemGastou?.trim();
+    if (quem) return quem === 'Pedro';
+    return true;
+  }
+  if (filtro === 'empresa') {
+    if (tipoGastoNormalizado(gasto.tipoGasto) !== 'Empresarial') return false;
+    const quem = gasto.quemGastou?.trim();
+    if (quem) return quem === 'Madrigal';
+    return true;
+  }
+  return true;
+}
+
+export function filtrarGastosClassificacaoPorClassificacao(
+  gastos: GastoClassificacaoRow[],
+  classificacao: ClassificarFiltrosState['classificacao']
+): GastoClassificacaoRow[] {
+  if (!temFiltroClassificacaoRapidaAtivo(classificacao)) return gastos;
+  return gastos.filter((g) => gastoPassaFiltroClassificacaoRapida(g, classificacao));
+}
+
 export function temFiltrosClassificacaoAtivos(filtros: ClassificarFiltrosState): boolean {
   return (
     temFiltroDataClassificacaoAtivo(filtros.data) ||
     temFiltroFornecedorClassificacaoAtivo(filtros.fornecedores) ||
-    temFiltroPagamentoClassificacaoAtivo(filtros.pagamento)
+    temFiltroPagamentoClassificacaoAtivo(filtros.pagamento) ||
+    temFiltroClassificacaoRapidaAtivo(filtros.classificacao)
   );
 }
 
@@ -484,6 +542,7 @@ export function aplicarFiltrosEOrdenacaoClassificacao(
   let rows = filtrarGastosClassificacaoPorData(gastos, filtros.data, refDate);
   rows = filtrarGastosClassificacaoPorFornecedor(rows, filtros.fornecedores);
   rows = filtrarGastosClassificacaoPorPagamento(rows, filtros.pagamento);
+  rows = filtrarGastosClassificacaoPorClassificacao(rows, filtros.classificacao);
   if (ordenacao.modo === 'valor') {
     rows = sortGastosClassificacaoValor(rows, ordenacao.direcao);
   } else {

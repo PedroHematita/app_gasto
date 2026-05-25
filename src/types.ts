@@ -144,11 +144,18 @@ export interface ClassificarFiltroPagamento {
   instituicoes: string[];
 }
 
+export type ClassificarFiltroClassificacao =
+  | 'todos'
+  | 'nao_classificados'
+  | 'pessoal'
+  | 'empresa';
+
 export interface ClassificarFiltrosState {
   data: ClassificarFiltroData;
   /** Chaves de fornecedor (`fornecedorChaveClassificacao`); vazio = todos. */
   fornecedores: string[];
   pagamento: ClassificarFiltroPagamento;
+  classificacao: ClassificarFiltroClassificacao;
 }
 
 export type ClassificarOrdenacaoModo = 'padrao' | 'valor';
