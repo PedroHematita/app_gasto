@@ -2,7 +2,14 @@ import React, { useRef, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { FloatingInput } from './FloatingInput';
 import { FloatingSelect } from './FloatingSelect';
-import { MEIOS_PAGAMENTO, INSTITUICOES, formatCurrency, FORNECEDOR_REQUIRED_MSG } from '../utils';
+import { CurrencyInput } from './CurrencyInput';
+import {
+  MEIOS_PAGAMENTO,
+  INSTITUICOES,
+  formatCurrency,
+  formatDiferencaValorCents,
+  FORNECEDOR_REQUIRED_MSG,
+} from '../utils';
 import { searchFornecedores } from '../lib/supabase';
 import type { PaymentData } from '../types';
 
@@ -18,6 +25,11 @@ interface PaymentModalProps {
   modalTitle?: string;
   /** Substitui o rótulo do botão principal quando não está em modo edição de gasto. */
   saveButtonLabel?: string;
+  /** Quitação de compromisso: valor planejado (somente leitura). */
+  valorPlanejadoCents?: number;
+  /** Quitação: valor efetivamente pago (editável). */
+  valorRealizadoCents?: number;
+  onValorRealizadoChange?: (cents: number) => void;
 }
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -31,12 +43,28 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   totalCents,
   modalTitle = 'Dados de pagamento',
   saveButtonLabel,
+  valorPlanejadoCents,
+  valorRealizadoCents,
+  onValorRealizadoChange,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [warningParcela, setWarningParcela] = useState<{ valorParcela: number } | null>(null);
   const [fornecedorError, setFornecedorError] = useState(false);
 
+  const isQuitMode =
+    valorPlanejadoCents !== undefined &&
+    valorRealizadoCents !== undefined &&
+    onValorRealizadoChange !== undefined;
+
+  const diffCents = isQuitMode ? valorRealizadoCents - valorPlanejadoCents : 0;
+
   const handleAttemptSave = () => {
+    if (isQuitMode && valorRealizadoCents <= 0) {
+      alert('Informe o valor realizado maior que zero.');
+      setTimeout(() => document.getElementById('input-valor-realizado')?.focus(), 10);
+      return;
+    }
+
     if (!payment.fornecedor.trim()) {
       setFornecedorError(true);
       alert(FORNECEDOR_REQUIRED_MSG);
@@ -89,6 +117,42 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         <div className="modal-sheet__handle" />
         <div className="modal-sheet__title">{modalTitle}</div>
 
+        {isQuitMode && (
+          <>
+            <div className="quit-valores-block">
+              <div className="quit-valores-row">
+                <span className="quit-valores-row__label">Valor planejado</span>
+                <span className="quit-valores-row__value quit-valores-row__value--readonly">
+                  {formatCurrency(valorPlanejadoCents)}
+                </span>
+              </div>
+              <CurrencyInput
+                id="input-valor-realizado"
+                label="Valor realizado"
+                valueCents={valorRealizadoCents}
+                onChange={onValorRealizadoChange}
+                bgVariant="surface"
+              />
+              <div className="quit-valores-diff">
+                {diffCents === 0 ? (
+                  <span className="quit-valores-diff__text quit-valores-diff__text--equal">
+                    Sem diferença em relação ao valor planejado.
+                  </span>
+                ) : (
+                  <span
+                    className={`quit-valores-diff__text ${
+                      diffCents < 0 ? 'quit-valores-diff__text--neg' : 'quit-valores-diff__text--pos'
+                    }`}
+                  >
+                    Diferença: {formatDiferencaValorCents(diffCents)}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="payment-separator">— pagamento —</div>
+          </>
+        )}
+
         <FloatingInput
           id="input-fornecedor"
           label="Fornecedor / Local do serviço"
@@ -103,7 +167,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           showError={fornecedorError}
         />
 
-        <div className="payment-separator">— pagamento —</div>
+        {!isQuitMode && <div className="payment-separator">— pagamento —</div>}
 
         <div className="payment-tabs">
           <div className="payment-tabs__label">Forma de pagamento</div>

@@ -1,7 +1,23 @@
 import { createClient } from '@supabase/supabase-js';
-import type { GastoRecord, CompromissoRecord, CompromissoStatus, GastoPereneRecord, PeriodicidadePerene, StatusGastoPerene } from '../types';
+import type {
+  GastoRecord,
+  GastoClassificacaoRow,
+  CompromissoRecord,
+  CompromissoStatus,
+  GastoPereneRecord,
+  PeriodicidadePerene,
+  StatusGastoPerene,
+} from '../types';
+import { mapGastoClassificacaoRowFromDb, sortGastosClassificacaoDesc } from '../utils';
 import { requireFornecedorTrimmed } from '../utils';
+import { isFormaPagamentoParcelado } from './gastosParceladosFuturos';
 import { listPeriodsDueThroughToday } from './gastosPerenePeriods';
+
+/** `null` à vista; número de parcelas só quando forma é parcelado (ex.: `'Parcelado'`). */
+function numeroParcelasParaDb(formaPagamento: string, parcelas: number | undefined): number | null {
+  if (!isFormaPagamentoParcelado(formaPagamento)) return null;
+  return parcelas ?? null;
+}
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -57,7 +73,7 @@ export async function saveGasto(
       observacoes: observacoes || null,
       total: total / 100,
       comprovante_url: comprovanteUrl || null,
-      numero_parcelas: formaPagamento === 'a_vista' ? null : parcelas,
+      numero_parcelas: numeroParcelasParaDb(formaPagamento, parcelas),
     })
     .select()
     .single();
@@ -230,6 +246,83 @@ export async function fetchGastos(orgId: string): Promise<GastoRecord[]> {
   }));
 }
 
+/** Listagem enxuta para Classificar Gastos (sem itens). */
+export async function fetchGastosParaClassificacao(
+  orgId: string
+): Promise<GastoClassificacaoRow[]> {
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('gastos')
+    .select(
+      'id, data_compra, created_at, fornecedor, forma_pagamento, meio_pagamento, instituicao_financeira, numero_parcelas, total, quem_gastou, tipo_gasto, setor, data_classificacao, responsavel_classificacao'
+    )
+    .eq('org_id', orgId)
+    .order('data_compra', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (error || !data) return [];
+
+  const rows: GastoClassificacaoRow[] = data.map((row: any) =>
+    mapGastoClassificacaoRowFromDb(row)
+  );
+
+  return sortGastosClassificacaoDesc(rows);
+}
+
+export type ClassificarGastosEmMassaInput = {
+  ids: string[];
+  orgId: string;
+  quemGastou: string;
+  tipoGasto: string;
+  setor: string | null;
+  responsavelClassificacao: string;
+};
+
+export type ClassificarGastosEmMassaResult =
+  | { ok: true; updatedCount: number }
+  | { ok: false; error: string };
+
+/** Atualiza classificação em massa nos gastos selecionados da org. */
+export async function classificarGastosEmMassa(
+  input: ClassificarGastosEmMassaInput
+): Promise<ClassificarGastosEmMassaResult> {
+  if (!supabase) {
+    return { ok: false, error: 'Não foi possível classificar os gastos. Tente novamente.' };
+  }
+
+  if (input.ids.length === 0) {
+    return { ok: false, error: 'Não é possível classificar sem seleção.' };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, error: 'Faça login para classificar gastos.' };
+  }
+
+  const responsavel = input.responsavelClassificacao.trim() || user.id;
+
+  const { data, error } = await supabase
+    .from('gastos')
+    .update({
+      quem_gastou: input.quemGastou.trim(),
+      tipo_gasto: input.tipoGasto.trim(),
+      setor: input.setor,
+      data_classificacao: new Date().toISOString(),
+      responsavel_classificacao: responsavel,
+    })
+    .in('id', input.ids)
+    .eq('org_id', input.orgId)
+    .select('id');
+
+  if (error) {
+    console.error('classificarGastosEmMassa', error);
+    return { ok: false, error: 'Não foi possível classificar os gastos. Tente novamente.' };
+  }
+
+  return { ok: true, updatedCount: data?.length ?? 0 };
+}
+
 // Fetch single gasto by ID
 export async function fetchGastoById(gastoId: string): Promise<GastoRecord | null> {
   if (!supabase) return null;
@@ -310,7 +403,7 @@ export async function updateGasto(
     instituicao_financeira: instituicaoFinanceira,
     observacoes: observacoes || null,
     total: total / 100,
-    numero_parcelas: formaPagamento === 'a_vista' ? null : parcelas,
+    numero_parcelas: numeroParcelasParaDb(formaPagamento, parcelas),
   };
 
   // Only update comprovante_url if a new file was provided

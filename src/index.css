@@ -818,6 +818,55 @@ html, body, #root {
   letter-spacing: 0.5px;
 }
 
+/* Quitação: valor planejado vs realizado */
+.quit-valores-block {
+  margin-bottom: 4px;
+}
+
+.quit-valores-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 0 2px;
+}
+
+.quit-valores-row__label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.quit-valores-row__value--readonly {
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
+  color: var(--text-inactive);
+}
+
+.quit-valores-diff {
+  margin-top: -8px;
+  margin-bottom: 4px;
+  padding: 0 2px;
+}
+
+.quit-valores-diff__text {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.quit-valores-diff__text--equal {
+  color: var(--text-inactive);
+}
+
+.quit-valores-diff__text--neg {
+  color: #6ecf9a;
+}
+
+.quit-valores-diff__text--pos {
+  color: #ffcc00;
+}
+
 /* Payment tabs */
 .payment-tabs {
   margin-bottom: 16px;
@@ -1460,6 +1509,612 @@ html, body, #root {
 
 .bottom-nav__item--active {
   color: var(--accent);
+}
+
+.bottom-nav__item span {
+  font-size: 8px;
+  letter-spacing: 0.02em;
+}
+
+/* ===== CLASSIFICAR GASTOS ===== */
+.classificar-gastos-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-bottom: var(--layout-bottom-nav-offset);
+}
+
+.classificar-gastos-screen--selecting {
+  padding-bottom: calc(
+    var(--layout-bottom-nav-offset) + var(--classificar-action-bar-height, 132px)
+  );
+}
+
+.classificar-gastos-screen__header {
+  padding: var(--space-4) var(--space-4) var(--space-2);
+}
+
+.classificar-gastos-screen__title {
+  font-size: var(--font-display);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+
+.classificar-gastos-screen__hint {
+  margin-top: var(--space-2);
+  font-size: var(--font-secondary);
+  color: var(--text-inactive);
+  line-height: var(--line-height-multi);
+}
+
+.classificar-gastos-screen__total {
+  margin-top: var(--space-2);
+  font-size: var(--font-secondary);
+  color: var(--text-secondary);
+  line-height: var(--line-height-multi);
+}
+
+.classificar-gastos-screen__total strong {
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+
+.classificar-gastos-screen__filtros-bar {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.classificar-gastos-screen__filtros-count {
+  font-size: var(--font-secondary);
+  color: var(--text-secondary);
+  line-height: var(--line-height-multi);
+  flex: 1;
+  min-width: 0;
+}
+
+.classificar-gastos-screen__filtros-label {
+  color: var(--text-inactive);
+}
+
+.classificar-gastos-screen__limpar-filtros {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-secondary);
+  color: var(--accent-primary, #6eb5ff);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.classificar-gastos-screen__status--empty-filter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.classificar-gastos-screen__table-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 var(--space-2) var(--space-3);
+  min-height: 0;
+}
+
+.classificar-gastos-screen__status {
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  color: var(--text-inactive);
+  font-size: var(--font-secondary);
+}
+
+/* Rolagem horizontal leve; largura mínima prioriza legibilidade */
+.classificar-gastos-table-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 calc(var(--space-2) * -1);
+  padding: 0 var(--space-2);
+}
+
+.classificar-gastos-table {
+  width: 100%;
+  min-width: 320px;
+  max-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.classificar-gastos-table__th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: var(--space-2) var(--space-1);
+  text-align: left;
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 10px;
+  background: var(--bg-main);
+  border-bottom: 1px solid var(--border-medium);
+  white-space: nowrap;
+}
+
+.classificar-gastos-table__th--data {
+  width: 76px;
+}
+
+.classificar-gastos-table__th--fornecedor {
+  width: auto;
+}
+
+.classificar-gastos-table__th--valor {
+  width: 80px;
+  text-align: right;
+  padding-right: var(--space-2);
+}
+
+.classificar-gastos-table__th--pagamento {
+  width: 100px;
+}
+
+.classificar-gastos-table__th-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: inherit;
+  width: 100%;
+  min-height: 36px;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.classificar-gastos-table__th-btn--right {
+  justify-content: flex-end;
+}
+
+.classificar-gastos-table__th--filter-active .classificar-gastos-table__th-btn::after {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: var(--accent-primary, #6eb5ff);
+  vertical-align: middle;
+}
+
+.classificar-gastos-table__th--sort-active .classificar-gastos-table__th-btn {
+  color: var(--text-primary);
+}
+
+.classificar-filtro-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  padding-bottom: 0;
+}
+
+.classificar-filtro-sheet__header {
+  position: relative;
+  padding: 0 var(--space-2) var(--space-3);
+  text-align: center;
+}
+
+.classificar-filtro-sheet__close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.classificar-filtro-sheet__title {
+  font-size: var(--font-primary);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.classificar-filtro-sheet__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 var(--space-2) var(--space-3);
+  min-height: 0;
+}
+
+.classificar-filtro-data-options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.classificar-filtro-data-options__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-3) var(--space-3);
+  margin-bottom: var(--space-1);
+  font-size: var(--font-primary);
+  color: var(--text-primary);
+  background: var(--bg-main);
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.classificar-filtro-data-options__item--selected {
+  border-color: var(--accent-primary, #6eb5ff);
+  background: rgba(110, 181, 255, 0.08);
+}
+
+.classificar-filtro-fornecedor-search {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+  font-size: var(--font-primary);
+  color: var(--text-primary);
+  background: var(--bg-main);
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+}
+
+.classificar-filtro-fornecedor-search::placeholder {
+  color: var(--text-inactive);
+}
+
+.classificar-filtro-fornecedor-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.classificar-filtro-fornecedor-list__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  padding: var(--space-3);
+  margin-bottom: var(--space-1);
+  font-size: var(--font-primary);
+  color: var(--text-primary);
+  background: var(--bg-main);
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.classificar-filtro-fornecedor-list__item--selected {
+  border-color: var(--accent-primary, #6eb5ff);
+  background: rgba(110, 181, 255, 0.08);
+}
+
+.classificar-filtro-fornecedor-list__check {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--border-medium);
+  border-radius: 4px;
+  background: transparent;
+}
+
+.classificar-filtro-fornecedor-list__check--on {
+  border-color: var(--accent-primary, #6eb5ff);
+  background: var(--accent-primary, #6eb5ff);
+  box-shadow: inset 0 0 0 2px var(--bg-main);
+}
+
+.classificar-filtro-fornecedor-list__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classificar-filtro-pagamento-group {
+  margin-bottom: var(--space-4);
+}
+
+.classificar-filtro-pagamento-group:last-child {
+  margin-bottom: 0;
+}
+
+.classificar-filtro-pagamento-group__title {
+  margin: 0 0 var(--space-2);
+  padding: 0 var(--space-1);
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.classificar-filtro-pagamento-group__empty {
+  margin: 0;
+  padding: var(--space-2) var(--space-1);
+  font-size: var(--font-secondary);
+  color: var(--text-inactive);
+}
+
+.classificar-selecionados-sheet__subtitle {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-secondary);
+  color: var(--text-secondary);
+  line-height: var(--line-height-multi);
+}
+
+.classificar-selecionados-sheet__opcao-hint {
+  font-weight: var(--weight-regular, 400);
+  color: var(--text-inactive);
+  font-size: 9px;
+}
+
+.classificar-classificacao-erro {
+  margin: var(--space-3) var(--space-1) 0;
+  font-size: var(--font-secondary);
+  color: #f87171;
+  text-align: center;
+}
+
+.classificar-filtro-sheet__preview {
+  margin-top: var(--space-4);
+  font-size: var(--font-secondary);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.classificar-filtro-sheet__footer {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--border-medium);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+
+.classificar-filtro-sheet__btn {
+  flex: 1;
+  min-height: 44px;
+  border-radius: 8px;
+  font-size: var(--font-primary);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  border: none;
+}
+
+.classificar-filtro-sheet__btn--secondary {
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border-medium);
+}
+
+.classificar-filtro-sheet__btn--primary {
+  color: var(--bg-main);
+  background: var(--accent-primary, #6eb5ff);
+}
+
+.classificar-filtro-sheet__btn--primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.classificar-gastos-table__row {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.classificar-gastos-table__row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.classificar-gastos-table__row--selected {
+  background: rgba(124, 111, 255, 0.12);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.classificar-gastos-table__row--selected:hover {
+  background: rgba(124, 111, 255, 0.16);
+}
+
+.classificar-gastos-table__row--selection-mode {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.classificar-gastos-table__cell {
+  padding: 10px var(--space-1);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  vertical-align: top;
+  font-size: 11px;
+}
+
+.classificar-gastos-table__cell--data {
+  color: var(--text-secondary);
+  font-size: 10px;
+  white-space: nowrap;
+  padding-top: 11px;
+}
+
+.classificar-gastos-table__cell--fornecedor {
+  overflow: hidden;
+  min-width: 0;
+  padding-top: 10px;
+}
+
+.classificar-gastos-table__fornecedor-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.classificar-gastos-table__fornecedor-nome {
+  font-weight: var(--weight-medium);
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.classificar-gastos-table__fornecedor-meta {
+  font-size: 9px;
+  line-height: 1.25;
+  color: var(--text-inactive);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.classificar-gastos-table__cell--pagamento {
+  overflow: hidden;
+  min-width: 0;
+  text-align: left;
+  padding-top: 10px;
+}
+
+.classificar-gastos-table__pagamento-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.classificar-gastos-table__pagamento-meio {
+  font-size: 11px;
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.classificar-gastos-table__pagamento-meta {
+  font-size: 9px;
+  line-height: 1.35;
+  color: var(--text-inactive);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.classificar-gastos-table__cell--valor {
+  text-align: right;
+  font-weight: var(--weight-medium);
+  font-size: 12px;
+  padding-right: var(--space-2);
+  padding-top: 11px;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.classificar-gastos-action-bar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: var(--layout-bottom-nav-offset);
+  width: 100%;
+  max-width: 480px;
+  z-index: 85;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-subtle);
+  padding: var(--space-3) var(--space-4);
+  box-sizing: border-box;
+}
+
+.classificar-gastos-action-bar__summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-secondary);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.classificar-gastos-action-bar__summary strong {
+  color: var(--text-primary);
+  font-weight: var(--weight-medium);
+}
+
+.classificar-gastos-action-bar__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.classificar-gastos-action-bar__clear {
+  padding: var(--space-2);
+  background: transparent;
+  border: none;
+  color: var(--text-inactive);
+  font-size: var(--font-secondary);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+}
+
+.classificar-gastos-action-bar__primary {
+  width: 100%;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: var(--font-primary);
+  font-weight: var(--weight-medium);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.classificar-gastos-action-bar__primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* ===== MEUS GASTOS ===== */

@@ -1,6 +1,24 @@
 import { isDateInForecastWindow } from './lib/forecastWindow';
+import { isFormaPagamentoParcelado } from './lib/gastosParceladosFuturos';
 import type { PerenePeriodInput } from './lib/gastosPerenePeriods';
-import type { GastoItem, PaymentData, CompromissoRecord, GastoPereneRecord, PeriodicidadePerene } from './types';
+import {
+  TIPO_GASTO_NAO_CLASSIFICADO,
+  type GastoClassificacaoPayload,
+  type GastoClassificacaoRow,
+} from './types';
+import type {
+  ClassificarFiltroData,
+  ClassificarFiltroDataPreset,
+  ClassificarFiltroFormaChave,
+  ClassificarFiltroPagamento,
+  ClassificarFiltrosState,
+  ClassificarOrdenacaoState,
+  GastoItem,
+  PaymentData,
+  CompromissoRecord,
+  GastoPereneRecord,
+  PeriodicidadePerene,
+} from './types';
 
 /** Mensagem única para fornecedor obrigatório (UI + camada de dados). */
 export const FORNECEDOR_REQUIRED_MSG =
@@ -25,6 +43,647 @@ export function formatCurrency(cents: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+}
+
+/** Rótulo da diferença planejado → realizado (ex.: `-R$ 20,00`, `+R$ 30,00`). */
+export function formatDiferencaValorCents(diffCents: number): string {
+  if (diffCents > 0) return `+${formatCurrency(diffCents)}`;
+  return formatCurrency(diffCents);
+}
+
+/** Observação automática quando valor realizado ≠ planejado; `null` se iguais. */
+export function observacaoAutomaticaDiferencaValor(
+  planejadoCents: number,
+  realizadoCents: number
+): string | null {
+  if (planejadoCents === realizadoCents) return null;
+
+  const planejado = formatCurrency(planejadoCents);
+  const realizado = formatCurrency(realizadoCents);
+  const diffStr = formatDiferencaValorCents(realizadoCents - planejadoCents);
+
+  if (realizadoCents < planejadoCents) {
+    return `Valor realizado menor que o planejado. Planejado: ${planejado}. Realizado: ${realizado}. Diferença: ${diffStr}.`;
+  }
+  return `Valor realizado maior que o planejado. Planejado: ${planejado}. Realizado: ${realizado}. Diferença: ${diffStr}.`;
+}
+
+/** Preserva observação do usuário e acrescenta linha automática de diferença, se houver. */
+export function appendObservacaoDiferencaValor(
+  observacoesUsuario: string,
+  planejadoCents: number,
+  realizadoCents: number
+): string {
+  const auto = observacaoAutomaticaDiferencaValor(planejadoCents, realizadoCents);
+  const user = observacoesUsuario.trim();
+  if (!auto) return user;
+  return user ? `${user}\n\n${auto}` : auto;
+}
+
+/** Redistribui valores dos itens para somar `targetTotalCents` (1 item → valor integral). */
+export function scaleItemsValorToTotal<
+  T extends {
+    ordem: number;
+    descricao: string;
+    quantidade: number;
+    unidade: string;
+    valorCentavos: number;
+  },
+>(items: T[], targetTotalCents: number): T[] {
+  if (items.length === 0) return items;
+  if (items.length === 1) {
+    return [{ ...items[0], valorCentavos: targetTotalCents }];
+  }
+
+  const planned = items.reduce((s, i) => s + i.valorCentavos, 0);
+  if (planned <= 0) {
+    const copy = items.map((item) => ({ ...item, valorCentavos: 0 }));
+    copy[0] = { ...copy[0], valorCentavos: targetTotalCents };
+    return copy;
+  }
+
+  const scaled = items.map((item) => ({
+    ...item,
+    valorCentavos: Math.round((item.valorCentavos * targetTotalCents) / planned),
+  }));
+  const sum = scaled.reduce((s, i) => s + i.valorCentavos, 0);
+  const drift = targetTotalCents - sum;
+  if (drift !== 0) {
+    const last = scaled.length - 1;
+    scaled[last] = { ...scaled[last], valorCentavos: scaled[last].valorCentavos + drift };
+  }
+  return scaled;
+}
+
+export const FORNECEDOR_CLASSIFICAR_SEM = 'Sem fornecedor';
+
+/** Fornecedor na listagem Classificar Gastos. */
+export function fornecedorExibicaoClassificacao(fornecedor: string): string {
+  return fornecedorChaveClassificacao(fornecedor);
+}
+
+/** Chave estável para filtro e exibição (vazio → Sem fornecedor). */
+export function fornecedorChaveClassificacao(fornecedor: string): string {
+  const t = fornecedor.trim();
+  return t || FORNECEDOR_CLASSIFICAR_SEM;
+}
+
+/** Fornecedores únicos dos gastos carregados, ordenados pt-BR. */
+export function listarFornecedoresClassificacao(
+  gastos: Pick<GastoClassificacaoRow, 'fornecedor'>[]
+): string[] {
+  const set = new Set<string>();
+  for (const g of gastos) {
+    set.add(fornecedorChaveClassificacao(g.fornecedor));
+  }
+  return [...set].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+}
+
+/** Busca parcial case-insensitive na lista de chaves. */
+export function buscarFornecedoresClassificacao(
+  fornecedores: string[],
+  busca: string
+): string[] {
+  const q = busca.trim().toLowerCase();
+  if (!q) return fornecedores;
+  return fornecedores.filter((f) => f.toLowerCase().includes(q));
+}
+
+export function temFiltroFornecedorClassificacaoAtivo(fornecedores: string[]): boolean {
+  return fornecedores.length > 0;
+}
+
+export function gastoPassaFiltroFornecedorClassificacao(
+  gasto: Pick<GastoClassificacaoRow, 'fornecedor'>,
+  fornecedoresSelecionados: string[]
+): boolean {
+  if (fornecedoresSelecionados.length === 0) return true;
+  return fornecedoresSelecionados.includes(fornecedorChaveClassificacao(gasto.fornecedor));
+}
+
+export function rotuloFiltroFornecedorClassificacao(fornecedores: string[]): string | null {
+  if (fornecedores.length === 0) return null;
+  if (fornecedores.length === 1) return `Fornecedor: ${fornecedores[0]}`;
+  return `Fornecedor: ${fornecedores.length} selecionados`;
+}
+
+export function filtrarGastosClassificacaoPorFornecedor(
+  gastos: GastoClassificacaoRow[],
+  fornecedoresSelecionados: string[]
+): GastoClassificacaoRow[] {
+  if (!temFiltroFornecedorClassificacaoAtivo(fornecedoresSelecionados)) return gastos;
+  return gastos.filter((g) =>
+    gastoPassaFiltroFornecedorClassificacao(g, fornecedoresSelecionados)
+  );
+}
+
+export { TIPO_GASTO_NAO_CLASSIFICADO };
+
+export function tipoGastoNormalizado(tipo: string): string {
+  const t = tipo.trim();
+  return t || TIPO_GASTO_NAO_CLASSIFICADO;
+}
+
+export function gastoEstaClassificado(
+  gasto: Pick<GastoClassificacaoRow, 'tipoGasto'>
+): boolean {
+  return tipoGastoNormalizado(gasto.tipoGasto) !== TIPO_GASTO_NAO_CLASSIFICADO;
+}
+
+/** Status discreto na coluna Fornecedor. */
+export function statusClassificacaoTabela(
+  gasto: Pick<GastoClassificacaoRow, 'tipoGasto' | 'setor' | 'quemGastou'>
+): string {
+  if (!gastoEstaClassificado(gasto)) return 'Não classificado';
+  const tipo = tipoGastoNormalizado(gasto.tipoGasto);
+  const setor = gasto.setor?.trim();
+  if (setor) return `${tipo} · ${setor}`;
+  const quem = gasto.quemGastou?.trim();
+  if (quem) return `${tipo} · ${quem}`;
+  return tipo;
+}
+
+export type ClassificacaoGastoOpcao = 'Pessoal' | 'Empresa';
+
+export const CLASSIFICACAO_GASTO_OPCOES: ClassificacaoGastoOpcao[] = ['Pessoal', 'Empresa'];
+
+/** Mapeia escolha do modal para valores gravados em `gastos`. */
+export function montarPayloadClassificacaoSimples(
+  classificacao: ClassificacaoGastoOpcao
+): GastoClassificacaoPayload {
+  if (classificacao === 'Pessoal') {
+    return { tipoGasto: 'Pessoal', quemGastou: 'Pedro', setor: null };
+  }
+  return { tipoGasto: 'Empresarial', quemGastou: 'Madrigal', setor: null };
+}
+
+export function idsVisiveisParaClassificacao(
+  selectedIds: Iterable<string>,
+  gastosVisiveis: Pick<GastoClassificacaoRow, 'id'>[]
+): string[] {
+  const visible = new Set(gastosVisiveis.map((g) => g.id));
+  const ids: string[] = [];
+  for (const id of selectedIds) {
+    if (visible.has(id)) ids.push(id);
+  }
+  return ids;
+}
+
+export type ValidarClassificacaoMassaInput = {
+  ids: string[];
+  classificacao: ClassificacaoGastoOpcao | '';
+  responsavelClassificacao: string | null;
+};
+
+export type ValidarClassificacaoMassaResult =
+  | { ok: true; payload: GastoClassificacaoPayload }
+  | { ok: false; mensagem: string };
+
+export function validarClassificacaoMassa(
+  input: ValidarClassificacaoMassaInput
+): ValidarClassificacaoMassaResult {
+  if (input.ids.length === 0) {
+    return { ok: false, mensagem: 'Não é possível classificar sem seleção.' };
+  }
+
+  if (input.classificacao !== 'Pessoal' && input.classificacao !== 'Empresa') {
+    return { ok: false, mensagem: 'Escolha uma classificação.' };
+  }
+
+  return { ok: true, payload: montarPayloadClassificacaoSimples(input.classificacao) };
+}
+
+export function validarClassificacaoMassaComAuth(
+  input: ValidarClassificacaoMassaInput
+): ValidarClassificacaoMassaResult {
+  if (!input.responsavelClassificacao?.trim()) {
+    return { ok: false, mensagem: 'Faça login para classificar gastos.' };
+  }
+  return validarClassificacaoMassa(input);
+}
+
+/** Segunda linha da listagem: forma · meio · instituição. */
+export function linhaPagamentoClassificacao(
+  gasto: Pick<
+    GastoClassificacaoRow,
+    'formaPagamento' | 'meioPagamento' | 'instituicaoFinanceira' | 'parcelas'
+  >
+): string {
+  const meio = gasto.meioPagamento || '—';
+  const inst = gasto.instituicaoFinanceira || '—';
+  if (isFormaPagamentoParcelado(gasto.formaPagamento)) {
+    const n = gasto.parcelas;
+    if (typeof n === 'number' && n > 1) {
+      return `Parcelado ${n}x · ${meio} · ${inst}`;
+    }
+    return `Parcelado · ${meio} · ${inst}`;
+  }
+  return `À Vista · ${meio} · ${inst}`;
+}
+
+/** Ordenação defensiva: data_compra ISO desc, created_at desc. */
+export function compareGastoClassificacaoDesc(
+  a: GastoClassificacaoRow,
+  b: GastoClassificacaoRow
+): number {
+  const byDate = b.dataCompra.localeCompare(a.dataCompra);
+  if (byDate !== 0) return byDate;
+  return (b.createdAt || '').localeCompare(a.createdAt || '');
+}
+
+export function sortGastosClassificacaoDesc(
+  gastos: GastoClassificacaoRow[]
+): GastoClassificacaoRow[] {
+  return [...gastos].sort(compareGastoClassificacaoDesc);
+}
+
+export const CLASSIFICAR_FILTRO_DATA_VAZIO: ClassificarFiltroData = {
+  preset: null,
+  dataInicial: null,
+  dataFinal: null,
+};
+
+export const CLASSIFICAR_FILTRO_PAGAMENTO_VAZIO: ClassificarFiltroPagamento = {
+  formas: [],
+  meios: [],
+  instituicoes: [],
+};
+
+export const CLASSIFICAR_FILTROS_VAZIO: ClassificarFiltrosState = {
+  data: CLASSIFICAR_FILTRO_DATA_VAZIO,
+  fornecedores: [],
+  pagamento: CLASSIFICAR_FILTRO_PAGAMENTO_VAZIO,
+};
+
+export const CLASSIFICAR_ORDENACAO_PADRAO: ClassificarOrdenacaoState = {
+  modo: 'padrao',
+  direcao: 'asc',
+};
+
+const ROTULO_PRESET_DATA_CLASSIFICAR: Record<ClassificarFiltroDataPreset, string> = {
+  hoje: 'Hoje',
+  esta_semana: 'Esta semana',
+  este_mes: 'Este mês',
+  mes_anterior: 'Mês anterior',
+  ultimos_7: 'Últimos 7 dias',
+  ultimos_30: 'Últimos 30 dias',
+};
+
+/** ISO yyyy-mm-dd a partir de data local (sem UTC shift). */
+export function dataCompraISOLocal(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function inicioSemanaSegundaLocal(ref: Date): Date {
+  const d = startOfDayLocal(ref);
+  const dow = d.getDay();
+  const diff = dow === 0 ? -6 : 1 - dow;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function fimSemanaDomingoLocal(ref: Date): Date {
+  const start = inicioSemanaSegundaLocal(ref);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  return end;
+}
+
+function inicioMesLocal(year: number, monthIndex: number): Date {
+  return startOfDayLocal(new Date(year, monthIndex, 1));
+}
+
+function fimMesLocal(year: number, monthIndex: number): Date {
+  return startOfDayLocal(new Date(year, monthIndex + 1, 0));
+}
+
+/** Intervalo ISO inclusivo para o filtro de data (preset ou período personalizado futuro). */
+export function intervaloFiltroDataClassificacao(
+  filtro: ClassificarFiltroData,
+  refDate: Date = new Date()
+): { inicio: string; fim: string } | null {
+  if (filtro.dataInicial && filtro.dataFinal) {
+    const inicio =
+      filtro.dataInicial <= filtro.dataFinal ? filtro.dataInicial : filtro.dataFinal;
+    const fim =
+      filtro.dataInicial <= filtro.dataFinal ? filtro.dataFinal : filtro.dataInicial;
+    return { inicio, fim };
+  }
+  if (!filtro.preset) return null;
+
+  const ref = startOfDayLocal(refDate);
+
+  switch (filtro.preset) {
+    case 'hoje':
+      return { inicio: dataCompraISOLocal(ref), fim: dataCompraISOLocal(ref) };
+    case 'esta_semana':
+      return {
+        inicio: dataCompraISOLocal(inicioSemanaSegundaLocal(ref)),
+        fim: dataCompraISOLocal(fimSemanaDomingoLocal(ref)),
+      };
+    case 'este_mes':
+      return {
+        inicio: dataCompraISOLocal(inicioMesLocal(ref.getFullYear(), ref.getMonth())),
+        fim: dataCompraISOLocal(fimMesLocal(ref.getFullYear(), ref.getMonth())),
+      };
+    case 'mes_anterior': {
+      const m = ref.getMonth() - 1;
+      const y = m < 0 ? ref.getFullYear() - 1 : ref.getFullYear();
+      const monthIndex = m < 0 ? 11 : m;
+      return {
+        inicio: dataCompraISOLocal(inicioMesLocal(y, monthIndex)),
+        fim: dataCompraISOLocal(fimMesLocal(y, monthIndex)),
+      };
+    }
+    case 'ultimos_7': {
+      const start = new Date(ref);
+      start.setDate(start.getDate() - 6);
+      return { inicio: dataCompraISOLocal(start), fim: dataCompraISOLocal(ref) };
+    }
+    case 'ultimos_30': {
+      const start = new Date(ref);
+      start.setDate(start.getDate() - 29);
+      return { inicio: dataCompraISOLocal(start), fim: dataCompraISOLocal(ref) };
+    }
+    default:
+      return null;
+  }
+}
+
+export function temFiltroDataClassificacaoAtivo(filtro: ClassificarFiltroData): boolean {
+  return filtro.preset !== null || !!(filtro.dataInicial && filtro.dataFinal);
+}
+
+export function temFiltrosClassificacaoAtivos(filtros: ClassificarFiltrosState): boolean {
+  return (
+    temFiltroDataClassificacaoAtivo(filtros.data) ||
+    temFiltroFornecedorClassificacaoAtivo(filtros.fornecedores) ||
+    temFiltroPagamentoClassificacaoAtivo(filtros.pagamento)
+  );
+}
+
+export function gastoPassaFiltroDataClassificacao(
+  gasto: Pick<GastoClassificacaoRow, 'dataCompra'>,
+  filtro: ClassificarFiltroData,
+  refDate?: Date
+): boolean {
+  const intervalo = intervaloFiltroDataClassificacao(filtro, refDate);
+  if (!intervalo) return true;
+  return (
+    gasto.dataCompra >= intervalo.inicio && gasto.dataCompra <= intervalo.fim
+  );
+}
+
+export function rotuloFiltroDataClassificacao(filtro: ClassificarFiltroData): string | null {
+  if (!temFiltroDataClassificacaoAtivo(filtro)) return null;
+  if (filtro.preset) return ROTULO_PRESET_DATA_CLASSIFICAR[filtro.preset];
+  if (filtro.dataInicial && filtro.dataFinal) {
+    return `${dataCompraTabelaClassificacao(filtro.dataInicial)} – ${dataCompraTabelaClassificacao(filtro.dataFinal)}`;
+  }
+  return null;
+}
+
+export function filtrarGastosClassificacaoPorData(
+  gastos: GastoClassificacaoRow[],
+  filtro: ClassificarFiltroData,
+  refDate?: Date
+): GastoClassificacaoRow[] {
+  if (!temFiltroDataClassificacaoAtivo(filtro)) return gastos;
+  return gastos.filter((g) => gastoPassaFiltroDataClassificacao(g, filtro, refDate));
+}
+
+export function sortGastosClassificacaoValor(
+  gastos: GastoClassificacaoRow[],
+  direcao: 'asc' | 'desc'
+): GastoClassificacaoRow[] {
+  return [...gastos].sort((a, b) => {
+    const diff = direcao === 'asc' ? a.total - b.total : b.total - a.total;
+    if (diff !== 0) return diff;
+    return compareGastoClassificacaoDesc(a, b);
+  });
+}
+
+export function proximaOrdenacaoValorClassificacao(
+  atual: ClassificarOrdenacaoState
+): ClassificarOrdenacaoState {
+  if (atual.modo !== 'valor') return { modo: 'valor', direcao: 'asc' };
+  if (atual.direcao === 'asc') return { modo: 'valor', direcao: 'desc' };
+  return CLASSIFICAR_ORDENACAO_PADRAO;
+}
+
+/** Pipeline em memória: data → fornecedor → pagamento → ordenação (padrão ou valor). */
+export function aplicarFiltrosEOrdenacaoClassificacao(
+  gastos: GastoClassificacaoRow[],
+  filtros: ClassificarFiltrosState,
+  ordenacao: ClassificarOrdenacaoState,
+  refDate?: Date
+): GastoClassificacaoRow[] {
+  let rows = filtrarGastosClassificacaoPorData(gastos, filtros.data, refDate);
+  rows = filtrarGastosClassificacaoPorFornecedor(rows, filtros.fornecedores);
+  rows = filtrarGastosClassificacaoPorPagamento(rows, filtros.pagamento);
+  if (ordenacao.modo === 'valor') {
+    rows = sortGastosClassificacaoValor(rows, ordenacao.direcao);
+  } else {
+    rows = sortGastosClassificacaoDesc(rows);
+  }
+  return rows;
+}
+
+/** Data completa para tabela Classificar: dd/mm/aaaa (ordenação continua na ISO). */
+export function dataCompraTabelaClassificacao(dataCompraISO: string): string {
+  const [y, m, d] = dataCompraISO.split('-');
+  if (!y || !m || !d) return dataCompraISO;
+  return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+}
+
+/** Mapeia linha Supabase → `GastoClassificacaoRow` (testável sem client). */
+export function mapGastoClassificacaoRowFromDb(row: {
+  id: string;
+  data_compra: string;
+  created_at?: string | null;
+  fornecedor?: string | null;
+  forma_pagamento?: string | null;
+  meio_pagamento?: string | null;
+  instituicao_financeira?: string | null;
+  numero_parcelas?: number | null;
+  total?: number | null;
+  quem_gastou?: string | null;
+  tipo_gasto?: string | null;
+  setor?: string | null;
+  data_classificacao?: string | null;
+  responsavel_classificacao?: string | null;
+}): GastoClassificacaoRow {
+  const iso = String(row.data_compra);
+  return {
+    id: row.id,
+    dataCompra: iso,
+    dataCompraBR: dataCompraTabelaClassificacao(iso),
+    createdAt: row.created_at ?? undefined,
+    fornecedor: row.fornecedor || '',
+    formaPagamento: row.forma_pagamento || '',
+    meioPagamento: row.meio_pagamento || '',
+    instituicaoFinanceira: row.instituicao_financeira || '',
+    parcelas: row.numero_parcelas ?? undefined,
+    total: Math.round((row.total || 0) * 100),
+    quemGastou: row.quem_gastou ?? null,
+    tipoGasto: row.tipo_gasto ?? TIPO_GASTO_NAO_CLASSIFICADO,
+    setor: row.setor ?? null,
+    dataClassificacao: row.data_classificacao ?? null,
+    responsavelClassificacao: row.responsavel_classificacao ?? null,
+  };
+}
+
+/** Coluna Forma na tabela Classificar. */
+export function formaPagamentoTabelaClassificacao(
+  gasto: Pick<GastoClassificacaoRow, 'formaPagamento' | 'parcelas'>
+): string {
+  if (isFormaPagamentoParcelado(gasto.formaPagamento)) {
+    const n = gasto.parcelas;
+    if (typeof n === 'number' && n > 1) return `Parc. ${n}x`;
+    return 'Parcelado';
+  }
+  return 'À Vista';
+}
+
+const MEIO_PAGAMENTO_TABELA: Record<string, string> = {
+  'Cartão de Crédito': 'Crédito',
+  'Cartão de Débito': 'Débito',
+  'Transferência Bancária': 'Transf.',
+  'Boleto Parcelado': 'Bol. Parc.',
+  PIX: 'PIX',
+  Dinheiro: 'Dinheiro',
+  Boleto: 'Boleto',
+  Financiamento: 'Financ.',
+};
+
+export const FORMAS_FILTRO_CLASSIFICAR: { chave: ClassificarFiltroFormaChave; rotulo: string }[] = [
+  { chave: 'a_vista', rotulo: 'À Vista' },
+  { chave: 'parcelado', rotulo: 'Parcelado' },
+];
+
+/** Meios do filtro: rótulo amigável → valor canônico em `meioPagamento`. */
+export const MEIOS_FILTRO_CLASSIFICAR: { rotulo: string; canonico: string }[] = [
+  { rotulo: 'PIX', canonico: 'PIX' },
+  { rotulo: 'Crédito', canonico: 'Cartão de Crédito' },
+  { rotulo: 'Débito', canonico: 'Cartão de Débito' },
+  { rotulo: 'Boleto', canonico: 'Boleto' },
+  { rotulo: 'Boleto Parcelado', canonico: 'Boleto Parcelado' },
+  { rotulo: 'Dinheiro', canonico: 'Dinheiro' },
+  { rotulo: 'Transferência', canonico: 'Transferência Bancária' },
+  { rotulo: 'Financiamento', canonico: 'Financiamento' },
+];
+
+export function formaPagamentoChaveClassificacao(
+  formaPagamento: string
+): ClassificarFiltroFormaChave {
+  return isFormaPagamentoParcelado(formaPagamento) ? 'parcelado' : 'a_vista';
+}
+
+export function rotuloMeioPagamentoFiltroClassificacao(canonico: string): string {
+  const found = MEIOS_FILTRO_CLASSIFICAR.find((m) => m.canonico === canonico);
+  return found?.rotulo ?? canonico;
+}
+
+export function listarMeiosPagamentoClassificacao(
+  gastos: Pick<GastoClassificacaoRow, 'meioPagamento'>[]
+): { rotulo: string; canonico: string }[] {
+  const present = new Set<string>();
+  for (const g of gastos) {
+    const t = g.meioPagamento.trim();
+    if (t) present.add(t);
+  }
+  return MEIOS_FILTRO_CLASSIFICAR.filter((m) => present.has(m.canonico));
+}
+
+export function listarInstituicoesClassificacao(
+  gastos: Pick<GastoClassificacaoRow, 'instituicaoFinanceira'>[]
+): string[] {
+  const set = new Set<string>();
+  for (const g of gastos) {
+    const t = g.instituicaoFinanceira.trim();
+    if (t) set.add(t);
+  }
+  return [...set].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+}
+
+export function temFiltroPagamentoClassificacaoAtivo(filtro: ClassificarFiltroPagamento): boolean {
+  return (
+    filtro.formas.length > 0 || filtro.meios.length > 0 || filtro.instituicoes.length > 0
+  );
+}
+
+export function gastoPassaFiltroPagamentoClassificacao(
+  gasto: Pick<
+    GastoClassificacaoRow,
+    'formaPagamento' | 'meioPagamento' | 'instituicaoFinanceira'
+  >,
+  filtro: ClassificarFiltroPagamento
+): boolean {
+  if (filtro.formas.length > 0) {
+    const chave = formaPagamentoChaveClassificacao(gasto.formaPagamento);
+    if (!filtro.formas.includes(chave)) return false;
+  }
+  if (filtro.meios.length > 0) {
+    const meio = gasto.meioPagamento.trim();
+    if (!filtro.meios.includes(meio)) return false;
+  }
+  if (filtro.instituicoes.length > 0) {
+    const inst = gasto.instituicaoFinanceira.trim();
+    if (!filtro.instituicoes.includes(inst)) return false;
+  }
+  return true;
+}
+
+export function rotuloFiltroPagamentoClassificacao(
+  filtro: ClassificarFiltroPagamento
+): string | null {
+  if (!temFiltroPagamentoClassificacaoAtivo(filtro)) return null;
+
+  const total =
+    filtro.formas.length + filtro.meios.length + filtro.instituicoes.length;
+  if (total === 1) {
+    if (filtro.formas.length === 1) {
+      const f = FORMAS_FILTRO_CLASSIFICAR.find((x) => x.chave === filtro.formas[0]);
+      return `Pagamento: ${f?.rotulo ?? filtro.formas[0]}`;
+    }
+    if (filtro.meios.length === 1) {
+      return `Pagamento: ${rotuloMeioPagamentoFiltroClassificacao(filtro.meios[0])}`;
+    }
+    return `Pagamento: ${filtro.instituicoes[0]}`;
+  }
+  return `Pagamento: ${total} critérios`;
+}
+
+export function filtrarGastosClassificacaoPorPagamento(
+  gastos: GastoClassificacaoRow[],
+  filtro: ClassificarFiltroPagamento
+): GastoClassificacaoRow[] {
+  if (!temFiltroPagamentoClassificacaoAtivo(filtro)) return gastos;
+  return gastos.filter((g) => gastoPassaFiltroPagamentoClassificacao(g, filtro));
+}
+
+/** Coluna Meio na tabela Classificar (abreviação visual). */
+export function meioPagamentoTabelaClassificacao(meioPagamento: string): string {
+  const t = meioPagamento.trim();
+  if (!t) return '—';
+  return MEIO_PAGAMENTO_TABELA[t] ?? t;
+}
+
+/** Coluna Valor na tabela Classificar (moeda BRL com R$). */
+export function valorTabelaClassificacao(totalCents: number): string {
+  return formatCurrency(totalCents);
+}
+
+/** Badge secundário: Forma · Instituição (ex.: À Vista · Nubank). */
+export function badgePagamentoClassificacao(
+  gasto: Pick<GastoClassificacaoRow, 'formaPagamento' | 'parcelas' | 'instituicaoFinanceira'>
+): string {
+  const forma = formaPagamentoTabelaClassificacao(gasto);
+  const inst = gasto.instituicaoFinanceira?.trim() || '—';
+  return `${forma} · ${inst}`;
 }
 
 export function formatCurrencyRaw(cents: number): string {

@@ -60,4 +60,7 @@
   --space-8: 32px;
   --space-9: 36px;
   --space-10: 40px;
+
+  /* Layout fixo — altura reservada para a navegação inferior (alinha com paddingBottom das telas) */
+  --layout-bottom-nav-offset: 70px;
 }

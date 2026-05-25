@@ -10,6 +10,7 @@ import { LoginScreen } from './components/LoginScreen';
 import { DatePickerSheet } from './components/DatePickerSheet';
 import { BottomNav } from './components/BottomNav';
 import { MeusGastos } from './components/MeusGastos';
+import { ClassificarGastosScreen } from './components/classificar/ClassificarGastosScreen';
 import { CotacoesScreen } from './components/cotacoes/CotacoesScreen';
 import { CotacaoDetailScreen } from './components/cotacoes/CotacaoDetailScreen';
 import { GastoDetail } from './components/GastoDetail';
@@ -24,7 +25,13 @@ import { AdminGateway } from './components/admin/AdminGateway';
 import { AdminPanel } from './components/admin/AdminPanel';
 import { LogoutButton } from './components/LogoutButton';
 import { OrgProvider, useOrg } from './contexts/OrgContext';
-import { formatDateBR, generateId } from './utils';
+import {
+  formatDateBR,
+  generateId,
+  compromissoDisplayTitle,
+  appendObservacaoDiferencaValor,
+  scaleItemsValorToTotal,
+} from './utils';
 import {
   supabase,
   saveGasto,
@@ -33,6 +40,7 @@ import {
   saveCompromisso,
   fetchCompromissoIndicatorCounts,
   fetchCompromissoById,
+  fetchGastoById,
   linkCompromissoQuitado,
   uploadComprovante,
   ensureCompromissosFromGastosPerenes,
@@ -92,6 +100,7 @@ function AppInner() {
 
   // Screen state
   const [screen, setScreen] = useState<Screen>('main');
+  const [gastoDetailReturnScreen, setGastoDetailReturnScreen] = useState<Screen>('meus_gastos');
   const [adminChoice, setAdminChoice] = useState<'admin' | 'user' | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -150,6 +159,7 @@ function AppInner() {
   const [selectedCompromisso, setSelectedCompromisso] = useState<CompromissoRecord | null>(null);
   const [showSalvarCompromissoModal, setShowSalvarCompromissoModal] = useState(false);
   const [showQuitPaymentModal, setShowQuitPaymentModal] = useState(false);
+  const [quitValorRealizadoCents, setQuitValorRealizadoCents] = useState(0);
   const [compromissoIndicatorCounts, setCompromissoIndicatorCounts] = useState({
     vencidos: 0,
     pendentes: 0,
@@ -447,7 +457,6 @@ function AppInner() {
 
       if (editingGastoId) {
         // After edit: go back to detail (refresh it)
-        const { fetchGastoById } = await import('./lib/supabase');
         const updated = await fetchGastoById(editingGastoId);
         if (updated) {
           setSelectedGasto(updated);
@@ -481,7 +490,19 @@ function AppInner() {
 
   // Select gasto from list
   const handleSelectGasto = useCallback((gasto: GastoRecord) => {
+    setGastoDetailReturnScreen('meus_gastos');
     setSelectedGasto(gasto);
+    setScreen('gasto_detail');
+  }, []);
+
+  const handleOpenGastoDetailFromClassificar = useCallback(async (gastoId: string) => {
+    const g = await fetchGastoById(gastoId);
+    if (!g) {
+      alert('Não foi possível abrir o detalhe deste gasto.');
+      return;
+    }
+    setGastoDetailReturnScreen('classificar_gastos');
+    setSelectedGasto(g);
     setScreen('gasto_detail');
   }, []);
 
@@ -584,15 +605,25 @@ function AppInner() {
     if (!selectedCompromisso) return;
     setSaving(true);
     try {
+      const planejadoCents = selectedCompromisso.total;
+      const realizadoCents = quitValorRealizadoCents;
       const forma = payment.formaPagamento === 'a_vista' ? 'À Vista' : 'Parcelado';
       const parcelasFinal = payment.formaPagamento === 'a_vista' ? 1 : payment.parcelas;
-      const itemsPayload = selectedCompromisso.items.map((item) => ({
-        ordem: item.ordem,
-        descricao: item.descricao,
-        quantidade: item.quantidade,
-        unidade: item.unidade,
-        valorCentavos: item.valorCentavos,
-      }));
+      const observacoesFinal = appendObservacaoDiferencaValor(
+        payment.observacoes,
+        planejadoCents,
+        realizadoCents
+      );
+      const itemsPayload = scaleItemsValorToTotal(
+        selectedCompromisso.items.map((item) => ({
+          ordem: item.ordem,
+          descricao: item.descricao,
+          quantidade: item.quantidade,
+          unidade: item.unidade,
+          valorCentavos: item.valorCentavos,
+        })),
+        realizadoCents
+      );
 
       const gastoResult = await saveGasto(
         orgId,
@@ -601,8 +632,8 @@ function AppInner() {
         forma,
         payment.meioPagamento,
         payment.instituicaoFinanceira,
-        payment.observacoes,
-        selectedCompromisso.total,
+        observacoesFinal,
+        realizadoCents,
         payment.comprovanteUrl,
         parcelasFinal,
         itemsPayload
@@ -623,6 +654,7 @@ function AppInner() {
 
       setShowQuitPaymentModal(false);
       setPayment({ ...defaultPayment });
+      setQuitValorRealizadoCents(0);
       setSelectedCompromisso(null);
       setScreen('meus_gastos');
       setRefreshKey((k) => k + 1);
@@ -634,7 +666,7 @@ function AppInner() {
     } finally {
       setSaving(false);
     }
-  }, [selectedCompromisso, payment]);
+  }, [selectedCompromisso, payment, quitValorRealizadoCents, orgId]);
 
   // Org loading
   if (orgLoading) {
@@ -714,6 +746,20 @@ function AppInner() {
     );
   }
 
+  // Classificar Gastos
+  if (screen === 'classificar_gastos') {
+    return (
+      <>
+        <ClassificarGastosScreen
+          orgId={orgId}
+          refreshKey={refreshKey}
+          onOpenGastoDetail={handleOpenGastoDetailFromClassificar}
+        />
+        <BottomNav active="classificar_gastos" onNavigate={handleNavigate} />
+      </>
+    );
+  }
+
   // Meus Gastos
   if (screen === 'meus_gastos') {
     return (
@@ -776,7 +822,12 @@ function AppInner() {
             setScreen('meus_gastos');
           }}
           onRequestQuit={() => {
-            setPayment({ ...defaultPayment });
+            const c = selectedCompromisso;
+            setPayment({
+              ...defaultPayment,
+              fornecedor: c.fornecedor.trim() || compromissoDisplayTitle(c),
+            });
+            setQuitValorRealizadoCents(c.total);
             setShowQuitPaymentModal(true);
           }}
           onCancelled={() => {
@@ -791,11 +842,17 @@ function AppInner() {
             payment={payment}
             onChange={handlePaymentChange}
             onSave={handleQuitCompromissoSave}
-            onClose={() => setShowQuitPaymentModal(false)}
+            onClose={() => {
+              setShowQuitPaymentModal(false);
+              setQuitValorRealizadoCents(0);
+            }}
             saving={saving}
-            totalCents={selectedCompromisso.total}
+            totalCents={quitValorRealizadoCents}
             modalTitle="Quitar compromisso"
             saveButtonLabel="Confirmar quitação"
+            valorPlanejadoCents={selectedCompromisso.total}
+            valorRealizadoCents={quitValorRealizadoCents}
+            onValorRealizadoChange={setQuitValorRealizadoCents}
           />
         )}
       </>
@@ -807,7 +864,7 @@ function AppInner() {
     return (
       <GastoDetail
         gasto={selectedGasto}
-        onBack={() => setScreen('meus_gastos')}
+        onBack={() => setScreen(gastoDetailReturnScreen)}
         onEdit={handleStartEdit}
       />
     );
