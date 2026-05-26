@@ -887,21 +887,11 @@ function AppInner() {
 
       {/* Draft Clear Button */}
       {!isEditMode && hasDraft && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px 20px 0', position: 'relative', zIndex: 11 }}>
+        <div className="clear-draft-row">
           <button
             onClick={() => setShowClearDraftWarning(true)}
             type="button"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#ff4444',
-              fontSize: 12,
-              fontWeight: 500,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4
-            }}
+            className="btn-clear-draft"
           >
             Limpar rascunho
           </button>

@@ -212,6 +212,32 @@ html, body, #root {
   border-radius: 4px;
 }
 
+.clear-draft-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 20px 0;
+  position: relative;
+  z-index: 11;
+}
+
+.btn-clear-draft {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: 'Inter', sans-serif;
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.15s ease;
+}
+
+.btn-clear-draft:hover {
+  color: var(--text-accent-medium);
+}
+
 /* ===== ACTION BUTTONS ===== */
 .btn-launch {
   width: 100%;
