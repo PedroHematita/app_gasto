@@ -4,6 +4,7 @@ import type {
   GastoClassificacaoRow,
   CompromissoRecord,
   CompromissoStatus,
+  CompromissoParcela,
   GastoPereneRecord,
   PeriodicidadePerene,
   StatusGastoPerene,
@@ -514,7 +515,26 @@ function mapCompromissoRow(row: any): CompromissoRecord {
       valorCentavos: Math.round((item.valor_total || 0) * 100),
     }));
 
-  const total = items.reduce((s, i) => s + i.valorCentavos, 0);
+  const tipo = (row.tipo || 'unico') as 'unico' | 'parcelado';
+
+  // Parcelas individuais (só presentes quando tipo='parcelado' e o join foi feito)
+  const parcelasRaw: any[] = row.compromisso_parcelas || [];
+  const parcelas: CompromissoParcela[] = parcelasRaw
+    .sort((a: any, b: any) => a.numero_parcela - b.numero_parcela)
+    .map((p: any) => ({
+      id: p.id,
+      compromissoId: row.id,
+      numeroParcela: p.numero_parcela,
+      totalParcelas: p.total_parcelas,
+      valorCentavos: Math.round((p.valor_centavos || 0)),
+      dataVencimentoBR: isoToBR(p.data_vencimento),
+      status: (p.status || 'pendente') as CompromissoStatus,
+    }));
+
+  // Para tipo parcelado, o total = soma das parcelas (mais preciso que o campo total do registro pai)
+  const total = tipo === 'parcelado' && parcelas.length > 0
+    ? parcelas.reduce((s, p) => s + p.valorCentavos, 0)
+    : items.reduce((s, i) => s + i.valorCentavos, 0);
 
   return {
     id: row.id,
@@ -522,12 +542,14 @@ function mapCompromissoRow(row: any): CompromissoRecord {
     dataPrevistaPagamento: isoToBR(row.data_prevista_pagamento),
     fornecedor: row.fornecedor || '',
     status: row.status as CompromissoStatus,
+    tipo,
     total,
     createdAt: row.created_at,
     gastoId: row.gasto_id || null,
     gastoPereneId: row.gasto_perene_id || null,
     competenciaChave: row.competencia_chave || null,
     items,
+    parcelas: tipo === 'parcelado' ? parcelas : undefined,
   };
 }
 
@@ -559,8 +581,9 @@ export async function fetchCompromissosAtivos(orgId: string): Promise<Compromiss
   const { data, error } = await supabase
     .from('compromissos')
     .select(`
-      id, data_compra, data_prevista_pagamento, fornecedor, status, created_at, gasto_id, gasto_perene_id, competencia_chave,
-      compromisso_itens ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total )
+      id, data_compra, data_prevista_pagamento, fornecedor, status, tipo, created_at, gasto_id, gasto_perene_id, competencia_chave,
+      compromisso_itens ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total ),
+      compromisso_parcelas ( id, numero_parcela, total_parcelas, valor_centavos, data_vencimento, status )
     `)
     .eq('org_id', orgId)
     .in('status', ['pendente', 'vencido']);
@@ -598,8 +621,9 @@ export async function fetchCompromissoById(compromissoId: string): Promise<Compr
   const { data, error } = await supabase
     .from('compromissos')
     .select(`
-      id, data_compra, data_prevista_pagamento, fornecedor, status, created_at, gasto_id, gasto_perene_id, competencia_chave,
-      compromisso_itens ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total )
+      id, data_compra, data_prevista_pagamento, fornecedor, status, tipo, created_at, gasto_id, gasto_perene_id, competencia_chave,
+      compromisso_itens ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total ),
+      compromisso_parcelas ( id, numero_parcela, total_parcelas, valor_centavos, data_vencimento, status )
     `)
     .eq('id', compromissoId)
     .single();
@@ -609,9 +633,17 @@ export async function fetchCompromissoById(compromissoId: string): Promise<Compr
   return mapCompromissoRow(data);
 }
 
+export type SaveCompromissoParcela = {
+  numeroParcela: number;
+  totalParcelas: number;
+  valorCentavos: number;
+  dataVencimentoBR: string; // dd/mm/aaaa
+};
+
 export async function saveCompromisso(
   orgId: string,
   dataCompraBR: string,
+  /** Para modo único: data de vencimento. Para modo parcelado: use a data da 1ª parcela ou a data de compra. */
   dataPrevistaBR: string,
   fornecedor: string,
   items: Array<{
@@ -620,7 +652,9 @@ export async function saveCompromisso(
     quantidade: number;
     unidade: string;
     valorCentavos: number;
-  }>
+  }>,
+  /** Se fornecido, salva como compromisso parcelado. */
+  parcelas?: SaveCompromissoParcela[]
 ): Promise<string | null> {
   if (!supabase) {
     console.warn('Supabase not configured.');
@@ -631,9 +665,14 @@ export async function saveCompromisso(
   if (!user) throw new Error('Usuário não autenticado');
 
   const fornecedorOk = requireFornecedorTrimmed(fornecedor);
+  const tipo = parcelas && parcelas.length > 0 ? 'parcelado' : 'unico';
 
-  const prevISO = brToISO(dataPrevistaBR);
+  // Para o compromisso pai, data_prevista_pagamento = data da 1ª parcela (parcelado) ou data única informada
+  const prevBR = parcelas && parcelas.length > 0 ? parcelas[0].dataVencimentoBR : dataPrevistaBR;
+  const prevISO = brToISO(prevBR);
   const statusInicial = effectiveStatusFromPrevistaISO(prevISO);
+
+
 
   const { data: row, error } = await supabase
     .from('compromissos')
@@ -644,12 +683,14 @@ export async function saveCompromisso(
       data_prevista_pagamento: prevISO,
       fornecedor: fornecedorOk,
       status: statusInicial,
+      tipo,
     })
     .select('id')
     .single();
 
   if (error || !row) throw error;
 
+  // Salva itens (descrição do que foi comprado)
   const itensData = items.map((item) => ({
     compromisso_id: row.id,
     ordem: item.ordem,
@@ -660,8 +701,22 @@ export async function saveCompromisso(
   }));
 
   const { error: itensError } = await supabase.from('compromisso_itens').insert(itensData);
-
   if (itensError) throw itensError;
+
+  // Salva parcelas individuais (apenas modo parcelado)
+  if (parcelas && parcelas.length > 0) {
+    const parcelasData = parcelas.map((p) => ({
+      compromisso_id: row.id,
+      numero_parcela: p.numeroParcela,
+      total_parcelas: p.totalParcelas,
+      valor_centavos: p.valorCentavos,
+      data_vencimento: brToISO(p.dataVencimentoBR),
+      status: effectiveStatusFromPrevistaISO(brToISO(p.dataVencimentoBR)),
+    }));
+
+    const { error: parcelasError } = await supabase.from('compromisso_parcelas').insert(parcelasData);
+    if (parcelasError) throw parcelasError;
+  }
 
   return row.id as string;
 }
@@ -675,6 +730,15 @@ export async function cancelCompromisso(compromissoId: string): Promise<void> {
     .eq('id', compromissoId);
 
   if (error) throw error;
+
+  // Cancela todas as parcelas pendentes ou vencidas
+  const { error: cpError } = await supabase
+    .from('compromisso_parcelas')
+    .update({ status: 'cancelado' })
+    .eq('compromisso_id', compromissoId)
+    .in('status', ['pendente', 'vencido']);
+
+  if (cpError) throw cpError;
 }
 
 export async function linkCompromissoQuitado(compromissoId: string, gastoId: string): Promise<void> {
@@ -686,6 +750,40 @@ export async function linkCompromissoQuitado(compromissoId: string, gastoId: str
     .eq('id', compromissoId);
 
   if (error) throw error;
+}
+
+export async function linkParcelaQuitada(parcelaId: string, gastoId: string): Promise<void> {
+  if (!supabase) throw new Error('Supabase não configurado');
+
+  // 1. Atualiza a parcela para quitado e vincula o gasto
+  const { data: updatedParcela, error: updateError } = await supabase
+    .from('compromisso_parcelas')
+    .update({ status: 'quitado', gasto_id: gastoId })
+    .eq('id', parcelaId)
+    .select('compromisso_id')
+    .single();
+
+  if (updateError || !updatedParcela) throw updateError || new Error('Parcela não encontrada');
+
+  const compId = updatedParcela.compromisso_id;
+
+  // 2. Busca todas as parcelas do mesmo compromisso para ver se estão todas concluídas (quitado/cancelado)
+  const { data: parcelas, error: fetchError } = await supabase
+    .from('compromisso_parcelas')
+    .select('status')
+    .eq('compromisso_id', compId);
+
+  if (fetchError || !parcelas) throw fetchError;
+
+  const todasConcluidas = parcelas.every(p => p.status === 'quitado' || p.status === 'cancelado');
+  if (todasConcluidas) {
+    const { error: compError } = await supabase
+      .from('compromissos')
+      .update({ status: 'quitado' })
+      .eq('id', compId);
+
+    if (compError) throw compError;
+  }
 }
 
 // ----- Gastos perenes -----

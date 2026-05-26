@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { formatCurrency, compromissoDisplayTitle, daysOverdueFromPrevistaBR } from '../utils';
 import { cancelCompromisso } from '../lib/supabase';
-import type { CompromissoRecord } from '../types';
+import type { CompromissoRecord, CompromissoParcela } from '../types';
 
 interface CompromissoDetailProps {
   compromisso: CompromissoRecord;
   onBack: () => void;
   onRequestQuit: () => void;
+  onRequestQuitParcela: (parcela: CompromissoParcela) => void;
   onCancelled: () => void;
 }
 
@@ -15,6 +16,7 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
   compromisso,
   onBack,
   onRequestQuit,
+  onRequestQuitParcela,
   onCancelled,
 }) => {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -24,6 +26,17 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
   const title = compromissoDisplayTitle(compromisso);
   const isVencido = compromisso.status === 'vencido';
   const dias = daysOverdueFromPrevistaBR(compromisso.dataPrevistaPagamento);
+
+  const isParcelado = compromisso.tipo === 'parcelado';
+  const parcelas = compromisso.parcelas || [];
+
+  const totalPago = parcelas
+    .filter((p) => p.status === 'quitado')
+    .reduce((s, p) => s + p.valorCentavos, 0);
+
+  const totalPendente = parcelas
+    .filter((p) => p.status === 'pendente' || p.status === 'vencido')
+    .reduce((s, p) => s + p.valorCentavos, 0);
 
   const handleConfirmCancel = async () => {
     setCancelling(true);
@@ -53,17 +66,19 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
         <div className="detail-info">
           <div className="detail-info__fornecedor">{title}</div>
           <div className="detail-info__date">Compra: {compromisso.dataCompra}</div>
-          <div className="detail-info__prevista-line">
-            <span className="detail-info__date detail-info__date--inline">
-              Pagamento previsto: {compromisso.dataPrevistaPagamento}
-            </span>
-            <span
-              className={`compromisso-badge compromisso-badge--${isVencido ? 'vencido' : 'pendente'}`}
-            >
-              {isVencido ? 'vencido' : 'pendente'}
-            </span>
-          </div>
-          {isVencido && dias > 0 && (
+          {!isParcelado && (
+            <div className="detail-info__prevista-line">
+              <span className="detail-info__date detail-info__date--inline">
+                Pagamento previsto: {compromisso.dataPrevistaPagamento}
+              </span>
+              <span
+                className={`compromisso-badge compromisso-badge--${isVencido ? 'vencido' : 'pendente'}`}
+              >
+                {isVencido ? 'vencido' : 'pendente'}
+              </span>
+            </div>
+          )}
+          {!isParcelado && isVencido && dias > 0 && (
             <p className="compromisso-meta compromisso-meta--danger" style={{ marginTop: 8, marginBottom: 0 }}>
               vencido há {dias} dia{dias === 1 ? '' : 's'}
             </p>
@@ -86,15 +101,115 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
           </div>
         ))}
 
-        <div className="total-bar total-bar--panel">
-          <span className="total-bar__label">Total do compromisso</span>
-          <span className="total-bar__value">{formatCurrency(compromisso.total)}</span>
-        </div>
+        {isParcelado && (
+          <>
+            <div className="detail-items-title" style={{ marginTop: 24, marginBottom: 10 }}>
+              Parcelas do Compromisso
+            </div>
+            <div
+              style={{
+                background: '#151515',
+                borderRadius: 14,
+                padding: '12px 16px',
+                border: '1px solid #222',
+                marginBottom: 20,
+              }}
+            >
+              {parcelas.map((p, idx) => {
+                const isPendente = p.status === 'pendente' || p.status === 'vencido';
+                return (
+                  <div
+                    key={p.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 0',
+                      borderBottom: idx === parcelas.length - 1 ? 'none' : '1px solid #222',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>
+                        Parcela {p.numeroParcela}/{p.totalParcelas}
+                      </div>
+                      <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
+                        Vence em: {p.dataVencimentoBR}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>
+                          {formatCurrency(p.valorCentavos)}
+                        </div>
+                        <span
+                          className={`compromisso-badge compromisso-badge--${p.status}`}
+                          style={{
+                            fontSize: 10,
+                            padding: '1px 6px',
+                            display: 'inline-block',
+                            marginTop: 2,
+                          }}
+                        >
+                          {p.status}
+                        </span>
+                      </div>
+
+                      {isPendente && (
+                        <button
+                          type="button"
+                          onClick={() => onRequestQuitParcela(p)}
+                          style={{
+                            background: 'var(--accent-color, #a855f7)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: 6,
+                            padding: '6px 12px',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Quitar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Resumo */}
+              <div style={{ marginTop: 12, fontSize: 13, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#888' }}>
+                  <span>Total Pago:</span>
+                  <span style={{ color: '#52fa7c', fontWeight: 600 }}>{formatCurrency(totalPago)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#888' }}>
+                  <span>Total Pendente:</span>
+                  <span style={{ color: '#ff7c7c', fontWeight: 600 }}>{formatCurrency(totalPendente)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fff', borderTop: '1px solid #333', paddingTop: 6, fontWeight: 600 }}>
+                  <span>Total do Compromisso:</span>
+                  <span>{formatCurrency(compromisso.total)}</span>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {!isParcelado && (
+          <div className="total-bar total-bar--panel">
+            <span className="total-bar__label">Total do compromisso</span>
+            <span className="total-bar__value">{formatCurrency(compromisso.total)}</span>
+          </div>
+        )}
 
         <div className="compromisso-detail-actions">
-          <button className="btn-compromisso-quitar" onClick={onRequestQuit} type="button">
-            Quitar compromisso
-          </button>
+          {!isParcelado && (
+            <button className="btn-compromisso-quitar" onClick={onRequestQuit} type="button">
+              Quitar compromisso
+            </button>
+          )}
           <button
             type="button"
             className="btn-compromisso-secondary"

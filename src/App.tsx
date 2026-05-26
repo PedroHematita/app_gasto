@@ -42,10 +42,11 @@ import {
   fetchCompromissoById,
   fetchGastoById,
   linkCompromissoQuitado,
+  linkParcelaQuitada,
   uploadComprovante,
   ensureCompromissosFromGastosPerenes,
 } from './lib/supabase';
-import type { GastoItem, PaymentData, Screen, GastoRecord, CompromissoRecord, GastoPereneRecord } from './types';
+import type { GastoItem, PaymentData, Screen, GastoRecord, CompromissoRecord, GastoPereneRecord, CompromissoParcela } from './types';
 
 const defaultPayment: PaymentData = {
   fornecedor: '',
@@ -157,6 +158,7 @@ function AppInner() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [selectedCompromisso, setSelectedCompromisso] = useState<CompromissoRecord | null>(null);
+  const [selectedParcela, setSelectedParcela] = useState<CompromissoParcela | null>(null);
   const [showSalvarCompromissoModal, setShowSalvarCompromissoModal] = useState(false);
   const [showQuitPaymentModal, setShowQuitPaymentModal] = useState(false);
   const [quitValorRealizadoCents, setQuitValorRealizadoCents] = useState(0);
@@ -545,13 +547,17 @@ function AppInner() {
     }
   }, [resetAll, selectedGasto]);
 
-  const handleSalvarRascunhoClick = useCallback(() => {
+  const handleSalvarCompromissoClick = useCallback(() => {
     if (items.length === 0) return;
     setShowSalvarCompromissoModal(true);
   }, [items.length]);
 
   const handleConfirmSalvarCompromisso = useCallback(
-    async (fornecedor: string, dataPrevistaBR: string) => {
+    async (
+      fornecedor: string,
+      dataPrevistaBR: string,
+      parcelas?: import('./lib/supabase').SaveCompromissoParcela[]
+    ) => {
       try {
         const payload = items.map((item) => ({
           ordem: item.ordem,
@@ -560,7 +566,7 @@ function AppInner() {
           unidade: item.unidade,
           valorCentavos: item.valorCentavos,
         }));
-        await saveCompromisso(orgId, dataCompra, dataPrevistaBR, fornecedor, payload);
+        await saveCompromisso(orgId, dataCompra, dataPrevistaBR, fornecedor, payload, parcelas);
         setShowSalvarCompromissoModal(false);
         resetAll();
         setRefreshKey((k) => k + 1);
@@ -605,15 +611,19 @@ function AppInner() {
     if (!selectedCompromisso) return;
     setSaving(true);
     try {
-      const planejadoCents = selectedCompromisso.total;
+      const planejadoCents = selectedParcela ? selectedParcela.valorCentavos : selectedCompromisso.total;
       const realizadoCents = quitValorRealizadoCents;
-      const forma = payment.formaPagamento === 'a_vista' ? 'À Vista' : 'Parcelado';
-      const parcelasFinal = payment.formaPagamento === 'a_vista' ? 1 : payment.parcelas;
+      
+      // Para parcelas individuais de um compromisso, o gasto real é sempre À Vista (não faz sentido parcelar uma parcela)
+      const forma = selectedParcela ? 'À Vista' : (payment.formaPagamento === 'a_vista' ? 'À Vista' : 'Parcelado');
+      const parcelasFinal = selectedParcela ? 1 : (payment.formaPagamento === 'a_vista' ? 1 : payment.parcelas);
+      
       const observacoesFinal = appendObservacaoDiferencaValor(
         payment.observacoes,
         planejadoCents,
         realizadoCents
       );
+      
       const itemsPayload = scaleItemsValorToTotal(
         selectedCompromisso.items.map((item) => ({
           ordem: item.ordem,
@@ -627,7 +637,7 @@ function AppInner() {
 
       const gastoResult = await saveGasto(
         orgId,
-        selectedCompromisso.dataCompra,
+        selectedParcela ? selectedParcela.dataVencimentoBR : selectedCompromisso.dataCompra,
         payment.fornecedor,
         forma,
         payment.meioPagamento,
@@ -650,11 +660,16 @@ function AppInner() {
         }
       }
 
-      await linkCompromissoQuitado(selectedCompromisso.id, inserted.id);
+      if (selectedParcela) {
+        await linkParcelaQuitada(selectedParcela.id, inserted.id);
+      } else {
+        await linkCompromissoQuitado(selectedCompromisso.id, inserted.id);
+      }
 
       setShowQuitPaymentModal(false);
       setPayment({ ...defaultPayment });
       setQuitValorRealizadoCents(0);
+      setSelectedParcela(null);
       setSelectedCompromisso(null);
       setScreen('meus_gastos');
       setRefreshKey((k) => k + 1);
@@ -666,7 +681,7 @@ function AppInner() {
     } finally {
       setSaving(false);
     }
-  }, [selectedCompromisso, payment, quitValorRealizadoCents, orgId]);
+  }, [selectedCompromisso, selectedParcela, payment, quitValorRealizadoCents, orgId]);
 
   // Org loading
   if (orgLoading) {
@@ -830,6 +845,15 @@ function AppInner() {
             setQuitValorRealizadoCents(c.total);
             setShowQuitPaymentModal(true);
           }}
+          onRequestQuitParcela={(parcela) => {
+            setSelectedParcela(parcela);
+            setPayment({
+              ...defaultPayment,
+              fornecedor: selectedCompromisso.fornecedor.trim() || compromissoDisplayTitle(selectedCompromisso),
+            });
+            setQuitValorRealizadoCents(parcela.valorCentavos);
+            setShowQuitPaymentModal(true);
+          }}
           onCancelled={() => {
             setRefreshKey((k) => k + 1);
             setSelectedCompromisso(null);
@@ -845,14 +869,16 @@ function AppInner() {
             onClose={() => {
               setShowQuitPaymentModal(false);
               setQuitValorRealizadoCents(0);
+              setSelectedParcela(null);
             }}
             saving={saving}
             totalCents={quitValorRealizadoCents}
-            modalTitle="Quitar compromisso"
+            modalTitle={selectedParcela ? "Quitar parcela" : "Quitar compromisso"}
             saveButtonLabel="Confirmar quitação"
-            valorPlanejadoCents={selectedCompromisso.total}
+            valorPlanejadoCents={selectedParcela ? selectedParcela.valorCentavos : selectedCompromisso.total}
             valorRealizadoCents={quitValorRealizadoCents}
             onValorRealizadoChange={setQuitValorRealizadoCents}
+            hideFormaPagamento={!!selectedParcela}
           />
         )}
       </>
@@ -893,7 +919,7 @@ function AppInner() {
             type="button"
             className="btn-clear-draft"
           >
-            Limpar rascunho
+            Descartar itens
           </button>
         </div>
       )}
@@ -1010,10 +1036,10 @@ function AppInner() {
           <button
             className="btn-save-draft"
             disabled={items.length === 0}
-            onClick={handleSalvarRascunhoClick}
+            onClick={handleSalvarCompromissoClick}
             type="button"
           >
-            Salvar rascunho
+            Salvar Compromisso
           </button>
         </div>
       ) : (
@@ -1031,6 +1057,7 @@ function AppInner() {
         <SalvarCompromissoModal
           orgId={orgId}
           dataCompraBR={dataCompra}
+          totalCents={totalCents}
           onClose={() => setShowSalvarCompromissoModal(false)}
           onConfirm={handleConfirmSalvarCompromisso}
         />

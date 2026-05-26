@@ -30,6 +30,8 @@ interface PaymentModalProps {
   /** Quitação: valor efetivamente pago (editável). */
   valorRealizadoCents?: number;
   onValorRealizadoChange?: (cents: number) => void;
+  /** Oculta a escolha de forma de pagamento (À Vista/Parcelado) */
+  hideFormaPagamento?: boolean;
 }
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -46,6 +48,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   valorPlanejadoCents,
   valorRealizadoCents,
   onValorRealizadoChange,
+  hideFormaPagamento = false,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [warningParcela, setWarningParcela] = useState<{ valorParcela: number } | null>(null);
@@ -169,46 +172,50 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
         {!isQuitMode && <div className="payment-separator">— pagamento —</div>}
 
-        <div className="payment-tabs">
-          <div className="payment-tabs__label">Forma de pagamento</div>
-          <div className="payment-tabs__row">
-            <button
-              className={`payment-tab ${payment.formaPagamento === 'a_vista' ? 'payment-tab--active' : 'payment-tab--inactive'}`}
-              onClick={() => onChange({ formaPagamento: 'a_vista', parcelas: 1 })}
-              type="button"
-            >
-              À Vista
-            </button>
-            <button
-              className={`payment-tab ${payment.formaPagamento === 'parcelado' ? 'payment-tab--active' : 'payment-tab--inactive'}`}
-              onClick={() => onChange({ formaPagamento: 'parcelado', parcelas: payment.parcelas && payment.parcelas >= 2 ? payment.parcelas : 2 })}
-              type="button"
-            >
-              Parcelado
-            </button>
-          </div>
-        </div>
+        {!hideFormaPagamento && (
+          <>
+            <div className="payment-tabs">
+              <div className="payment-tabs__label">Forma de pagamento</div>
+              <div className="payment-tabs__row">
+                <button
+                  className={`payment-tab ${payment.formaPagamento === 'a_vista' ? 'payment-tab--active' : 'payment-tab--inactive'}`}
+                  onClick={() => onChange({ formaPagamento: 'a_vista', parcelas: 1 })}
+                  type="button"
+                >
+                  À Vista
+                </button>
+                <button
+                  className={`payment-tab ${payment.formaPagamento === 'parcelado' ? 'payment-tab--active' : 'payment-tab--inactive'}`}
+                  onClick={() => onChange({ formaPagamento: 'parcelado', parcelas: payment.parcelas && payment.parcelas >= 2 ? payment.parcelas : 2 })}
+                  type="button"
+                >
+                  Parcelado
+                </button>
+              </div>
+            </div>
 
-        {payment.formaPagamento === 'parcelado' && (
-          <FloatingInput
-            id="input-parcelas"
-            label="Número de parcelas"
-            value={payment.parcelas !== undefined ? String(payment.parcelas) : ''}
-            onChange={(v) => {
-              const numStr = v.replace(/\D/g, '');
-              if (!numStr) {
-                onChange({ parcelas: undefined });
-                return;
-              }
-              let num = parseInt(numStr, 10);
-              if (num > 48) num = 48;
-              onChange({ parcelas: num });
-            }}
-            type="number"
-            inputMode="numeric"
-            autoComplete="off"
-            bgVariant="surface"
-          />
+            {payment.formaPagamento === 'parcelado' && (
+              <FloatingInput
+                id="input-parcelas"
+                label="Número de parcelas"
+                value={payment.parcelas !== undefined ? String(payment.parcelas) : ''}
+                onChange={(v) => {
+                  const numStr = v.replace(/\D/g, '');
+                  if (!numStr) {
+                    onChange({ parcelas: undefined });
+                    return;
+                  }
+                  let num = parseInt(numStr, 10);
+                  if (num > 48) num = 48;
+                  onChange({ parcelas: num });
+                }}
+                type="number"
+                inputMode="numeric"
+                autoComplete="off"
+                bgVariant="surface"
+              />
+            )}
+          </>
         )}
 
         <FloatingSelect

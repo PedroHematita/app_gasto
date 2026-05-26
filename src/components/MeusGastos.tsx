@@ -226,10 +226,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     return gastos.reduce((s, g) => s + g.total, 0);
   }, [gastos, filteredGastos, search]);
 
-  const totalComprometido = useMemo(
-    () => compromissosParaExibir.reduce((s, c) => s + c.total, 0),
-    [compromissosParaExibir]
-  );
+
 
   const countGastosExibicao = search.trim() ? filteredGastos.length : gastos.length;
 
@@ -455,7 +452,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
       if (gp) onSelectGastoPerene(gp);
       return;
     }
-    if (linha.origem === 'rascunho' && linha.compromissoId) {
+    if ((linha.origem === 'rascunho' || linha.origem === 'parcela') && linha.compromissoId) {
       const c = compromissosAtivos.find((x) => x.id === linha.compromissoId);
       if (c) onSelectCompromisso(c);
       return;
@@ -719,7 +716,24 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
   const renderCompromissosSection = () => {
     if (compromissosParaExibir.length === 0) return null;
 
-    const n = compromissosParaExibir.length;
+    // Separar compromissos únicos de parcelados
+    const unicos = compromissosParaExibir.filter((c) => c.tipo !== 'parcelado');
+    const parcelados = compromissosParaExibir.filter((c) => c.tipo === 'parcelado');
+
+    // Gerar lista plana de parcelas pendentes a partir dos compromissos parcelados
+    const parcelasFlat = parcelados.flatMap((c) =>
+      (c.parcelas ?? [])
+        .filter((p) => p.status === 'pendente' || p.status === 'vencido')
+        .map((p) => ({ parcela: p, compromisso: c }))
+    );
+
+    const totalUnicosCents = unicos.reduce((s, c) => s + c.total, 0);
+    const totalParcelasCents = parcelasFlat.reduce((s, { parcela }) => s + parcela.valorCentavos, 0);
+    const totalComprometidoLocal = totalUnicosCents + totalParcelasCents;
+
+    // Total de "itens" para o cabeçalho da seção
+    const nTotal = unicos.length + parcelasFlat.length;
+    const showSubtitles = unicos.length > 0 && parcelasFlat.length > 0;
     const isExpanded = displayCompromissosExpanded;
 
     return (
@@ -732,13 +746,13 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
           <div className="meus-gastos-month-header__left">
             <span className="meus-gastos-month-header__title">Compromissos pendentes</span>
             <span className="meus-gastos-month-header__count">
-              {n} {n === 1 ? 'compromisso' : 'compromissos'}
+              {nTotal} {nTotal === 1 ? 'item' : 'itens'}
             </span>
           </div>
           <div className="meus-gastos-month-header__right">
             {!isExpanded && (
               <span className="meus-gastos-month-header__total">
-                {formatCurrency(totalComprometido)}
+                {formatCurrency(totalComprometidoLocal)}
               </span>
             )}
             <span className={`meus-gastos-month-header__icon ${isExpanded ? 'is-expanded' : ''}`}>
@@ -747,31 +761,86 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
           </div>
         </button>
 
-        {isExpanded &&
-          compromissosParaExibir.map((c) => {
-            const diasVenc = daysOverdueFromPrevistaBR(c.dataPrevistaPagamento);
-            const statusMeio =
-              c.status === 'vencido'
-                ? `vencido há ${diasVenc} dia${diasVenc === 1 ? '' : 's'}`
-                : 'pendente';
-            return (
-              <button
-                key={c.id}
-                type="button"
-                className="gasto-card"
-                onClick={() => onSelectCompromisso(c)}
-              >
-                <div className="gasto-card__top">
-                  <span className="gasto-card__fornecedor">{compromissoDisplayTitle(c)}</span>
-                  <span className="gasto-card__total">{formatCurrency(c.total)}</span>
-                </div>
-                <div className="gasto-card__bottom">
-                  <span className="gasto-card__date">{c.dataPrevistaPagamento}</span>
-                  <span className="gasto-card__meio">{statusMeio}</span>
-                </div>
-              </button>
-            );
-          })}
+        {isExpanded && (
+          <>
+            {/* ── Subgrupo: Compromissos únicos ── */}
+            {unicos.length > 0 && (
+              <>
+                {showSubtitles && (
+                  <div className="meus-gastos-sub-title">Compromissos únicos</div>
+                )}
+                {unicos.map((c) => {
+                  const diasVenc = daysOverdueFromPrevistaBR(c.dataPrevistaPagamento);
+                  const statusMeio =
+                    c.status === 'vencido'
+                      ? `vencido há ${diasVenc} dia${diasVenc === 1 ? '' : 's'}`
+                      : 'pendente';
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      className="gasto-card"
+                      onClick={() => onSelectCompromisso(c)}
+                    >
+                      <div className="gasto-card__top">
+                        <span className="gasto-card__fornecedor">{compromissoDisplayTitle(c)}</span>
+                        <span className="gasto-card__total">{formatCurrency(c.total)}</span>
+                      </div>
+                      <div className="gasto-card__bottom">
+                        <span className="gasto-card__date">{c.dataPrevistaPagamento}</span>
+                        <span className="gasto-card__meio">{statusMeio}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </>
+            )}
+
+            {/* ── Subgrupo: Parcelas a pagar ── */}
+            {parcelasFlat.length > 0 && (
+              <>
+                {showSubtitles && (
+                  <div className="meus-gastos-sub-title meus-gastos-sub-title--separator">
+                    Parcelas a pagar
+                  </div>
+                )}
+                {parcelasFlat.map(({ parcela, compromisso }) => {
+                  const diasVenc = daysOverdueFromPrevistaBR(parcela.dataVencimentoBR);
+                  const statusMeio =
+                    parcela.status === 'vencido'
+                      ? `vencida há ${diasVenc} dia${diasVenc === 1 ? '' : 's'}`
+                      : 'pendente';
+                  // Título: primeiro item dos itens do compromisso (descricao) ou fornecedor
+                  const descricao =
+                    compromisso.items[0]?.descricao || compromisso.fornecedor || 'Parcela';
+                  return (
+                    <button
+                      key={parcela.id}
+                      type="button"
+                      className="gasto-card"
+                      onClick={() => onSelectCompromisso(compromisso)}
+                    >
+                      <div className="gasto-card__top">
+                        <span className="gasto-card__fornecedor">
+                          {descricao}
+                        </span>
+                        <span className="gasto-card__total">
+                          {formatCurrency(parcela.valorCentavos)}
+                        </span>
+                      </div>
+                      <div className="gasto-card__bottom">
+                        <span className="gasto-card__date">{parcela.dataVencimentoBR}</span>
+                        <span className="gasto-card__meio">
+                          Parcela {parcela.numeroParcela}/{parcela.totalParcelas} · {statusMeio}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </>
+            )}
+          </>
+        )}
       </div>
     );
   };

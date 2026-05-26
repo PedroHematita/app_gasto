@@ -43,6 +43,18 @@ export interface GastoRecord {
 }
 
 export type CompromissoStatus = 'pendente' | 'vencido' | 'quitado' | 'cancelado';
+export type CompromissoTipo = 'unico' | 'parcelado';
+
+/** Uma parcela individual de um compromisso parcelado. */
+export interface CompromissoParcela {
+  id: string;
+  compromissoId: string;
+  numeroParcela: number;
+  totalParcelas: number;
+  valorCentavos: number;
+  dataVencimentoBR: string; // dd/mm/aaaa
+  status: CompromissoStatus;
+}
 
 export interface CompromissoRecord {
   id: string;
@@ -50,12 +62,16 @@ export interface CompromissoRecord {
   dataPrevistaPagamento: string; // dd/mm/aaaa
   fornecedor: string;
   status: CompromissoStatus;
+  /** 'unico' = data prevista única; 'parcelado' = N parcelas em compromisso_parcelas */
+  tipo: CompromissoTipo;
   total: number; // cents
   createdAt: string;
   gastoId: string | null;
   gastoPereneId: string | null;
   competenciaChave: string | null;
   items: GastoItem[];
+  /** Parcelas individuais (preenchido apenas para tipo='parcelado') */
+  parcelas?: CompromissoParcela[];
 }
 
 export type PeriodicidadePerene = 'mensal' | 'trimestral' | 'semestral' | 'anual';

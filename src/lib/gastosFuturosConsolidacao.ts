@@ -29,7 +29,7 @@ const MONTH_NAMES = [
   'Dezembro',
 ];
 
-export type OrigemFuturoLinha = 'perene' | 'rascunho' | 'parcelado' | 'realizado';
+export type OrigemFuturoLinha = 'perene' | 'rascunho' | 'parcelado' | 'realizado' | 'parcela';
 
 export interface LinhaGastoFuturo {
   id: string;
@@ -41,6 +41,7 @@ export interface LinhaGastoFuturo {
   gastoId?: string;
   compromissoId?: string;
   gastoPereneId?: string;
+  parcelaId?: string;
 }
 
 export interface MesFuturoGroup {
@@ -138,6 +139,31 @@ export function consolidarGastosFuturos(input: ConsolidarGastosFuturosInput): An
    * estrito — parcela no dia de hoje não entra aqui (alinhado à decisão de produto).
    */
   for (const c of input.compromissos) {
+    if (c.tipo === 'parcelado') {
+      if (c.parcelas) {
+        for (const p of c.parcelas) {
+          // Apenas parcelas pendentes ou vencidas participam do fluxo financeiro futuro
+          if (p.status !== 'pendente' && p.status !== 'vencido') continue;
+
+          const dp = parseDateBR(p.dataVencimentoBR);
+          if (!dp) continue;
+          const d = startOfDayLocal(dp);
+          if (d.getTime() < hojeSod.getTime() || d.getTime() > fim.getTime()) continue;
+          const key = monthKeyFromDate(d);
+          push(key, {
+            id: `comp-parc:${c.id}:${p.id}`,
+            dataRef: d,
+            valorCents: p.valorCentavos,
+            titulo: `${c.fornecedor.trim() || 'Compromisso'} · Parc. ${p.numeroParcela}/${p.totalParcelas}`,
+            origem: 'parcela',
+            compromissoId: c.id,
+            parcelaId: p.id,
+          });
+        }
+      }
+      continue;
+    }
+
     const dp = parseDateBR(c.dataPrevistaPagamento);
     if (!dp) continue;
     const d = startOfDayLocal(dp);
