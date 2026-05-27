@@ -1089,23 +1089,31 @@ function AppInner() {
       )}
 
       {pendingZeroWarning && (
-        <div className="modal-overlay" onClick={() => setPendingZeroWarning(null)} style={{ zIndex: 1000 }}>
-          <div className="modal-sheet price-history-sheet" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-sheet__handle" />
-            <div className="ph-title" style={{ color: '#ffcc00', marginBottom: 12 }}>Atenção: Valor Zerado</div>
-            
-            <div style={{ padding: '10px 20px 20px', fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5 }}>
+        <div
+          className="modal-overlay modal-finance modal-finance--z-elevated"
+          onClick={() => setPendingZeroWarning(null)}
+        >
+          <div
+            className="modal-sheet price-history-sheet bottom-sheet-finance modal-finance__container"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-sheet__handle modal-finance__handle" />
+            <div className="ph-title ph-title--warning modal-finance__title--warning">
+              Atenção: Valor Zerado
+            </div>
+
+            <div className="modal-finance__body">
               <p>O valor do item está zerado. Deseja lançar assim mesmo?</p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 20px 20px' }}>
+            <div className="payment-warning-actions modal-finance__actions modal-finance__footer">
               <button
                 onClick={() => {
                   setPendingZeroWarning(null);
                   document.getElementById('input-valor')?.focus();
                 }}
                 type="button"
-                style={{ width: '100%', padding: '14px', borderRadius: 8, background: '#333', color: '#fff', border: 'none', fontWeight: 500, cursor: 'pointer' }}
+                className="payment-warning-actions__fix button-finance button-finance--primary"
               >
                 Corrigir valor
               </button>
@@ -1116,7 +1124,7 @@ function AppInner() {
                   commit();
                 }}
                 type="button"
-                style={{ width: '100%', padding: '14px', borderRadius: 8, background: 'transparent', color: 'var(--text-inactive)', border: '1px solid #333', fontWeight: 500, cursor: 'pointer' }}
+                className="payment-warning-actions__continue button-finance button-finance--ghost"
               >
                 Lançar assim mesmo
               </button>
@@ -1126,31 +1134,37 @@ function AppInner() {
       )}
 
       {showClearDraftWarning && (
-        <div className="modal-overlay" onClick={() => setShowClearDraftWarning(false)} style={{ zIndex: 1000 }}>
-          <div className="modal-sheet price-history-sheet" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-sheet__handle" />
-            <div className="ph-title" style={{ color: '#ff4444', marginBottom: 12 }}>Atenção</div>
-            
-            <div style={{ padding: '10px 20px 20px', fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5 }}>
+        <div
+          className="modal-overlay modal-finance modal-finance--z-elevated"
+          onClick={() => setShowClearDraftWarning(false)}
+        >
+          <div
+            className="modal-sheet price-history-sheet bottom-sheet-finance modal-finance__container"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-sheet__handle modal-finance__handle" />
+            <div className="ph-title ph-title--danger modal-finance__title--danger">Atenção</div>
+
+            <div className="modal-finance__body">
               <p>Deseja descartar o rascunho atual?</p>
-              <p style={{ marginTop: 8 }}>Todos os dados preenchidos serão perdidos.</p>
+              <p>Todos os dados preenchidos serão perdidos.</p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 20px 20px' }}>
+            <div className="payment-warning-actions modal-finance__actions modal-finance__footer">
               <button
                 onClick={() => {
                   setShowClearDraftWarning(false);
                   resetAll();
                 }}
                 type="button"
-                style={{ width: '100%', padding: '14px', borderRadius: 8, background: '#333', color: '#ff4444', border: 'none', fontWeight: 500, cursor: 'pointer' }}
+                className="payment-warning-actions__discard button-finance button-finance--primary"
               >
                 Descartar rascunho
               </button>
               <button
                 onClick={() => setShowClearDraftWarning(false)}
                 type="button"
-                style={{ width: '100%', padding: '14px', borderRadius: 8, background: 'transparent', color: 'var(--text-inactive)', border: '1px solid #333', fontWeight: 500, cursor: 'pointer' }}
+                className="payment-warning-actions__continue button-finance button-finance--ghost"
               >
                 Cancelar
               </button>

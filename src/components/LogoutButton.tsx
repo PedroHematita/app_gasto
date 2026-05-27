@@ -51,17 +51,19 @@ export const LogoutButton: React.FC<LogoutButtonProps> = ({ onLogoutComplete, st
 
       {showConfirm && (
         <div
-          className="modal-overlay"
-          style={{ zIndex: 1000 }}
+          className="modal-overlay modal-finance modal-finance--z-elevated"
           onClick={() => setShowConfirm(false)}
         >
-          <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-sheet__handle" />
-            <div className="modal-sheet__title">Deseja sair da aplicação?</div>
-            <div className="compromisso-cancel-confirm__body">
+          <div
+            className="modal-sheet bottom-sheet-finance modal-finance__container"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-sheet__handle modal-finance__handle" />
+            <div className="modal-sheet__title modal-finance__title">Deseja sair da aplicação?</div>
+            <div className="compromisso-cancel-confirm__body modal-finance__body">
               <p>Você será desconectado da sua conta atual.</p>
             </div>
-            <div className="compromisso-cancel-confirm__actions">
+            <div className="compromisso-cancel-confirm__actions modal-finance__actions modal-finance__footer">
               <button
                 type="button"
                 className="btn-compromisso-secondary"

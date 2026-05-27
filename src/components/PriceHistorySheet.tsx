@@ -116,9 +116,12 @@ export const PriceHistorySheet: React.FC<PriceHistorySheetProps> = ({
   }, [chronological, innerW, innerH, padX, padY]);
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-sheet price-history-sheet" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-sheet__handle" />
+    <div className="modal-overlay modal-finance" onClick={onClose}>
+      <div
+        className="modal-sheet price-history-sheet bottom-sheet-finance modal-finance__container"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="modal-sheet__handle modal-finance__handle" />
 
         {/* Title */}
         <div className="ph-title">{descricao}</div>

@@ -129,10 +129,16 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
       })}
 
       {deleteConfirmId && (
-        <div className="delete-confirm" onClick={() => setDeleteConfirmId(null)}>
-          <div className="delete-confirm__box" onClick={(e) => e.stopPropagation()}>
-            <p className="delete-confirm__text">Excluir este item?</p>
-            <div className="delete-confirm__actions">
+        <div
+          className="delete-confirm modal-finance modal-finance--centered modal-finance--z-dialog"
+          onClick={() => setDeleteConfirmId(null)}
+        >
+          <div
+            className="delete-confirm__box modal-finance__dialog"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="delete-confirm__text modal-finance__dialog-body">Excluir este item?</p>
+            <div className="delete-confirm__actions modal-finance__dialog-actions">
               <button
                 className="delete-confirm__btn delete-confirm__btn--cancel"
                 onClick={() => { setDeleteConfirmId(null); setSwipedId(null); }}

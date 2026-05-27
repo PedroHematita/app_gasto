@@ -658,20 +658,6 @@ html.keyboard-open .date-header__row {
   --button-finance-radius: 10px;
 }
 
-.compromisso-cancel-confirm__body {
-  padding: 10px 20px 20px;
-  font-size: 13px;
-  color: var(--text-primary);
-  line-height: 1.5;
-}
-
-.compromisso-cancel-confirm__actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 0 20px 20px;
-}
-
 .salvar-compromisso-actions {
   display: flex;
   flex-direction: column;
@@ -684,13 +670,6 @@ html.keyboard-open .date-header__row {
   --button-finance-color: var(--text-inactive);
   --button-finance-hover-border: var(--border-medium);
   --button-finance-hover-color: var(--text-primary);
-}
-
-.payment-warning-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 0 20px 20px;
 }
 
 .payment-warning-actions__fix {
@@ -707,6 +686,15 @@ html.keyboard-open .date-header__row {
   --button-finance-color: var(--text-inactive);
   --button-finance-hover-border: #3a3a3a;
   --button-finance-hover-color: var(--text-primary);
+}
+
+.payment-warning-actions__discard {
+  --button-finance-padding: 14px;
+  --button-finance-radius: 8px;
+  --button-finance-bg: #333;
+  --button-finance-color: #ff4444;
+  --button-finance-hover-bg: #3a3a3a;
+  --button-finance-hover-color: #ff4444;
 }
 
 .compromissos-section {
@@ -1010,11 +998,12 @@ html.keyboard-open .date-header__row {
   transform: translateX(-80px);
 }
 
-/* ===== BOTTOM SHEET / MODAL ===== */
+/* ===== MODAL FINANCE SYSTEM (ETAPA 5) ===== */
+.modal-finance,
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--bg-overlay);
   z-index: 100;
   display: flex;
   align-items: flex-end;
@@ -1022,41 +1011,193 @@ html.keyboard-open .date-header__row {
   animation: fadeIn 0.2s ease;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.modal-finance--z-elevated {
+  z-index: 1000;
 }
 
+.modal-finance--z-high {
+  z-index: 300;
+}
+
+.modal-finance--z-dialog {
+  z-index: 200;
+}
+
+.modal-finance--centered {
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+
+.modal-finance__dialog,
+.delete-confirm__box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 300px;
+  width: 100%;
+  text-align: center;
+}
+
+.modal-finance__dialog-body,
+.delete-confirm__text {
+  font-size: var(--font-secondary);
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.modal-finance__dialog-actions,
+.delete-confirm__actions {
+  display: flex;
+  gap: 12px;
+}
+
+.delete-confirm__btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif;
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-confirm__btn--cancel {
+  background: transparent;
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+}
+
+.delete-confirm__btn--delete {
+  background: #3a1111;
+  border: 1px solid #662222;
+  color: #ff4444;
+}
+
+.bottom-sheet-finance,
+.modal-finance__container,
 .modal-sheet {
   width: 100%;
   max-width: 480px;
   max-height: 90vh;
   background: var(--bg-surface);
-  border-radius: 16px 16px 0 0;
+  border-radius: var(--space-4) var(--space-4) 0 0;
   overflow-y: auto;
-  padding: 12px 16px 24px;
+  padding: var(--space-3) var(--space-4) var(--space-6);
   animation: slideUp 0.3s ease;
 }
 
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-
+.modal-finance__handle,
 .modal-sheet__handle {
   width: 36px;
   height: 4px;
   background: #333;
   border-radius: 2px;
-  margin: 0 auto 16px;
+  margin: 0 auto var(--space-4);
 }
 
+.modal-finance__title,
 .modal-sheet__title {
   font-size: var(--font-secondary);
   color: var(--text-secondary);
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
   font-weight: var(--weight-medium);
+}
+
+.modal-finance__body,
+.compromisso-cancel-confirm__body {
+  padding: 10px var(--space-5) var(--space-5);
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.modal-finance__footer,
+.modal-finance__actions,
+.compromisso-cancel-confirm__actions,
+.payment-warning-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 var(--space-5) var(--space-5);
+}
+
+.ph-title--warning,
+.modal-finance__title--warning {
+  color: #ffcc00;
+  margin-bottom: 12px;
+}
+
+.ph-title--danger,
+.modal-finance__title--danger {
+  color: #ff4444;
+  margin-bottom: 12px;
+}
+
+.modal-finance__body p + p {
+  margin-top: 8px;
+}
+
+.modal-finance__lead {
+  margin-bottom: 16px;
+}
+
+.modal-finance__detail-panel {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 16px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-finance__detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-finance__detail-label {
+  color: var(--text-inactive);
+  font-size: 11px;
+}
+
+.modal-finance__detail-value {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.modal-finance__detail-value--accent {
+  color: var(--accent);
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.modal-finance__detail-value--warning {
+  color: #ffcc00;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.modal-finance__detail-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ===== BOTTOM SHEET / MODAL (aliases legados) ===== */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 /* Payment separator */
@@ -1427,61 +1568,17 @@ html.keyboard-open .date-header__row {
   background: #251f4a;
 }
 
-/* ===== DELETE CONFIRMATION ===== */
+/* delete-confirm: overlay legado (alias de modal-finance--centered + --z-dialog) */
 .delete-confirm {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--bg-overlay);
   z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
   animation: fadeIn 0.15s ease;
-}
-
-.delete-confirm__box {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-medium);
-  border-radius: 12px;
-  padding: 20px;
-  max-width: 300px;
-  width: 100%;
-  text-align: center;
-}
-
-.delete-confirm__text {
-  font-size: var(--font-secondary);
-  color: var(--text-primary);
-  margin-bottom: 16px;
-}
-
-.delete-confirm__actions {
-  display: flex;
-  gap: 12px;
-}
-
-.delete-confirm__btn {
-  flex: 1;
-  padding: 8px;
-  border-radius: var(--radius-sm);
-  font-family: 'Inter', sans-serif;
-  font-size: var(--font-secondary);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.delete-confirm__btn--cancel {
-  background: transparent;
-  border: 1px solid var(--border-medium);
-  color: var(--text-secondary);
-}
-
-.delete-confirm__btn--delete {
-  background: #3a1111;
-  border: 1px solid #662222;
-  color: #ff4444;
 }
 
 /* ===== SCROLLBAR ===== */

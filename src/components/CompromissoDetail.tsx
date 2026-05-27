@@ -199,19 +199,21 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
 
       {showCancelConfirm && (
         <div
-          className="modal-overlay"
-          style={{ zIndex: 300 }}
+          className="modal-overlay modal-finance modal-finance--z-high"
           onClick={() => !cancelling && setShowCancelConfirm(false)}
         >
-          <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-sheet__handle" />
-            <div className="modal-sheet__title">Cancelar compromisso</div>
-            <div className="compromisso-cancel-confirm__body">
+          <div
+            className="modal-sheet bottom-sheet-finance modal-finance__container"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-sheet__handle modal-finance__handle" />
+            <div className="modal-sheet__title modal-finance__title">Cancelar compromisso</div>
+            <div className="compromisso-cancel-confirm__body modal-finance__body">
               <p>
                 Esta ação não pode ser desfeita. O compromisso será removido da lista de pendentes.
               </p>
             </div>
-            <div className="compromisso-cancel-confirm__actions">
+            <div className="compromisso-cancel-confirm__actions modal-finance__actions modal-finance__footer">
               <button
                 type="button"
                   className="btn-compromisso-secondary button-finance button-finance--ghost"
