@@ -27,7 +27,7 @@ export function CotacoesScreen({ orgId, refreshKey, onOpenDetail }: CotacoesScre
 
 
   return (
-    <div className="app-container" style={{ paddingBottom: 72 }}>
+    <div className="app-container cotacoes-screen" style={{ paddingBottom: 72 }}>
       <div className="meus-gastos-header">
         <h1 className="meus-gastos-header__title">Cotações</h1>
         <button
@@ -35,65 +35,54 @@ export function CotacoesScreen({ orgId, refreshKey, onOpenDetail }: CotacoesScre
           className="cotacao-header__new-btn"
           onClick={() => setShowNova(true)}
         >
-          <Plus size={18} />
+          <Plus size={18} aria-hidden />
           <span>Nova cotação</span>
         </button>
       </div>
 
-      <div className="meus-gastos-search">
-        <Search size={14} className="meus-gastos-search__icon" />
+      <div className="meus-gastos-search input-finance input-finance--search">
+        <Search size={14} className="meus-gastos-search__icon" aria-hidden />
         <input
-          className="meus-gastos-search__input"
+          type="text"
+          className="meus-gastos-search__input input-finance__field"
           placeholder="Buscar produto…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           aria-label="Buscar produto"
+          autoComplete="off"
         />
       </div>
 
       {loading ? (
-        <p style={{ padding: 24, textAlign: 'center', color: 'var(--text-inactive)', fontSize: 13 }}>
+        <div className="meus-gastos-empty" role="status" aria-live="polite">
           Carregando…
-        </p>
+        </div>
       ) : list.length === 0 ? (
-        <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-inactive)', fontSize: 13 }}>
-          <p>Nenhuma cotação ainda.</p>
-          <p style={{ marginTop: 8, fontSize: 12 }}>Toque em &quot;Nova cotação&quot; para começar.</p>
+        <div className="meus-gastos-empty meus-gastos-empty--hero" role="status">
+          <span className="meus-gastos-empty__title">Nenhuma cotação ainda.</span>
+          <span className="meus-gastos-empty__hint">
+            Toque em &quot;Nova cotação&quot; para começar.
+          </span>
         </div>
       ) : (
-        <div className="meus-gastos-month-card" style={{ marginTop: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 16px 8px' }}>
-            <span className="detail-items-title" style={{ marginBottom: 0 }}>Descrição</span>
-            <span className="detail-items-title" style={{ marginBottom: 0 }}>Valor médio</span>
+        <div className="meus-gastos-month-card card-finance card-finance--section cotacoes-list">
+          <div className="cotacoes-list__head">
+            <span className="detail-items-title cotacoes-list__head-label">Descrição</span>
+            <span className="detail-items-title cotacoes-list__head-label">Valor médio</span>
           </div>
-          
+
           {list.map((c) => (
             <button
               key={c.id}
               type="button"
-              className="gasto-card"
+              className="gasto-card card-finance__item card-finance--clickable cotacoes-list__row"
               onClick={() => onOpenDetail(c.id)}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                <span style={{
-                  flex: 1,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  paddingRight: 16,
-                  fontSize: 'var(--font-primary)',
-                  color: 'var(--text-secondary)',
-                  fontWeight: 'var(--weight-medium)'
-                }}>
-                  {c.descricao}
-                </span>
-                <span style={{
-                  fontVariantNumeric: 'tabular-nums',
-                  fontSize: 'var(--font-primary)',
-                  fontWeight: 'var(--weight-medium)',
-                  color: c.precoMedioCentavos != null ? 'var(--text-secondary)' : 'var(--text-inactive)',
-                  whiteSpace: 'nowrap'
-                }}>
+              <div className="cotacoes-list__row-line">
+                <span className="cotacoes-list__desc">{c.descricao}</span>
+                <span
+                  className={`cotacoes-list__valor ${c.precoMedioCentavos == null ? 'cotacoes-list__valor--empty' : ''}`}
+                >
                   {c.precoMedioCentavos != null
                     ? formatCurrency(c.precoMedioCentavos)
                     : '—'}
