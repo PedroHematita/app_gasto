@@ -39,8 +39,10 @@ export function compareDataBR(a: string, b: string): number {
 }
 
 /** Preço unitário (centavos) para uma observação: valor total / quantidade da cotação */
-export function valorUnitarioCentavos(valorTotalCentavos: number, _quantidadeCotacao: number): number {
-  return valorTotalCentavos;
+export function valorUnitarioCentavos(valorTotalCentavos: number, quantidadeCotacao: number): number {
+  const q = Number(quantidadeCotacao);
+  if (!q || q <= 0) return 0;
+  return Math.round(valorTotalCentavos / q);
 }
 
 /** Stats sobre observações filtradas (preços já restritos ao filtro). */
