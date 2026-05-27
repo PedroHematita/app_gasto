@@ -108,17 +108,17 @@ export function CotacaoDetailScreen({
 
   if (loading && !cotacao) {
     return (
-      <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-        <p style={{ color: 'var(--text-inactive)', fontSize: 13 }}>Carregando…</p>
+      <div className="app-container cotacao-detail-screen cotacao-detail-screen--centered">
+        <p className="meus-gastos-empty">Carregando…</p>
       </div>
     );
   }
 
   if (!cotacao) {
     return (
-      <div className="app-container" style={{ padding: 16 }}>
-        <p style={{ color: 'var(--text-inactive)', fontSize: 13 }}>Cotação não encontrada.</p>
-        <button type="button" className="btn-save-main" style={{ marginTop: 16 }} onClick={onBack}>
+      <div className="app-container cotacao-detail-screen cotacao-detail-screen--not-found">
+        <p className="meus-gastos-empty meus-gastos-empty--soft">Cotação não encontrada.</p>
+        <button type="button" className="btn-save-main cotacao-detail-screen__back-btn" onClick={onBack}>
           Voltar
         </button>
       </div>
@@ -126,7 +126,7 @@ export function CotacaoDetailScreen({
   }
 
   return (
-    <div className="app-container" style={{ paddingBottom: 24 }}>
+    <div className="app-container cotacao-detail-screen">
       <div className="detail-header">
         <button className="detail-header__back" onClick={onBack} type="button">
           <ChevronLeft size={20} />
@@ -148,7 +148,7 @@ export function CotacaoDetailScreen({
         </div>
       </div>
 
-      <div className="detail-content" style={{ paddingTop: 8 }}>
+      <div className="detail-content cotacao-detail-content">
         <div className="cotacao-detail__product">
           <div className="cotacao-detail__product-title">{cotacao.descricao}</div>
           <div className="cotacao-detail__product-meta">
@@ -156,13 +156,13 @@ export function CotacaoDetailScreen({
           </div>
         </div>
 
-        <div style={{ padding: '0 16px 16px', fontSize: 'var(--font-auxiliary)', color: 'var(--text-inactive)', textAlign: 'center' }}>
+        <div className="cotacao-detail__stats-inline">
           Menor: {stats.min != null ? formatCurrency(stats.min) : '—'} &middot; Média: {stats.avg != null ? formatCurrency(stats.avg) : '—'} &middot; Tendência: {tendenciaNode}
         </div>
 
-        <div style={{ padding: '12px 16px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-            <div style={{ flex: 1 }}>
+        <div className="cotacao-detail__filter-wrap">
+          <div className="cotacao-detail__filter-row">
+            <div className="cotacao-detail__filter-input">
               <FloatingInput
                 id="filtro-fornecedor-cotacao"
                 label="Filtrar por fornecedor"
@@ -176,19 +176,7 @@ export function CotacaoDetailScreen({
                 type="button"
                 onClick={() => setFilterForn('')}
                 aria-label="Limpar filtro"
-                style={{
-                  flexShrink: 0,
-                  width: 44,
-                  height: 44,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'transparent',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: 'var(--radius-md)',
-                  color: 'var(--text-inactive)',
-                  cursor: 'pointer'
-                }}
+                className="cotacao-filter-clear"
               >
                 <X size={18} />
               </button>
@@ -196,17 +184,17 @@ export function CotacaoDetailScreen({
           </div>
         </div>
 
-        <div style={{ padding: '8px 16px 0' }}>
+        <div className="cotacao-detail__chart-wrap">
           {chartPoints.length >= 2 ? (
             <CotacaoLineChart pointsChrono={chartPoints} />
           ) : (
-            <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-inactive)', fontSize: 'var(--font-auxiliary)' }}>
+            <div className="cotacao-chart-placeholder cotacao-detail__chart-empty">
               Adicione mais registros para ver a evolução do preço
             </div>
           )}
         </div>
 
-        <div style={{ padding: '0 16px' }}>
+        <div className="cotacao-detail__table-wrap">
           <CotacaoPrecosTable
             rows={filtered}
             quantidadeCotacao={cotacao.quantidade}

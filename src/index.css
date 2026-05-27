@@ -3633,6 +3633,24 @@ html.keyboard-open .date-header__row {
   background: #251f4a;
 }
 
+.cotacao-detail-screen {
+  padding-bottom: var(--space-6);
+}
+
+.cotacao-detail-screen--centered {
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-6);
+}
+
+.cotacao-detail-screen--not-found {
+  padding: var(--space-4);
+}
+
+.cotacao-detail-screen__back-btn {
+  margin-top: var(--space-4);
+}
+
 .cotacao-card__meta {
   font-size: 11px;
   color: var(--text-secondary);
@@ -3654,6 +3672,44 @@ html.keyboard-open .date-header__row {
   font-size: var(--font-secondary);
   color: var(--text-secondary);
   margin-top: 4px;
+}
+
+.cotacao-detail-content {
+  padding-top: var(--space-2);
+}
+
+.cotacao-detail__stats-inline {
+  padding: 0 var(--space-4) var(--space-4);
+  font-size: var(--font-auxiliary);
+  color: var(--text-inactive);
+  text-align: center;
+  line-height: var(--line-height-multi);
+}
+
+.cotacao-detail__filter-wrap {
+  padding: var(--space-3) var(--space-4) 0;
+}
+
+.cotacao-detail__filter-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.cotacao-detail__filter-input {
+  flex: 1;
+}
+
+.cotacao-detail__chart-wrap {
+  padding: var(--space-2) var(--space-4) 0;
+}
+
+.cotacao-detail__chart-empty {
+  padding: var(--space-7) var(--space-4);
+}
+
+.cotacao-detail__table-wrap {
+  padding: 0 var(--space-4);
 }
 
 .cotacao-stats {
