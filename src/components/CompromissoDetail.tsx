@@ -55,8 +55,13 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
   return (
     <div className="app-container" style={{ paddingBottom: 24 }}>
       <div className="detail-header">
-        <button className="detail-header__back" onClick={onBack} type="button">
-          <ChevronLeft size={20} />
+        <button
+          className="detail-header__back"
+          onClick={onBack}
+          type="button"
+          aria-label="Voltar"
+        >
+          <ChevronLeft size={20} aria-hidden />
         </button>
         <span className="detail-header__title">Compromisso</span>
         <span style={{ width: 56 }} />

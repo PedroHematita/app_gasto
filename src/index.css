@@ -21,6 +21,28 @@ html, body, #root {
   overflow-x: hidden;
 }
 
+/* ===== ACESSIBILIDADE — foco visível (Etapa 8) ===== */
+.button-finance:focus-visible,
+.bottom-nav__item:focus-visible,
+.classificar-gastos-table__th-btn:focus-visible,
+.classificar-gastos-screen__classificacao-chip:focus-visible,
+.classificar-gastos-screen__limpar-filtros:focus-visible,
+.classificar-gastos-screen__limpar-cta:focus-visible,
+.cotacao-filter-clear:focus-visible,
+.detail-header__back:focus-visible,
+.cotacao-header__new-btn:focus-visible,
+.meus-gastos-header__new:focus-visible,
+.gasto-card:focus-visible,
+.card-finance--clickable:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.button-finance:disabled:focus-visible,
+.bottom-nav__item:disabled:focus-visible {
+  outline: none;
+}
+
 /* ===== KEYBOARD AVOIDANCE ===== */
 /* BottomNav permanece fixa no rodapé; não sobe junto com teclado */
 html.keyboard-open .classificar-gastos-action-bar {
@@ -1902,7 +1924,7 @@ html.keyboard-open .date-header__row {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: #0a0a0a;
+  background: var(--bg-screen);
   padding-bottom: var(--layout-bottom-nav-offset);
 }
 
@@ -2059,7 +2081,7 @@ html.keyboard-open .date-header__row {
   text-transform: uppercase;
   letter-spacing: 0.03em;
   font-size: 10px;
-  background: #0a0a0a;
+  background: var(--bg-screen);
   border-bottom: 1px solid var(--border-medium);
   white-space: nowrap;
 }
@@ -2520,7 +2542,7 @@ html.keyboard-open .date-header__row {
 
 /* ===== MEUS GASTOS ===== */
 .meus-gastos-screen {
-  background: #0a0a0a;
+  background: var(--bg-screen);
 }
 
 /* Header (Etapa 6c) */
@@ -3547,7 +3569,19 @@ html.keyboard-open .date-header__row {
 
 /* ===== COTAÇÕES ===== */
 .cotacoes-screen {
-  background: #0a0a0a;
+  background: var(--bg-screen);
+}
+
+.cotacao-detail__trend--neutral {
+  color: var(--text-inactive);
+}
+
+.cotacao-detail__trend--up {
+  color: var(--status-danger);
+}
+
+.cotacao-detail__trend--down {
+  color: var(--status-success);
 }
 
 .cotacoes-list {

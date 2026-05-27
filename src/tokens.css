@@ -84,4 +84,17 @@
 
   /* Layout fixo — altura reservada para a navegação inferior (alinha com paddingBottom das telas) */
   --layout-bottom-nav-offset: 70px;
+
+  /* Fundo de telas de lista (levemente mais escuro que --bg-main) */
+  --bg-screen: #0a0a0a;
+
+  /* Escala z-index de referência (aliases legados em index.css preservados) */
+  --z-table-sticky: 2;
+  --z-classificar-action: 85;
+  --z-bottom-nav: 90;
+  --z-date-header: 90;
+  --z-modal-overlay: 100;
+  --z-modal-sheet: 200;
+  --z-datepicker: 300;
+  --z-toast: 1000;
 }

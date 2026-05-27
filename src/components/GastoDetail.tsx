@@ -37,8 +37,13 @@ export const GastoDetail: React.FC<GastoDetailProps> = ({
     <div className="app-container" style={{ paddingBottom: 24 }}>
       {/* Header */}
       <div className="detail-header">
-        <button className="detail-header__back" onClick={onBack} type="button">
-          <ChevronLeft size={20} />
+        <button
+          className="detail-header__back"
+          onClick={onBack}
+          type="button"
+          aria-label="Voltar"
+        >
+          <ChevronLeft size={20} aria-hidden />
         </button>
         <span className="detail-header__title">Gasto #{gasto.seq}</span>
         <button className="detail-header__edit" onClick={onEdit} type="button">

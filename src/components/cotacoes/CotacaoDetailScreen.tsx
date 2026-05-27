@@ -82,18 +82,24 @@ export function CotacaoDetailScreen({
   }, [cotacao, filtered]);
 
   const tendenciaNode = useMemo(() => {
-    if (chartPoints.length < 2) return <span style={{ color: 'var(--text-inactive)' }}>—</span>;
+    if (chartPoints.length < 2) {
+      return <span className="cotacao-detail__trend cotacao-detail__trend--neutral">—</span>;
+    }
     const last = chartPoints[chartPoints.length - 1];
     const prev = chartPoints[chartPoints.length - 2];
     if (last.valorUnitarioCentavos > prev.valorUnitarioCentavos) {
       const pct = ((last.valorUnitarioCentavos - prev.valorUnitarioCentavos) / prev.valorUnitarioCentavos) * 100;
-      return <span style={{ color: '#ff6b6b' }}>↑ +{pct.toFixed(0)}%</span>;
+      return (
+        <span className="cotacao-detail__trend cotacao-detail__trend--up">↑ +{pct.toFixed(0)}%</span>
+      );
     }
     if (last.valorUnitarioCentavos < prev.valorUnitarioCentavos) {
       const pct = ((prev.valorUnitarioCentavos - last.valorUnitarioCentavos) / prev.valorUnitarioCentavos) * 100;
-      return <span style={{ color: '#4ade80' }}>↓ -{pct.toFixed(0)}%</span>;
+      return (
+        <span className="cotacao-detail__trend cotacao-detail__trend--down">↓ -{pct.toFixed(0)}%</span>
+      );
     }
-    return <span style={{ color: 'var(--text-inactive)' }}>—</span>;
+    return <span className="cotacao-detail__trend cotacao-detail__trend--neutral">—</span>;
   }, [chartPoints]);
 
   const handleDeletePreco = async (id: string) => {
@@ -109,7 +115,9 @@ export function CotacaoDetailScreen({
   if (loading && !cotacao) {
     return (
       <div className="app-container cotacao-detail-screen cotacao-detail-screen--centered">
-        <p className="meus-gastos-empty">Carregando…</p>
+        <p className="meus-gastos-empty" role="status" aria-live="polite">
+          Carregando…
+        </p>
       </div>
     );
   }
@@ -117,7 +125,9 @@ export function CotacaoDetailScreen({
   if (!cotacao) {
     return (
       <div className="app-container cotacao-detail-screen cotacao-detail-screen--not-found">
-        <p className="meus-gastos-empty meus-gastos-empty--soft">Cotação não encontrada.</p>
+        <p className="meus-gastos-empty meus-gastos-empty--soft" role="status">
+          Cotação não encontrada.
+        </p>
         <button type="button" className="btn-save-main cotacao-detail-screen__back-btn" onClick={onBack}>
           Voltar
         </button>
@@ -128,8 +138,13 @@ export function CotacaoDetailScreen({
   return (
     <div className="app-container cotacao-detail-screen">
       <div className="detail-header">
-        <button className="detail-header__back" onClick={onBack} type="button">
-          <ChevronLeft size={20} />
+        <button
+          className="detail-header__back"
+          onClick={onBack}
+          type="button"
+          aria-label="Voltar"
+        >
+          <ChevronLeft size={20} aria-hidden />
         </button>
         <span className="detail-header__title">Cotação</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -143,7 +158,7 @@ export function CotacaoDetailScreen({
             onClick={() => setShowAddPreco(true)}
             aria-label="Adicionar preço"
           >
-            <Plus size={16} />
+            <Plus size={16} aria-hidden />
           </button>
         </div>
       </div>

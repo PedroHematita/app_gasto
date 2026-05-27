@@ -686,7 +686,12 @@ function AppInner() {
   // Org loading
   if (orgLoading) {
     return (
-      <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <div
+        className="app-container"
+        style={{ justifyContent: 'center', alignItems: 'center' }}
+        role="status"
+        aria-live="polite"
+      >
         <p style={{ color: 'var(--text-inactive)', fontSize: 13 }}>Carregando organizações...</p>
       </div>
     );
@@ -1204,7 +1209,12 @@ function AppContent() {
 
   if (checkingAuth) {
     return (
-      <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <div
+        className="app-container"
+        style={{ justifyContent: 'center', alignItems: 'center' }}
+        role="status"
+        aria-live="polite"
+      >
         <p style={{ color: 'var(--text-inactive)', fontSize: 13 }}>Carregando...</p>
       </div>
     );

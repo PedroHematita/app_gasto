@@ -151,8 +151,13 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
   return (
     <div className="app-container gasto-perene-detail" style={{ paddingBottom: 32 }}>
       <div className="detail-header">
-        <button className="detail-header__back" onClick={onBack} type="button">
-          <ChevronLeft size={20} />
+        <button
+          className="detail-header__back"
+          onClick={onBack}
+          type="button"
+          aria-label="Voltar"
+        >
+          <ChevronLeft size={20} aria-hidden />
         </button>
         <span className="detail-header__title">Gasto perene</span>
         <span style={{ width: 56 }} />
