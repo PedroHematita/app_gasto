@@ -1,5 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { formatCurrency } from '../utils';
+import { scheduleScrollFieldIntoView } from '../hooks/scrollFieldIntoView';
 
 interface CurrencyInputProps {
   label: string;
@@ -18,11 +19,16 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
   bgVariant = 'main',
   id,
 }) => {
-  const bgClass = bgVariant === 'edit'
-    ? 'floating-field--edit-bg'
-    : bgVariant === 'main'
-    ? 'floating-field--main-bg'
-    : '';
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const bgClass =
+    bgVariant === 'edit'
+      ? 'floating-field--edit-bg'
+      : bgVariant === 'main'
+        ? 'floating-field--main-bg'
+        : bgVariant === 'surface'
+          ? 'floating-field--surface-bg'
+          : '';
 
   const displayValue = formatCurrency(valueCents);
 
@@ -52,7 +58,7 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
   );
 
   return (
-    <div className={`floating-field ${bgClass} ${className}`}>
+    <div ref={containerRef} className={`floating-field ${bgClass} ${className}`}>
       <input
         id={id}
         name={id}
@@ -60,6 +66,7 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
         value={displayValue}
         onKeyDown={handleKeyDown}
         onChange={() => {}}
+        onFocus={() => scheduleScrollFieldIntoView(containerRef.current)}
         className={`floating-field__input floating-field__input--currency ${displayValue ? 'has-value' : ''}`}
         inputMode="numeric"
         autoComplete="off"

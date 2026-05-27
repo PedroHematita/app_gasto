@@ -21,6 +21,58 @@ html, body, #root {
   overflow-x: hidden;
 }
 
+/* ===== KEYBOARD AVOIDANCE ===== */
+/* BottomNav permanece fixa no rodapé; não sobe junto com teclado */
+html.keyboard-open .classificar-gastos-action-bar {
+  bottom: calc(
+    var(--layout-bottom-nav-offset) + var(--keyboard-inset) + env(safe-area-inset-bottom, 0px)
+  );
+}
+
+html.keyboard-open .modal-overlay:has(.payment-modal-sheet),
+html.keyboard-open .modal-overlay:has(.classificar-filtro-sheet),
+html.keyboard-open .modal-overlay:has(.modal-sheet--form) {
+  padding-bottom: var(--keyboard-inset);
+  box-sizing: border-box;
+  align-items: flex-end;
+}
+
+html.keyboard-open {
+  scroll-padding-bottom: calc(
+    var(--keyboard-inset) + var(--keyboard-scroll-clearance)
+  );
+}
+
+html.keyboard-open .app-container--cadastro {
+  scroll-padding-bottom: calc(
+    var(--keyboard-inset) + var(--keyboard-scroll-clearance)
+  );
+}
+
+.app-container--with-bottom-nav {
+  padding-bottom: var(--layout-bottom-nav-offset);
+}
+
+html.keyboard-open .app-container--cadastro.app-container--with-bottom-nav {
+  padding-bottom: calc(
+    var(--layout-bottom-nav-offset) + var(--keyboard-inset) + var(--keyboard-scroll-clearance)
+  );
+}
+
+html.keyboard-open .app-container--cadastro:not(.app-container--with-bottom-nav) {
+  padding-bottom: calc(var(--keyboard-inset) + var(--keyboard-scroll-clearance));
+}
+
+html.keyboard-open .floating-field,
+html.keyboard-open .item-form,
+html.keyboard-open .btn-launch,
+html.keyboard-open .btn-save-actions-row,
+html.keyboard-open .date-header__row {
+  scroll-margin-bottom: calc(
+    var(--keyboard-inset) + var(--keyboard-scroll-clearance)
+  );
+}
+
 /* ===== APP CONTAINER ===== */
 .app-container {
   max-width: 480px;
