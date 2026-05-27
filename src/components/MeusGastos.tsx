@@ -474,7 +474,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     const isExpanded = futurosSectionExpanded;
 
     return (
-      <div className="meus-gastos-month-card">
+      <div className="meus-gastos-month-card card-finance card-finance--section">
         <button
           type="button"
           className={`meus-gastos-month-header ${isExpanded ? 'meus-gastos-month-header--expanded' : ''}`}
@@ -561,7 +561,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                 return (
                   <div
                     key={monthGroup.key}
-                    className={`meus-gastos-month-card meus-gastos-futuros-month ${monthIndex === 0 ? 'meus-gastos-futuros-month--year-first' : ''} ${mesExpanded ? 'meus-gastos-futuros-month--expanded' : 'meus-gastos-futuros-month--collapsed'}`}
+                    className={`meus-gastos-month-card card-finance card-finance--section meus-gastos-futuros-month ${monthIndex === 0 ? 'meus-gastos-futuros-month--year-first' : ''} ${mesExpanded ? 'meus-gastos-futuros-month--expanded' : 'meus-gastos-futuros-month--collapsed'}`}
                   >
                     <button
                       type="button"
@@ -592,7 +592,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                         <button
                           key={linha.id}
                           type="button"
-                          className="gasto-card meus-gastos-futuros-item"
+                          className="gasto-card card-finance__item card-finance--clickable card-finance--nested meus-gastos-futuros-item"
                           onClick={() => handleFuturosLinhaClick(linha)}
                         >
                           <div className="gasto-card__top">
@@ -626,7 +626,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     const { sumCents, byId } = pereneForecast;
 
     return (
-      <div className="meus-gastos-month-card">
+      <div className="meus-gastos-month-card card-finance card-finance--section">
         <button
           type="button"
           className={`meus-gastos-month-header ${isExpanded ? 'meus-gastos-month-header--expanded' : ''}`}
@@ -690,7 +690,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
               <button
                 key={gp.id}
                 type="button"
-                className="gasto-card"
+                className="gasto-card card-finance__item card-finance--clickable"
                 onClick={() => onSelectGastoPerene(gp)}
               >
                 <div className="gasto-card__top">
@@ -737,7 +737,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     const isExpanded = displayCompromissosExpanded;
 
     return (
-      <div className="meus-gastos-month-card" ref={compromissosSectionRef}>
+      <div className="meus-gastos-month-card card-finance card-finance--section" ref={compromissosSectionRef}>
         <button
           type="button"
           className={`meus-gastos-month-header ${isExpanded ? 'meus-gastos-month-header--expanded' : ''}`}
@@ -779,7 +779,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                     <button
                       key={c.id}
                       type="button"
-                      className="gasto-card"
+                      className="gasto-card card-finance__item card-finance--clickable"
                       onClick={() => onSelectCompromisso(c)}
                     >
                       <div className="gasto-card__top">
@@ -817,7 +817,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                     <button
                       key={parcela.id}
                       type="button"
-                      className="gasto-card"
+                      className="gasto-card card-finance__item card-finance--clickable"
                       onClick={() => onSelectCompromisso(compromisso)}
                     >
                       <div className="gasto-card__top">
@@ -863,7 +863,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
         {yearGroup.months.map((monthGroup) => {
           const isExpanded = !!expandedMonths[monthGroup.key];
           return (
-            <div key={monthGroup.key} className="meus-gastos-month-card">
+            <div key={monthGroup.key} className="meus-gastos-month-card card-finance card-finance--section">
               <button
                 className={`meus-gastos-month-header ${isExpanded ? 'meus-gastos-month-header--expanded' : ''}`}
                 onClick={() => toggleMonth(monthGroup.key)}
@@ -890,7 +890,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
               {isExpanded && monthGroup.gastos.map((gasto) => (
                 <button
                   key={gasto.id}
-                  className="gasto-card"
+                  className="gasto-card card-finance__item card-finance--clickable"
                   onClick={() => onSelectGasto(gasto)}
                   type="button"
                 >

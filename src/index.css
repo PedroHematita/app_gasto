@@ -482,6 +482,107 @@ html.keyboard-open .date-header__row {
   border-radius: 10px;
 }
 
+.compromisso-parcelas-card {
+  border: 1px solid var(--border-medium);
+  margin-bottom: 20px;
+}
+
+.compromisso-parcelas-card__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) 0;
+}
+
+.compromisso-parcelas-card__item:not(.compromisso-parcelas-card__item--last) {
+  border-bottom: 1px solid var(--border-medium);
+}
+
+.compromisso-parcelas-card__item-main {
+  min-width: 0;
+}
+
+.compromisso-parcelas-card__item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.compromisso-parcelas-card__item-date {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.compromisso-parcelas-card__item-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.compromisso-parcelas-card__item-price-wrap {
+  text-align: right;
+}
+
+.compromisso-parcelas-card__item-price {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: var(--font-tabular);
+}
+
+.compromisso-parcelas-card__item-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  display: inline-block;
+  margin-top: 2px;
+}
+
+.compromisso-parcelas-card__quitar-btn {
+  background: var(--accent);
+  color: var(--text-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.compromisso-parcelas-card__summary {
+  margin-top: var(--space-3);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.compromisso-parcelas-card__summary-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-secondary);
+}
+
+.compromisso-parcelas-card__summary-value {
+  font-weight: 600;
+  font-variant-numeric: var(--font-tabular);
+}
+
+.compromisso-parcelas-card__summary-value--success {
+  color: var(--status-success);
+}
+
+.compromisso-parcelas-card__summary-value--danger {
+  color: var(--status-danger);
+}
+
+.compromisso-parcelas-card__summary-row--total {
+  color: var(--text-primary);
+  border-top: 1px solid var(--border-medium);
+  padding-top: 6px;
+  font-weight: 600;
+}
+
 .btn-compromisso-quitar {
   width: 100%;
   padding: 12px;
@@ -2344,10 +2445,70 @@ html.keyboard-open .date-header__row {
   font-weight: var(--weight-medium);
 }
 
+/* ===== CARD FINANCE — BASE ===== */
+.card-finance {
+  background: var(--surface-card);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.card-finance--section {
+  margin: 0 var(--space-2) var(--space-2);
+}
+
+.card-finance__item {
+  display: block;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s ease;
+  position: relative;
+}
+
+.card-finance--clickable:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.card-finance--nested {
+  margin-left: var(--space-2);
+}
+
+.card-finance .card-finance__item + .card-finance__item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--space-4);
+  right: var(--space-4);
+  border-top: 4px solid var(--separator);
+}
+
+.card-finance__label {
+  color: var(--text-secondary);
+  font-size: var(--font-primary);
+  font-weight: var(--weight-medium);
+}
+
+.card-finance__value {
+  color: var(--text-secondary);
+  font-size: var(--font-primary);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: var(--font-tabular);
+}
+
+.card-finance__meta {
+  color: var(--text-secondary);
+  font-size: var(--font-secondary);
+}
+
+/* Legacy aliases (transição incremental) */
 .meus-gastos-month-card {
-  margin: 0 8px 8px;
-  background: #151515;
-  border-radius: 14px;
+  margin: 0 var(--space-2) var(--space-2);
+  background: var(--surface-card);
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
@@ -2551,7 +2712,7 @@ html.keyboard-open .date-header__row {
 .gasto-card {
   display: block;
   width: 100%;
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   background: none;
   border: none;
   cursor: pointer;
@@ -2569,9 +2730,9 @@ html.keyboard-open .date-header__row {
   content: '';
   position: absolute;
   top: 0;
-  left: 16px;
-  right: 16px;
-  border-top: 4px solid #1b1b1b;
+  left: var(--space-4);
+  right: var(--space-4);
+  border-top: 4px solid var(--separator);
 }
 
 .meus-gastos-futuros-month .gasto-card + .gasto-card::before {
@@ -2579,7 +2740,7 @@ html.keyboard-open .date-header__row {
 }
 
 .meus-gastos-futuros-item {
-  margin-left: 10px;
+  margin-left: var(--space-2);
 }
 
 .gasto-card__top {

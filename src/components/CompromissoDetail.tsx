@@ -106,50 +106,32 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
             <div className="detail-items-title" style={{ marginTop: 24, marginBottom: 10 }}>
               Parcelas do Compromisso
             </div>
-            <div
-              style={{
-                background: '#151515',
-                borderRadius: 14,
-                padding: '12px 16px',
-                border: '1px solid #222',
-                marginBottom: 20,
-              }}
-            >
+            <div className="card-finance card-finance--section compromisso-parcelas-card">
               {parcelas.map((p, idx) => {
                 const isPendente = p.status === 'pendente' || p.status === 'vencido';
                 return (
                   <div
                     key={p.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '12px 0',
-                      borderBottom: idx === parcelas.length - 1 ? 'none' : '1px solid #222',
-                    }}
+                    className={`card-finance__item compromisso-parcelas-card__item ${
+                      idx === parcelas.length - 1 ? 'compromisso-parcelas-card__item--last' : ''
+                    }`}
                   >
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>
+                    <div className="compromisso-parcelas-card__item-main">
+                      <div className="compromisso-parcelas-card__item-title">
                         Parcela {p.numeroParcela}/{p.totalParcelas}
                       </div>
-                      <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
+                      <div className="compromisso-parcelas-card__item-date">
                         Vence em: {p.dataVencimentoBR}
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>
+                    <div className="compromisso-parcelas-card__item-actions">
+                      <div className="compromisso-parcelas-card__item-price-wrap">
+                        <div className="compromisso-parcelas-card__item-price">
                           {formatCurrency(p.valorCentavos)}
                         </div>
                         <span
-                          className={`compromisso-badge compromisso-badge--${p.status}`}
-                          style={{
-                            fontSize: 10,
-                            padding: '1px 6px',
-                            display: 'inline-block',
-                            marginTop: 2,
-                          }}
+                          className={`compromisso-badge compromisso-badge--${p.status} compromisso-parcelas-card__item-badge`}
                         >
                           {p.status}
                         </span>
@@ -159,16 +141,7 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
                         <button
                           type="button"
                           onClick={() => onRequestQuitParcela(p)}
-                          style={{
-                            background: 'var(--accent-color, #a855f7)',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: 6,
-                            padding: '6px 12px',
-                            fontSize: 12,
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                          }}
+                          className="compromisso-parcelas-card__quitar-btn"
                         >
                           Quitar
                         </button>
@@ -179,16 +152,20 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
               })}
 
               {/* Resumo */}
-              <div style={{ marginTop: 12, fontSize: 13, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#888' }}>
+              <div className="compromisso-parcelas-card__summary">
+                <div className="compromisso-parcelas-card__summary-row">
                   <span>Total Pago:</span>
-                  <span style={{ color: '#52fa7c', fontWeight: 600 }}>{formatCurrency(totalPago)}</span>
+                  <span className="compromisso-parcelas-card__summary-value compromisso-parcelas-card__summary-value--success">
+                    {formatCurrency(totalPago)}
+                  </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#888' }}>
+                <div className="compromisso-parcelas-card__summary-row">
                   <span>Total Pendente:</span>
-                  <span style={{ color: '#ff7c7c', fontWeight: 600 }}>{formatCurrency(totalPendente)}</span>
+                  <span className="compromisso-parcelas-card__summary-value compromisso-parcelas-card__summary-value--danger">
+                    {formatCurrency(totalPendente)}
+                  </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fff', borderTop: '1px solid #333', paddingTop: 6, fontWeight: 600 }}>
+                <div className="compromisso-parcelas-card__summary-row compromisso-parcelas-card__summary-row--total">
                   <span>Total do Compromisso:</span>
                   <span>{formatCurrency(compromisso.total)}</span>
                 </div>

@@ -4,6 +4,7 @@
   --bg-base: #0f0f0f;
   --surface-1: #161616;
   --surface-2: #1a1b1e;
+  --surface-card: #151515;
   --bg-overlay: rgba(0, 0, 0, 0.6);
   --border-strong: #2d2d2d;
   --border-focus: var(--accent);
