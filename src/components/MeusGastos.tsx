@@ -526,8 +526,11 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
         )}
 
         {isExpanded && totalItens === 0 && (
-          <div className="meus-gastos-empty meus-gastos-empty--soft">
-            Nenhum lançamento futuro na janela de 12 meses
+          <div className="meus-gastos-empty meus-gastos-empty--soft" role="status">
+            <span className="meus-gastos-empty__title">Nenhum lançamento futuro</span>
+            <span className="meus-gastos-empty__hint">
+              Nada previsto nos próximos 12 meses com os filtros atuais.
+            </span>
           </div>
         )}
 
@@ -847,9 +850,13 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
 
   const renderGastosGrouped = () => {
     if (filteredGastos.length === 0) {
+      if (!search.trim()) return null;
       return (
-        <div className="meus-gastos-empty">
-          {search.trim() ? 'Nenhum gasto encontrado nesta busca' : ''}
+        <div className="meus-gastos-empty meus-gastos-empty--soft" role="status">
+          <span className="meus-gastos-empty__title">Nenhum gasto realizado nesta busca</span>
+          <span className="meus-gastos-empty__hint">
+            Tente outro termo em fornecedor ou item.
+          </span>
         </div>
       );
     }
@@ -929,20 +936,26 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     <div className="app-container meus-gastos-screen" style={{ paddingBottom: 70 }}>
       <div className="meus-gastos-header">
         <h1 className="meus-gastos-header__title">Meus Gastos</h1>
-        <button className="meus-gastos-header__new" onClick={onNewGasto} type="button">
-          <Plus size={18} />
+        <button
+          type="button"
+          className="meus-gastos-header__new button-finance"
+          onClick={onNewGasto}
+          aria-label="Novo gasto"
+        >
+          <Plus size={18} aria-hidden />
         </button>
       </div>
 
-      <div className="meus-gastos-search">
-        <Search size={14} className="meus-gastos-search__icon" />
+      <div className="meus-gastos-search input-finance input-finance--search">
+        <Search size={14} className="meus-gastos-search__icon" aria-hidden />
         <input
           type="text"
           placeholder="Buscar por fornecedor ou item..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="meus-gastos-search__input"
+          className="meus-gastos-search__input input-finance__field"
           autoComplete="off"
+          aria-label="Buscar por fornecedor ou item"
         />
       </div>
 
@@ -953,13 +966,25 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
       </div>
 
       {loading ? (
-        <div className="meus-gastos-empty">Carregando...</div>
+        <div className="meus-gastos-empty" role="status" aria-live="polite">
+          Carregando...
+        </div>
       ) : listaGeralVazia ? (
-        <div className="meus-gastos-empty">Nenhum gasto registrado</div>
+        <div className="meus-gastos-empty meus-gastos-empty--hero" role="status">
+          <span className="meus-gastos-empty__title">Nenhum gasto registrado</span>
+          <span className="meus-gastos-empty__hint">
+            Toque em + para lançar um gasto ou use &quot;Novo gasto perene&quot; para despesas recorrentes.
+          </span>
+        </div>
       ) : buscaAtiva ? (
         <>
           {nenhumResultadoBusca ? (
-            <div className="meus-gastos-empty">Nenhum resultado para esta busca</div>
+            <div className="meus-gastos-empty meus-gastos-empty--hero" role="status">
+              <span className="meus-gastos-empty__title">Nenhum resultado</span>
+              <span className="meus-gastos-empty__hint">
+                Nada encontrado em gastos, compromissos, perenes ou futuros para esta busca.
+              </span>
+            </div>
           ) : (
             <>
               {renderGastosPerenesSection()}
@@ -969,7 +994,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
               <div className="meus-gastos-search-block">
                 <h3 className="meus-gastos-search-block__title">Gastos realizados</h3>
                 <div className="meus-gastos-summary meus-gastos-summary--stack">
-                  <span>
+                  <span className="meus-gastos-summary__count">
                     {filteredGastos.length}{' '}
                     {filteredGastos.length === 1 ? 'gasto' : 'gastos'}
                   </span>
@@ -978,7 +1003,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                     <div className="meus-gastos-summary__paid-center">
                       <button
                         type="button"
-                        className="meus-gastos-summary__toggle-all-btn"
+                        className="meus-gastos-summary__toggle-all-btn button-finance button-finance--ghost button-finance--compact"
                         onClick={collapseAllMeusGastos}
                         aria-label="Recolher todas as seções"
                       >
@@ -1000,7 +1025,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
       ) : (
         <>
           <div className="meus-gastos-summary meus-gastos-summary--stack">
-            <span>
+            <span className="meus-gastos-summary__count">
               {countGastosExibicao} {countGastosExibicao === 1 ? 'gasto' : 'gastos'}
             </span>
             <div className="meus-gastos-summary__paid-row">
@@ -1008,7 +1033,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
               <div className="meus-gastos-summary__paid-center">
                 <button
                   type="button"
-                  className="meus-gastos-summary__toggle-all-btn"
+                  className="meus-gastos-summary__toggle-all-btn button-finance button-finance--ghost button-finance--compact"
                   onClick={collapseAllMeusGastos}
                   aria-label="Recolher todas as seções"
                 >
@@ -1026,8 +1051,11 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
           {renderGastosFuturosSection()}
 
           {gastos.length === 0 ? (
-            <div className="meus-gastos-empty meus-gastos-empty--soft">
-              Nenhum gasto quitado registrado ainda
+            <div className="meus-gastos-empty meus-gastos-empty--soft" role="status">
+              <span className="meus-gastos-empty__title">Nenhum gasto realizado</span>
+              <span className="meus-gastos-empty__hint">
+                Gastos quitados aparecem aqui agrupados por mês.
+              </span>
             </div>
           ) : (
             renderGastosGrouped()

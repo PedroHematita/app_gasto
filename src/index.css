@@ -781,23 +781,33 @@ html.keyboard-open .date-header__row {
   color: #c084fc;
 }
 
+/* Resumo Meus Gastos (Etapa 6c — aliases locais) */
 .meus-gastos-summary--stack {
   flex-direction: column;
   align-items: stretch;
-  gap: 6px;
+  gap: var(--space-2);
+}
+
+.meus-gastos-summary__count {
+  font-size: var(--font-secondary);
+  color: var(--text-secondary);
+  letter-spacing: 0.2px;
+  line-height: var(--line-height-single);
 }
 
 .meus-gastos-summary__paid-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   width: 100%;
+  min-height: 28px;
 }
 
 .meus-gastos-summary__paid-label {
   flex-shrink: 0;
-  font-size: 11px;
+  font-size: var(--font-secondary);
   color: var(--text-secondary);
+  letter-spacing: 0.15px;
 }
 
 .meus-gastos-summary__paid-center {
@@ -806,31 +816,26 @@ html.keyboard-open .date-header__row {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0 var(--space-1);
 }
 
-.meus-gastos-summary__toggle-all-btn {
+.meus-gastos-summary__toggle-all-btn.button-finance {
+  --button-finance-width: auto;
+  --button-finance-padding: 4px 10px;
+  --button-finance-radius: var(--radius-sm);
+  --button-finance-font-size: 10px;
+  --button-finance-font-weight: var(--weight-medium);
+  --button-finance-bg: transparent;
+  --button-finance-border: 1px solid var(--border-subtle);
+  --button-finance-color: var(--text-secondary);
+  --button-finance-hover-bg: transparent;
+  --button-finance-hover-border: var(--border-medium);
+  --button-finance-hover-color: var(--text-primary);
+  --button-finance-transition: border-color 0.15s ease, color 0.15s ease;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 4px;
-  margin: 0;
-  background: transparent;
-  border: none;
-  font-family: inherit;
-  font-size: 10px;
-  font-weight: var(--weight-medium);
+  gap: var(--space-1);
   letter-spacing: 0.2px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: color 0.15s ease;
-}
-
-.meus-gastos-summary__toggle-all-btn:hover {
-  color: var(--text-primary);
-}
-
-.meus-gastos-summary__toggle-all-btn:active {
-  transform: scale(0.98);
 }
 
 .meus-gastos-summary__paid-row .meus-gastos-summary__total {
@@ -843,10 +848,11 @@ html.keyboard-open .date-header__row {
 }
 
 .meus-gastos-search-block__title {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--font-primary);
+  font-weight: var(--weight-medium);
   color: var(--text-primary);
-  margin: 12px 16px 8px;
+  margin: var(--space-3) var(--space-4) var(--space-2);
+  line-height: var(--line-height-single);
 }
 
 .meus-gastos-search-block--compromissos {
@@ -859,10 +865,46 @@ html.keyboard-open .date-header__row {
   color: #c084fc;
 }
 
+/* Empty states (Etapa 6) */
 .meus-gastos-empty--soft {
+  text-align: left;
+  padding: var(--space-2) var(--space-4) var(--space-4);
+  font-size: var(--font-secondary);
+  line-height: var(--line-height-multi);
   color: var(--text-inactive);
-  font-size: 13px;
-  padding: 8px 16px 16px;
+}
+
+.meus-gastos-empty--hero {
+  padding: var(--space-7) var(--space-4);
+}
+
+.meus-gastos-empty__title {
+  display: block;
+  color: var(--text-secondary);
+  font-size: var(--font-primary);
+  font-weight: var(--weight-medium);
+  margin-bottom: var(--space-2);
+}
+
+.meus-gastos-empty__hint {
+  display: block;
+  font-size: var(--font-secondary);
+  color: var(--text-inactive);
+  line-height: var(--line-height-multi);
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+.meus-gastos-empty--soft .meus-gastos-empty__title {
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-regular);
+  margin-bottom: var(--space-1);
+}
+
+.meus-gastos-empty--soft .meus-gastos-empty__hint {
+  margin: 0;
+  max-width: none;
+  font-size: var(--font-auxiliary);
 }
 
 /* ===== ITEMS TABLE ===== */
@@ -2497,43 +2539,49 @@ html.keyboard-open .date-header__row {
   background: #0a0a0a;
 }
 
+/* Header (Etapa 6c) */
 .meus-gastos-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  padding-bottom: var(--space-3);
 }
 
 .meus-gastos-header__title {
   font-size: var(--font-primary);
   font-weight: var(--weight-medium);
   color: var(--text-primary);
+  line-height: var(--line-height-single);
+  margin: 0;
 }
 
-.meus-gastos-header__new {
+.meus-gastos-header__new.button-finance {
+  --button-finance-width: 44px;
+  --button-finance-padding: 0;
+  --button-finance-bg: var(--accent-dark);
+  --button-finance-border: none;
+  --button-finance-radius: var(--radius-md);
+  --button-finance-color: var(--accent);
+  --button-finance-hover-bg: #251f4a;
+  --button-finance-hover-color: var(--text-accent-medium);
   flex-shrink: 0;
   width: 44px;
   height: 44px;
-  padding: 0;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent-dark);
-  border: none;
-  border-radius: var(--radius-md);
-  color: var(--accent);
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
 }
 
-.meus-gastos-header__new:hover {
-  background: #251f4a;
+/* Search (Etapa 6b — input-finance) */
+.input-finance--search,
+.meus-gastos-search.input-finance {
+  margin: 0 var(--space-4) var(--space-3);
 }
 
-/* Search */
 .meus-gastos-search {
   position: relative;
-  margin: 0 16px 12px;
 }
 
 .meus-gastos-search__icon {
@@ -2543,11 +2591,13 @@ html.keyboard-open .date-header__row {
   transform: translateY(-50%);
   color: var(--text-inactive);
   pointer-events: none;
+  z-index: 1;
 }
 
-.meus-gastos-search__input {
+.meus-gastos-search__input,
+.meus-gastos-search .input-finance__field {
   width: 100%;
-  padding: 12px 12px 12px 36px;
+  padding: var(--space-3) var(--space-3) var(--space-3) 36px;
   background: var(--bg-surface);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
@@ -2556,33 +2606,40 @@ html.keyboard-open .date-header__row {
   font-size: var(--font-secondary);
   outline: none;
   transition: border-color 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
-.meus-gastos-search__input:focus {
+.meus-gastos-search__input:focus,
+.meus-gastos-search .input-finance__field:focus {
   border-color: var(--accent);
 }
 
-.meus-gastos-search__input::placeholder {
+.meus-gastos-search__input::placeholder,
+.meus-gastos-search .input-finance__field::placeholder {
   color: var(--text-inactive);
 }
 
-/* Summary */
+/* Summary (Etapa 6c) */
 .meus-gastos-summary {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 8px;
-  font-size: 11px;
+  margin: 0 var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-secondary);
   color: var(--text-secondary);
-  border-bottom: 0px solid var(--separator);
-  margin-bottom: 4px;
+  background: var(--surface-card);
+  border: 0.5px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
 }
 
 .meus-gastos-summary__total {
   color: var(--accent);
   font-weight: var(--weight-medium);
-  font-size: var(--font-secondary);
+  font-size: var(--font-primary);
   font-variant-numeric: tabular-nums;
+  line-height: var(--line-height-single);
 }
 
 /* Year + month hierarchy */
@@ -2859,12 +2916,13 @@ html.keyboard-open .date-header__row {
   padding-bottom: 10px;
 }
 
-/* Empty */
+/* Empty (base + aliases Etapa 6) */
 .meus-gastos-empty {
   text-align: center;
-  padding: 40px 16px;
+  padding: var(--space-6) var(--space-4);
   color: var(--text-inactive);
   font-size: var(--font-secondary);
+  line-height: var(--line-height-multi);
 }
 
 /* Gasto card */
