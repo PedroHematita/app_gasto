@@ -1,11 +1,31 @@
 /* ===== DESIGN TOKENS ===== */
 :root {
+  /* SEMANTIC FOUNDATION (Etapa 1 - sem mudança visual) */
+  --bg-base: #0f0f0f;
+  --surface-1: #161616;
+  --surface-2: #1a1b1e;
+  --bg-overlay: rgba(0, 0, 0, 0.6);
+  --border-strong: #2d2d2d;
+  --border-focus: var(--accent);
+  --accent-hover: #6f62ee;
+  --accent-muted: rgba(124, 111, 255, 0.14);
+  --status-success: #5fcf8b;
+  --status-danger: #ff4444;
+  --status-warning: #ffcc00;
+  --status-info: #8f87df;
+  --text-success: var(--status-success);
+  --text-danger: var(--status-danger);
+  --interactive-hover: rgba(255, 255, 255, 0.04);
+  --interactive-pressed: rgba(255, 255, 255, 0.08);
+  --interactive-disabled: rgba(255, 255, 255, 0.12);
+  --font-tabular: tabular-nums;
+
   /* COLORS */
-  --bg-main: #0f0f0f;
-  --bg-surface: #161616;
+  --bg-main: var(--bg-base);
+  --bg-surface: var(--surface-1);
   --bg-edit: #0d0d1a;
   --border-subtle: #2a2a2a;
-  --border-medium: #2d2d2d;
+  --border-medium: var(--border-strong);
   
   --accent: #7c6fff;
   --accent-dark: #1e1a3a;
@@ -20,8 +40,8 @@
   --text-accent-medium: #9f8fff;
   
   /* Semantic Colors */
-  --color-error: #ff4444;
-  --color-warning: #ffcc00;
+  --color-error: var(--status-danger);
+  --color-warning: var(--status-warning);
   
   --total-bg: #1a1530;
   --total-border: #2e2060;
