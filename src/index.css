@@ -290,61 +290,133 @@ html.keyboard-open .date-header__row {
   color: var(--text-accent-medium);
 }
 
+/* ===== BUTTON FINANCE SYSTEM (ETAPA 3) ===== */
+.button-finance,
+.btn-save-main,
+.btn-save-modal,
+.btn-save-draft,
+.btn-launch,
+.btn-compromisso-quitar,
+.btn-compromisso-secondary,
+.compromisso-parcelas-card__quitar-btn,
+.meus-gastos-perene-cta__btn {
+  width: var(--button-finance-width, 100%);
+  padding: var(--button-finance-padding, 12px);
+  background: var(--button-finance-bg, var(--accent));
+  border: var(--button-finance-border, none);
+  border-radius: var(--button-finance-radius, var(--radius-lg));
+  color: var(--button-finance-color, var(--text-primary));
+  font-family: 'Inter', sans-serif;
+  font-size: var(--button-finance-font-size, var(--font-secondary));
+  font-weight: var(--button-finance-font-weight, var(--weight-medium));
+  cursor: pointer;
+  transition: var(--button-finance-transition, all 0.2s ease);
+}
+
+.button-finance--primary,
+.btn-save-main,
+.btn-save-modal,
+.btn-compromisso-quitar,
+.compromisso-parcelas-card__quitar-btn {
+  --button-finance-bg: var(--accent);
+  --button-finance-border: none;
+  --button-finance-color: var(--text-primary);
+  --button-finance-hover-bg: #6b5ef0;
+}
+
+.button-finance--secondary,
+.btn-save-draft,
+.btn-launch {
+  --button-finance-bg: transparent;
+  --button-finance-border: 1px solid var(--accent);
+  --button-finance-color: var(--accent);
+  --button-finance-hover-bg: var(--accent-dark);
+}
+
+.button-finance--danger {
+  --button-finance-bg: transparent;
+  --button-finance-border: 1px solid var(--status-danger);
+  --button-finance-color: var(--status-danger);
+}
+
+.button-finance--ghost,
+.btn-compromisso-secondary {
+  --button-finance-bg: transparent;
+  --button-finance-border: 1px solid #2a2a2a;
+  --button-finance-color: rgba(224, 224, 224, 0.4);
+  --button-finance-hover-border: #3a3a3a;
+  --button-finance-hover-color: rgba(224, 224, 224, 0.65);
+  --button-finance-transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.button-finance--compact,
+.compromisso-parcelas-card__quitar-btn {
+  --button-finance-width: auto;
+  --button-finance-padding: 6px 12px;
+  --button-finance-radius: var(--radius-sm);
+  --button-finance-font-size: 12px;
+  --button-finance-font-weight: 600;
+}
+
+.button-finance:hover:not(:disabled),
+.btn-save-main:hover:not(:disabled),
+.btn-save-modal:hover:not(:disabled),
+.btn-save-draft:hover:not(:disabled),
+.btn-launch:hover:not(:disabled),
+.btn-compromisso-quitar:hover:not(:disabled),
+.btn-compromisso-secondary:hover:not(:disabled),
+.compromisso-parcelas-card__quitar-btn:hover:not(:disabled),
+.meus-gastos-perene-cta__btn:hover:not(:disabled) {
+  background: var(--button-finance-hover-bg, var(--button-finance-bg));
+  border-color: var(--button-finance-hover-border, transparent);
+  color: var(--button-finance-hover-color, var(--button-finance-color));
+}
+
+.button-finance:active:not(:disabled),
+.btn-save-main:active:not(:disabled),
+.btn-save-modal:active:not(:disabled),
+.btn-launch:active:not(:disabled),
+.btn-compromisso-quitar:active:not(:disabled),
+.compromisso-parcelas-card__quitar-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.button-finance:disabled,
+.btn-save-main:disabled,
+.btn-save-modal:disabled,
+.btn-save-draft:disabled,
+.btn-launch:disabled,
+.btn-compromisso-quitar:disabled,
+.btn-compromisso-secondary:disabled,
+.compromisso-parcelas-card__quitar-btn:disabled,
+.meus-gastos-perene-cta__btn:disabled {
+  background: var(--button-finance-disabled-bg, var(--border-subtle));
+  border-color: var(--button-finance-disabled-border, var(--border-subtle));
+  color: var(--button-finance-disabled-color, var(--text-inactive));
+  cursor: not-allowed;
+}
+
 /* ===== ACTION BUTTONS ===== */
 .btn-launch {
-  width: 100%;
-  padding: 12px;
-  background: var(--accent-dark);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-md);
-  color: var(--text-accent-medium);
-  font-family: 'Inter', sans-serif;
-  font-size: var(--font-secondary);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-  transition: all 0.2s ease;
+  --button-finance-bg: var(--accent-dark);
+  --button-finance-border: 1px solid var(--accent);
+  --button-finance-radius: var(--radius-md);
+  --button-finance-color: var(--text-accent-medium);
+  --button-finance-hover-bg: #251f4a;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
 }
 
-.btn-launch:hover {
-  background: #251f4a;
-}
-
-.btn-launch:active {
-  transform: scale(0.98);
-}
-
 .btn-save-main {
-  width: 100%;
   margin: 12px 16px;
   width: calc(100% - 32px);
-  padding: 12px;
-  background: var(--accent);
-  border: none;
-  border-radius: var(--radius-lg);
-  color: #fff;
-  font-family: 'Inter', sans-serif;
-  font-size: var(--font-secondary);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-save-main:hover:not(:disabled) {
-  background: #6b5ef0;
-}
-
-.btn-save-main:active:not(:disabled) {
-  transform: scale(0.98);
 }
 
 .btn-save-main:disabled {
-  background: var(--border-subtle);
-  color: var(--text-inactive);
-  cursor: not-allowed;
+  --button-finance-disabled-bg: var(--border-subtle);
+  --button-finance-disabled-color: var(--text-inactive);
 }
 
 .btn-save-actions-row {
@@ -362,26 +434,10 @@ html.keyboard-open .date-header__row {
 
 .btn-save-draft {
   flex: 1;
-  padding: 12px;
-  background: transparent;
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-lg);
-  color: var(--accent);
-  font-family: 'Inter', sans-serif;
-  font-size: var(--font-secondary);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-save-draft:hover:not(:disabled) {
-  background: var(--accent-dark);
 }
 
 .btn-save-draft:disabled {
-  border-color: var(--border-subtle);
-  color: var(--text-inactive);
-  cursor: not-allowed;
+  --button-finance-disabled-border: var(--border-subtle);
 }
 
 .modal-overlay--datepicker-front {
@@ -538,17 +594,6 @@ html.keyboard-open .date-header__row {
   margin-top: 2px;
 }
 
-.compromisso-parcelas-card__quitar-btn {
-  background: var(--accent);
-  color: var(--text-primary);
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
 .compromisso-parcelas-card__summary {
   margin-top: var(--space-3);
   font-size: 13px;
@@ -584,44 +629,11 @@ html.keyboard-open .date-header__row {
 }
 
 .btn-compromisso-quitar {
-  width: 100%;
-  padding: 12px;
-  background: var(--accent);
-  border: none;
-  border-radius: 10px;
-  color: #fff;
-  font-family: 'Inter', sans-serif;
-  font-size: var(--font-secondary);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-compromisso-quitar:hover:not(:disabled) {
-  background: #6b5ef0;
-}
-
-.btn-compromisso-quitar:active:not(:disabled) {
-  transform: scale(0.98);
+  --button-finance-radius: 10px;
 }
 
 .btn-compromisso-secondary {
-  width: 100%;
-  padding: 12px;
-  background: transparent;
-  border: 1px solid #2a2a2a;
-  border-radius: 10px;
-  color: rgba(224, 224, 224, 0.4);
-  font-family: 'Inter', sans-serif;
-  font-size: var(--font-secondary);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease;
-}
-
-.btn-compromisso-secondary:hover:not(:disabled) {
-  color: rgba(224, 224, 224, 0.65);
-  border-color: #3a3a3a;
+  --button-finance-radius: 10px;
 }
 
 .compromisso-cancel-confirm__body {
@@ -636,6 +648,43 @@ html.keyboard-open .date-header__row {
   flex-direction: column;
   gap: 8px;
   padding: 0 20px 20px;
+}
+
+.salvar-compromisso-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.salvar-compromisso-actions .button-finance--ghost {
+  --button-finance-border: 1px solid var(--border-medium);
+  --button-finance-color: var(--text-inactive);
+  --button-finance-hover-border: var(--border-medium);
+  --button-finance-hover-color: var(--text-primary);
+}
+
+.payment-warning-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 20px 20px;
+}
+
+.payment-warning-actions__fix {
+  --button-finance-padding: 14px;
+  --button-finance-radius: 8px;
+  --button-finance-bg: #333;
+  --button-finance-hover-bg: #3a3a3a;
+}
+
+.payment-warning-actions__continue {
+  --button-finance-padding: 14px;
+  --button-finance-radius: 8px;
+  --button-finance-border: 1px solid #333;
+  --button-finance-color: var(--text-inactive);
+  --button-finance-hover-border: #3a3a3a;
+  --button-finance-hover-color: var(--text-primary);
 }
 
 .compromissos-section {
@@ -1123,26 +1172,7 @@ html.keyboard-open .date-header__row {
 
 /* Modal save button */
 .btn-save-modal {
-  width: 100%;
-  padding: 12px;
-  background: var(--accent);
-  border: none;
-  border-radius: var(--radius-lg);
-  color: #fff;
-  font-family: 'Inter', sans-serif;
-  font-size: var(--font-secondary);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-  transition: all 0.2s ease;
   margin-top: 8px;
-}
-
-.btn-save-modal:hover {
-  background: #6b5ef0;
-}
-
-.btn-save-modal:active {
-  transform: scale(0.98);
 }
 
 /* ===== CONFIRMATION SCREEN ===== */
@@ -3225,19 +3255,13 @@ html.keyboard-open .date-header__row {
 }
 
 .meus-gastos-perene-cta__btn {
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-medium);
-  background: transparent;
-  color: var(--accent);
-  font-size: var(--font-secondary);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-}
-
-.meus-gastos-perene-cta__btn:hover {
-  border-color: var(--accent);
+  --button-finance-padding: 10px 14px;
+  --button-finance-radius: var(--radius-sm);
+  --button-finance-bg: transparent;
+  --button-finance-border: 1px solid var(--border-medium);
+  --button-finance-color: var(--accent);
+  --button-finance-hover-bg: transparent;
+  --button-finance-hover-border: var(--accent);
 }
 
 .gasto-perene-detail__meta {

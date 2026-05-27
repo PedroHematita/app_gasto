@@ -469,24 +469,15 @@ export const SalvarCompromissoModal: React.FC<SalvarCompromissoModalProps> = ({
           )}
 
           {/* Botões */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 0' }}>
+          <div className="salvar-compromisso-actions">
             <button
               type="button"
               onClick={onClose}
-              style={{
-                width: '100%',
-                padding: '12px',
-                background: 'transparent',
-                border: '1px solid var(--border-medium)',
-                borderRadius: 8,
-                color: 'var(--text-inactive)',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}
+              className="button-finance button-finance--ghost"
             >
               Cancelar
             </button>
-            <button className="btn-save-modal" onClick={handleSalvar} type="button">
+            <button className="btn-save-modal button-finance button-finance--primary" onClick={handleSalvar} type="button">
               {modo === 'unico' ? 'Salvar compromisso' : `Salvar ${parcelas.length} parcelas`}
             </button>
           </div>

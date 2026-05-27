@@ -269,7 +269,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         </div>
 
         <button
-          className="btn-save-modal"
+          className="btn-save-modal button-finance button-finance--primary"
           onClick={handleAttemptSave}
           disabled={saving}
           type="button"
@@ -294,11 +294,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <p style={{ marginTop: 8 }}>Verifique se a quantidade de parcelas está correta antes de continuar.</p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 20px 20px' }}>
+            <div className="payment-warning-actions">
               <button
                 onClick={() => setWarningParcela(null)}
                 type="button"
-                style={{ width: '100%', padding: '14px', borderRadius: 8, background: '#333', color: '#fff', border: 'none', fontWeight: 500, cursor: 'pointer' }}
+                className="payment-warning-actions__fix button-finance button-finance--primary"
               >
                 Corrigir parcelas
               </button>
@@ -308,7 +308,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   onSave();
                 }}
                 type="button"
-                style={{ width: '100%', padding: '14px', borderRadius: 8, background: 'transparent', color: 'var(--text-inactive)', border: '1px solid #333', fontWeight: 500, cursor: 'pointer' }}
+                className="payment-warning-actions__continue button-finance button-finance--ghost"
               >
                 Continuar mesmo assim
               </button>

@@ -141,7 +141,7 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
                         <button
                           type="button"
                           onClick={() => onRequestQuitParcela(p)}
-                          className="compromisso-parcelas-card__quitar-btn"
+                          className="compromisso-parcelas-card__quitar-btn button-finance button-finance--primary button-finance--compact"
                         >
                           Quitar
                         </button>
@@ -183,13 +183,13 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
 
         <div className="compromisso-detail-actions">
           {!isParcelado && (
-            <button className="btn-compromisso-quitar" onClick={onRequestQuit} type="button">
+            <button className="btn-compromisso-quitar button-finance button-finance--primary" onClick={onRequestQuit} type="button">
               Quitar compromisso
             </button>
           )}
           <button
             type="button"
-            className="btn-compromisso-secondary"
+            className="btn-compromisso-secondary button-finance button-finance--ghost"
             onClick={() => setShowCancelConfirm(true)}
           >
             Cancelar compromisso
@@ -214,7 +214,7 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
             <div className="compromisso-cancel-confirm__actions">
               <button
                 type="button"
-                className="btn-compromisso-secondary"
+                  className="btn-compromisso-secondary button-finance button-finance--ghost"
                 disabled={cancelling}
                 onClick={() => setShowCancelConfirm(false)}
               >
@@ -222,7 +222,7 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
               </button>
               <button
                 type="button"
-                className="btn-compromisso-secondary"
+                  className="btn-compromisso-secondary button-finance button-finance--ghost"
                 disabled={cancelling}
                 onClick={handleConfirmCancel}
               >
