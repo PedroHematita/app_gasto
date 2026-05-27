@@ -27,11 +27,14 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const bgClass = bgVariant === 'edit'
-    ? 'floating-field--edit-bg'
-    : bgVariant === 'main'
-    ? 'floating-field--main-bg'
-    : '';
+  const bgClass =
+    bgVariant === 'edit'
+      ? 'floating-field--edit-bg input-finance--edit-bg'
+      : bgVariant === 'main'
+        ? 'floating-field--main-bg input-finance--main-bg'
+        : bgVariant === 'surface'
+          ? 'floating-field--surface-bg input-finance--surface-bg'
+          : '';
 
   // Filtered options based on search
   const filtered = search.trim()
@@ -69,7 +72,7 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
   const labelBg = bgVariant === 'edit' ? 'var(--bg-edit)' : bgVariant === 'surface' ? 'var(--bg-surface)' : 'var(--bg-main)';
 
   return (
-    <div className={`floating-field ${bgClass} ${className}`} ref={containerRef} style={{ position: 'relative' }}>
+    <div className={`floating-field input-finance ${bgClass} ${className}`} ref={containerRef} style={{ position: 'relative' }}>
       {/* Display value (when closed) */}
       {!open && (
         <div
@@ -129,14 +132,14 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
       </label>
 
       {open && (
-        <div className="custom-dropdown">
+        <div className="input-finance__dropdown custom-dropdown">
           {filtered.length === 0 ? (
-            <div className="custom-dropdown__empty">Nenhuma opção encontrada</div>
+            <div className="input-finance__option--empty custom-dropdown__empty">Nenhuma opção encontrada</div>
           ) : (
             filtered.map((opt) => (
               <div
                 key={opt}
-                className={`custom-dropdown__item ${opt === value ? 'custom-dropdown__item--selected' : ''}`}
+                className={`input-finance__option custom-dropdown__item ${opt === value ? 'input-finance__option--active custom-dropdown__item--selected' : ''}`}
                 onClick={() => handleSelect(opt)}
               >
                 {opt}

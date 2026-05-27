@@ -23,11 +23,11 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
 
   const bgClass =
     bgVariant === 'edit'
-      ? 'floating-field--edit-bg'
+      ? 'floating-field--edit-bg input-finance--edit-bg'
       : bgVariant === 'main'
-        ? 'floating-field--main-bg'
+        ? 'floating-field--main-bg input-finance--main-bg'
         : bgVariant === 'surface'
-          ? 'floating-field--surface-bg'
+          ? 'floating-field--surface-bg input-finance--surface-bg'
           : '';
 
   const displayValue = formatCurrency(valueCents);
@@ -58,7 +58,7 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
   );
 
   return (
-    <div ref={containerRef} className={`floating-field ${bgClass} ${className}`}>
+    <div ref={containerRef} className={`floating-field input-finance ${bgClass} ${className}`}>
       <input
         id={id}
         name={id}
@@ -67,7 +67,7 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
         onKeyDown={handleKeyDown}
         onChange={() => {}}
         onFocus={() => scheduleScrollFieldIntoView(containerRef.current)}
-        className={`floating-field__input floating-field__input--currency ${displayValue ? 'has-value' : ''}`}
+        className={`floating-field__input input-finance__field input-finance--currency floating-field__input--currency ${displayValue ? 'has-value' : ''}`}
         inputMode="numeric"
         autoComplete="off"
         autoCorrect="off"

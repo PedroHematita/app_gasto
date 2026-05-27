@@ -64,6 +64,7 @@ html.keyboard-open .app-container--cadastro:not(.app-container--with-bottom-nav)
 }
 
 html.keyboard-open .floating-field,
+html.keyboard-open .input-finance,
 html.keyboard-open .item-form,
 html.keyboard-open .btn-launch,
 html.keyboard-open .btn-save-actions-row,
@@ -83,12 +84,14 @@ html.keyboard-open .date-header__row {
   position: relative;
 }
 
-/* ===== FLOATING LABEL INPUT (OUTLINED WITH NOTCH) ===== */
+/* ===== INPUT FINANCE SYSTEM (ETAPA 4) ===== */
+.input-finance,
 .floating-field {
   position: relative;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
+.input-finance__field,
 .floating-field__input,
 .floating-field__select {
   width: 100%;
@@ -130,6 +133,7 @@ html.keyboard-open .date-header__row {
   color: var(--accent);
 }
 
+.input-finance__label,
 .floating-field__label {
   position: absolute;
   left: 12px;
@@ -157,6 +161,8 @@ html.keyboard-open .date-header__row {
 }
 
 /* When on main bg (not inside a card) */
+.input-finance--main-bg .floating-field__input:focus ~ .floating-field__label,
+.input-finance--main-bg .floating-field__input.has-value ~ .floating-field__label,
 .floating-field--main-bg .floating-field__input:focus ~ .floating-field__label,
 .floating-field--main-bg .floating-field__input.has-value ~ .floating-field__label,
 .floating-field--main-bg .floating-field__select:focus ~ .floating-field__label,
@@ -164,28 +170,43 @@ html.keyboard-open .date-header__row {
   background: var(--bg-main);
 }
 
+/* Inside modal/card surface */
+.input-finance--surface-bg .floating-field__input:focus ~ .floating-field__label,
+.input-finance--surface-bg .floating-field__input.has-value ~ .floating-field__label,
+.floating-field--surface-bg .floating-field__input:focus ~ .floating-field__label,
+.floating-field--surface-bg .floating-field__input.has-value ~ .floating-field__label {
+  background: var(--bg-surface);
+}
+
 /* When in edit mode bg */
+.input-finance--edit-bg .floating-field__input:focus ~ .floating-field__label,
+.input-finance--edit-bg .floating-field__input.has-value ~ .floating-field__label,
 .floating-field--edit-bg .floating-field__input:focus ~ .floating-field__label,
 .floating-field--edit-bg .floating-field__input.has-value ~ .floating-field__label {
   background: var(--bg-edit);
 }
 
 /* Validação: fornecedor obrigatório */
+.input-finance--error .floating-field__input,
 .floating-field--error .floating-field__input,
 .floating-field__input--error {
-  border-color: #ff4444;
+  border-color: var(--status-danger);
 }
 
+.input-finance--error .floating-field__input:focus,
 .floating-field--error .floating-field__input:focus {
-  border-color: #ff6666;
+  border-color: var(--status-danger);
 }
 
+.input-finance--error .floating-field__input.has-value ~ .floating-field__label,
+.input-finance--error .floating-field__input:focus ~ .floating-field__label,
 .floating-field--error .floating-field__input.has-value ~ .floating-field__label,
 .floating-field--error .floating-field__input:focus ~ .floating-field__label {
-  color: #ff8888;
+  color: var(--text-danger);
 }
 
 /* Currency input alignment */
+.input-finance--currency,
 .floating-field__input--currency {
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -197,7 +218,8 @@ html.keyboard-open .date-header__row {
   gap: 12px;
 }
 
-.form-row > .floating-field {
+.form-row > .floating-field,
+.form-row > .input-finance {
   flex: 1;
 }
 
@@ -1381,7 +1403,8 @@ html.keyboard-open .date-header__row {
   gap: 8px;
 }
 
-.date-header__row > .floating-field {
+.date-header__row > .floating-field,
+.date-header__row > .input-finance {
   flex: 1;
 }
 
@@ -1473,7 +1496,8 @@ html.keyboard-open .date-header__row {
   border-radius: 3px;
 }
 
-/* ===== CUSTOM DROPDOWN ===== */
+/* ===== INPUT FINANCE DROPDOWN (ETAPA 4b) ===== */
+.input-finance__dropdown,
 .custom-dropdown {
   position: absolute;
   top: calc(100% + 4px);
@@ -1486,7 +1510,7 @@ html.keyboard-open .date-header__row {
   overflow-y: auto;
   z-index: 50;
   animation: dropdownFade 0.15s ease;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px var(--bg-overlay);
 }
 
 @keyframes dropdownFade {
@@ -1494,6 +1518,7 @@ html.keyboard-open .date-header__row {
   to { opacity: 1; transform: translateY(0); }
 }
 
+.input-finance__option,
 .custom-dropdown__item {
   padding: 12px 16px;
   font-size: var(--font-secondary);
@@ -1503,19 +1528,23 @@ html.keyboard-open .date-header__row {
   border-bottom: 0px solid var(--separator);
 }
 
+.input-finance__option:last-child,
 .custom-dropdown__item:last-child {
   border-bottom: none;
 }
 
+.input-finance__option:hover,
 .custom-dropdown__item:hover {
   background: var(--accent-dark);
 }
 
+.input-finance__option--active,
 .custom-dropdown__item--selected {
   color: var(--accent);
-  background: rgba(124, 111, 255, 0.08);
+  background: var(--accent-muted);
 }
 
+.input-finance__option--empty,
 .custom-dropdown__empty {
   padding: 16px;
   font-size: var(--font-secondary);
@@ -1523,12 +1552,15 @@ html.keyboard-open .date-header__row {
   text-align: center;
 }
 
+.input-finance__dropdown::-webkit-scrollbar,
 .custom-dropdown::-webkit-scrollbar {
   width: 4px;
 }
+.input-finance__dropdown::-webkit-scrollbar-track,
 .custom-dropdown::-webkit-scrollbar-track {
   background: transparent;
 }
+.input-finance__dropdown::-webkit-scrollbar-thumb,
 .custom-dropdown::-webkit-scrollbar-thumb {
   background: var(--accent-border);
   border-radius: 4px;

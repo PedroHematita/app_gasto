@@ -53,11 +53,14 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
   const [suggestions, setSuggestions] = useState<AutocompleteResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const bgClass = bgVariant === 'edit'
-    ? 'floating-field--edit-bg'
-    : bgVariant === 'main'
-    ? 'floating-field--main-bg'
-    : '';
+  const bgClass =
+    bgVariant === 'edit'
+      ? 'floating-field--edit-bg input-finance--edit-bg'
+      : bgVariant === 'main'
+        ? 'floating-field--main-bg input-finance--main-bg'
+        : bgVariant === 'surface'
+          ? 'floating-field--surface-bg input-finance--surface-bg'
+          : '';
 
   // Debounced search
   const handleChange = useCallback(
@@ -120,7 +123,7 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
 
   return (
     <div
-      className={`floating-field ${bgClass} ${className}${showError ? ' floating-field--error' : ''}`}
+      className={`floating-field input-finance ${bgClass} ${className}${showError ? ' input-finance--error floating-field--error' : ''}`}
       ref={containerRef}
       style={{ position: 'relative' }}
     >
@@ -145,13 +148,13 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
       <label className="floating-field__label">{label}</label>
 
       {showSuggestions && suggestions.length > 0 && (
-        <div className="custom-dropdown">
+        <div className="input-finance__dropdown custom-dropdown">
           {suggestions.map((s, i) => {
             const label = typeof s === 'string' ? s : s.label;
             return (
               <div
                 key={`${label}-${i}`}
-                className="custom-dropdown__item"
+                className="input-finance__option custom-dropdown__item"
                 onClick={() => handleSelect(s)}
               >
                 {label}
