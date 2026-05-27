@@ -1003,7 +1003,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                     <div className="meus-gastos-summary__paid-center">
                       <button
                         type="button"
-                        className="meus-gastos-summary__toggle-all-btn button-finance button-finance--ghost button-finance--compact"
+                        className="meus-gastos-summary__toggle-all-btn"
                         onClick={collapseAllMeusGastos}
                         aria-label="Recolher todas as seções"
                       >
@@ -1033,7 +1033,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
               <div className="meus-gastos-summary__paid-center">
                 <button
                   type="button"
-                  className="meus-gastos-summary__toggle-all-btn button-finance button-finance--ghost button-finance--compact"
+                  className="meus-gastos-summary__toggle-all-btn"
                   onClick={collapseAllMeusGastos}
                   aria-label="Recolher todas as seções"
                 >

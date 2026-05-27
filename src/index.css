@@ -781,33 +781,29 @@ html.keyboard-open .date-header__row {
   color: #c084fc;
 }
 
-/* Resumo Meus Gastos (Etapa 6c — aliases locais) */
+/* Resumo Meus Gastos */
 .meus-gastos-summary--stack {
   flex-direction: column;
   align-items: stretch;
-  gap: var(--space-2);
+  gap: 6px;
 }
 
 .meus-gastos-summary__count {
-  font-size: var(--font-secondary);
+  font-size: 11px;
   color: var(--text-secondary);
-  letter-spacing: 0.2px;
-  line-height: var(--line-height-single);
 }
 
 .meus-gastos-summary__paid-row {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 8px;
   width: 100%;
-  min-height: 28px;
 }
 
 .meus-gastos-summary__paid-label {
   flex-shrink: 0;
-  font-size: var(--font-secondary);
+  font-size: 11px;
   color: var(--text-secondary);
-  letter-spacing: 0.15px;
 }
 
 .meus-gastos-summary__paid-center {
@@ -816,26 +812,31 @@ html.keyboard-open .date-header__row {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 var(--space-1);
 }
 
-.meus-gastos-summary__toggle-all-btn.button-finance {
-  --button-finance-width: auto;
-  --button-finance-padding: 4px 10px;
-  --button-finance-radius: var(--radius-sm);
-  --button-finance-font-size: 10px;
-  --button-finance-font-weight: var(--weight-medium);
-  --button-finance-bg: transparent;
-  --button-finance-border: 1px solid var(--border-subtle);
-  --button-finance-color: var(--text-secondary);
-  --button-finance-hover-bg: transparent;
-  --button-finance-hover-border: var(--border-medium);
-  --button-finance-hover-color: var(--text-primary);
-  --button-finance-transition: border-color 0.15s ease, color 0.15s ease;
+.meus-gastos-summary__toggle-all-btn {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: 4px;
+  padding: 2px 4px;
+  margin: 0;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: var(--weight-medium);
   letter-spacing: 0.2px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.meus-gastos-summary__toggle-all-btn:hover {
+  color: var(--text-primary);
+}
+
+.meus-gastos-summary__toggle-all-btn:active {
+  transform: scale(0.98);
 }
 
 .meus-gastos-summary__paid-row .meus-gastos-summary__total {
@@ -2620,26 +2621,23 @@ html.keyboard-open .date-header__row {
   color: var(--text-inactive);
 }
 
-/* Summary (Etapa 6c) */
+/* Summary */
 .meus-gastos-summary {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 0 var(--space-2) var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  font-size: var(--font-secondary);
+  padding: 8px 8px;
+  font-size: 11px;
   color: var(--text-secondary);
-  background: var(--surface-card);
-  border: 0.5px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  border-bottom: 0 solid var(--separator);
+  margin-bottom: 4px;
 }
 
 .meus-gastos-summary__total {
   color: var(--accent);
   font-weight: var(--weight-medium);
-  font-size: var(--font-primary);
+  font-size: var(--font-secondary);
   font-variant-numeric: tabular-nums;
-  line-height: var(--line-height-single);
 }
 
 /* Year + month hierarchy */
