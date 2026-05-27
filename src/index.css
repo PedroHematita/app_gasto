@@ -1897,11 +1897,12 @@ html.keyboard-open .date-header__row {
   letter-spacing: 0.02em;
 }
 
-/* ===== CLASSIFICAR GASTOS ===== */
+/* ===== CLASSIFICAR GASTOS (Etapa 7d) ===== */
 .classificar-gastos-screen {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background: #0a0a0a;
   padding-bottom: var(--layout-bottom-nav-offset);
 }
 
@@ -1972,8 +1973,8 @@ html.keyboard-open .date-header__row {
 }
 
 .classificar-gastos-screen__classificacao-chip--active {
-  border-color: var(--accent);
-  background: var(--accent-dark);
+  border-color: var(--accent-border);
+  background: var(--accent-muted);
   color: var(--text-primary);
 }
 
@@ -2002,19 +2003,22 @@ html.keyboard-open .date-header__row {
   flex-shrink: 0;
   padding: var(--space-1) var(--space-2);
   font-size: var(--font-secondary);
-  color: var(--accent-primary, #6eb5ff);
+  color: var(--text-accent-medium);
   background: none;
   border: none;
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;
+  transition: color 0.15s ease;
 }
 
-.classificar-gastos-screen__status--empty-filter {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
+.classificar-gastos-screen__limpar-filtros:hover {
+  color: var(--text-primary);
+}
+
+.classificar-gastos-screen__limpar-cta {
+  --button-finance-width: auto;
+  margin-top: var(--space-3);
 }
 
 .classificar-gastos-screen__table-wrap {
@@ -2022,13 +2026,6 @@ html.keyboard-open .date-header__row {
   overflow-y: auto;
   padding: 0 var(--space-2) var(--space-3);
   min-height: 0;
-}
-
-.classificar-gastos-screen__status {
-  padding: var(--space-6) var(--space-4);
-  text-align: center;
-  color: var(--text-inactive);
-  font-size: var(--font-secondary);
 }
 
 /* Rolagem horizontal leve; largura mínima prioriza legibilidade */
@@ -2062,7 +2059,7 @@ html.keyboard-open .date-header__row {
   text-transform: uppercase;
   letter-spacing: 0.03em;
   font-size: 10px;
-  background: var(--bg-main);
+  background: #0a0a0a;
   border-bottom: 1px solid var(--border-medium);
   white-space: nowrap;
 }
@@ -2117,7 +2114,7 @@ html.keyboard-open .date-header__row {
   height: 5px;
   margin-left: 4px;
   border-radius: 50%;
-  background: var(--accent-primary, #6eb5ff);
+  background: var(--accent);
   vertical-align: middle;
 }
 
@@ -2505,31 +2502,18 @@ html.keyboard-open .date-header__row {
   gap: var(--space-2);
 }
 
-.classificar-gastos-action-bar__clear {
-  padding: var(--space-2);
-  background: transparent;
-  border: none;
-  color: var(--text-inactive);
-  font-size: var(--font-secondary);
-  font-family: inherit;
-  cursor: pointer;
+.classificar-gastos-action-bar__clear.button-finance--ghost {
+  --button-finance-padding: var(--space-2);
   text-align: center;
 }
 
-.classificar-gastos-action-bar__primary {
-  width: 100%;
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  border: none;
-  background: var(--accent);
-  color: #fff;
-  font-size: var(--font-primary);
-  font-weight: var(--weight-medium);
-  font-family: inherit;
-  cursor: pointer;
+.classificar-gastos-action-bar__primary.button-finance--primary {
+  --button-finance-padding: var(--space-3);
+  --button-finance-radius: var(--radius-md);
+  --button-finance-font-size: var(--font-primary);
 }
 
-.classificar-gastos-action-bar__primary:disabled {
+.classificar-gastos-action-bar__primary.button-finance--primary:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }

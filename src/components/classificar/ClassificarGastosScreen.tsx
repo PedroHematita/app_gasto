@@ -368,17 +368,27 @@ export const ClassificarGastosScreen: React.FC<ClassificarGastosScreenProps> = (
 
       <div className="classificar-gastos-screen__table-wrap">
         {loading && (
-          <p className="classificar-gastos-screen__status">Carregando gastos...</p>
+          <div className="meus-gastos-empty" role="status" aria-live="polite">
+            Carregando…
+          </div>
         )}
         {!loading && gastosBrutos.length === 0 && (
-          <p className="classificar-gastos-screen__status">Nenhum gasto cadastrado.</p>
+          <div className="meus-gastos-empty meus-gastos-empty--hero" role="status">
+            <span className="meus-gastos-empty__title">Nenhum gasto cadastrado</span>
+            <span className="meus-gastos-empty__hint">
+              Quando houver gastos para classificar, eles aparecerão aqui.
+            </span>
+          </div>
         )}
         {!loading && gastosBrutos.length > 0 && gastosVisiveis.length === 0 && (
-          <div className="classificar-gastos-screen__status classificar-gastos-screen__status--empty-filter">
-            <p>Nenhum gasto neste filtro.</p>
+          <div className="meus-gastos-empty meus-gastos-empty--hero" role="status">
+            <span className="meus-gastos-empty__title">Nenhum gasto neste filtro</span>
+            <span className="meus-gastos-empty__hint">
+              Ajuste os filtros ou limpe para ver todos os gastos.
+            </span>
             <button
               type="button"
-              className="classificar-gastos-screen__limpar-filtros"
+              className="classificar-gastos-screen__limpar-cta button-finance button-finance--ghost"
               onClick={limparFiltros}
             >
               Limpar filtros
@@ -487,14 +497,14 @@ export const ClassificarGastosScreen: React.FC<ClassificarGastosScreenProps> = (
           <div className="classificar-gastos-action-bar__actions">
             <button
               type="button"
-              className="classificar-gastos-action-bar__clear"
+              className="classificar-gastos-action-bar__clear button-finance button-finance--ghost"
               onClick={clearSelection}
             >
               Cancelar seleção
             </button>
             <button
               type="button"
-              className="classificar-gastos-action-bar__primary"
+              className="classificar-gastos-action-bar__primary button-finance button-finance--primary"
               onClick={handleClassificar}
               disabled={selectedCount === 0 || savingClassificacao}
             >
