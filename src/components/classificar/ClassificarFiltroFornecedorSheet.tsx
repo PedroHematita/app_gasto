@@ -38,14 +38,14 @@ export const ClassificarFiltroFornecedorSheet: React.FC<ClassificarFiltroFornece
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose} role="presentation">
+    <div className="modal-overlay modal-finance" onClick={onClose} role="presentation">
       <div
-        className="modal-sheet classificar-filtro-sheet"
+        className="modal-sheet classificar-filtro-sheet bottom-sheet-finance modal-finance__container"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-labelledby="classificar-filtro-fornecedor-title"
       >
-        <div className="modal-sheet__handle" />
+        <div className="modal-sheet__handle modal-finance__handle" />
         <div className="classificar-filtro-sheet__header">
           <button
             type="button"
@@ -63,10 +63,10 @@ export const ClassificarFiltroFornecedorSheet: React.FC<ClassificarFiltroFornece
           </h2>
         </div>
 
-        <div className="classificar-filtro-sheet__body">
+        <div className="classificar-filtro-sheet__body modal-finance__body">
           <input
             type="search"
-            className="classificar-filtro-fornecedor-search"
+            className="classificar-filtro-fornecedor-search input-finance__field"
             placeholder="Buscar fornecedor"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
@@ -109,17 +109,17 @@ export const ClassificarFiltroFornecedorSheet: React.FC<ClassificarFiltroFornece
           )}
         </div>
 
-        <div className="classificar-filtro-sheet__footer">
+        <div className="classificar-filtro-sheet__footer modal-finance__footer modal-finance__actions">
           <button
             type="button"
-            className="classificar-filtro-sheet__btn classificar-filtro-sheet__btn--secondary"
+            className="classificar-filtro-sheet__btn classificar-filtro-sheet__btn--secondary button-finance button-finance--ghost"
             onClick={handleLimpar}
           >
             Limpar
           </button>
           <button
             type="button"
-            className="classificar-filtro-sheet__btn classificar-filtro-sheet__btn--primary"
+            className="classificar-filtro-sheet__btn classificar-filtro-sheet__btn--primary button-finance button-finance--primary"
             onClick={handleAplicar}
           >
             Aplicar

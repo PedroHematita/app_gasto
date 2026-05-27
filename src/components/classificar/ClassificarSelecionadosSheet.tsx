@@ -50,14 +50,14 @@ export const ClassificarSelecionadosSheet: React.FC<ClassificarSelecionadosSheet
   };
 
   return (
-    <div className="modal-overlay" onClick={saving ? undefined : onClose} role="presentation">
+    <div className="modal-overlay modal-finance" onClick={saving ? undefined : onClose} role="presentation">
       <div
-        className="modal-sheet classificar-filtro-sheet"
+        className="modal-sheet classificar-filtro-sheet bottom-sheet-finance modal-finance__container"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-labelledby="classificar-selecionados-title"
       >
-        <div className="modal-sheet__handle" />
+        <div className="modal-sheet__handle modal-finance__handle" />
         <div className="classificar-filtro-sheet__header">
           <button
             type="button"
@@ -77,7 +77,7 @@ export const ClassificarSelecionadosSheet: React.FC<ClassificarSelecionadosSheet
           </p>
         </div>
 
-        <div className="classificar-filtro-sheet__body">
+        <div className="classificar-filtro-sheet__body modal-finance__body">
           <section className="classificar-filtro-pagamento-group">
             <h3 className="classificar-filtro-pagamento-group__title">Tipo de classificação</h3>
             <ul
@@ -120,10 +120,10 @@ export const ClassificarSelecionadosSheet: React.FC<ClassificarSelecionadosSheet
           {erro ? <p className="classificar-classificacao-erro">{erro}</p> : null}
         </div>
 
-        <div className="classificar-filtro-sheet__footer">
+        <div className="classificar-filtro-sheet__footer modal-finance__footer modal-finance__actions">
           <button
             type="button"
-            className="classificar-filtro-sheet__btn classificar-filtro-sheet__btn--secondary"
+            className="classificar-filtro-sheet__btn classificar-filtro-sheet__btn--secondary button-finance button-finance--ghost"
             onClick={onClose}
             disabled={saving}
           >
@@ -131,7 +131,7 @@ export const ClassificarSelecionadosSheet: React.FC<ClassificarSelecionadosSheet
           </button>
           <button
             type="button"
-            className="classificar-filtro-sheet__btn classificar-filtro-sheet__btn--primary"
+            className="classificar-filtro-sheet__btn classificar-filtro-sheet__btn--primary button-finance button-finance--primary"
             onClick={handleAplicar}
             disabled={!podeAplicar}
           >

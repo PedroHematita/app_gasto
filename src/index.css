@@ -2125,11 +2125,14 @@ html.keyboard-open .date-header__row {
   color: var(--text-primary);
 }
 
-.classificar-filtro-sheet {
+/* Classificar filter sheets (Etapa 7b — modal-finance) */
+.classificar-filtro-sheet.bottom-sheet-finance,
+.classificar-filtro-sheet.modal-finance__container {
   display: flex;
   flex-direction: column;
   max-height: 85vh;
   padding-bottom: 0;
+  padding-top: var(--space-3);
 }
 
 .classificar-filtro-sheet__header {
@@ -2161,11 +2164,13 @@ html.keyboard-open .date-header__row {
   margin: 0;
 }
 
-.classificar-filtro-sheet__body {
+.classificar-filtro-sheet__body,
+.classificar-filtro-sheet__body.modal-finance__body {
   flex: 1;
   overflow-y: auto;
-  padding: 0 var(--space-2) var(--space-3);
+  padding: 0 var(--space-4) var(--space-3);
   min-height: 0;
+  text-align: left;
 }
 
 .classificar-filtro-data-options {
@@ -2178,33 +2183,29 @@ html.keyboard-open .date-header__row {
   display: block;
   width: 100%;
   text-align: left;
-  padding: var(--space-3) var(--space-3);
+  padding: var(--space-3);
   margin-bottom: var(--space-1);
   font-size: var(--font-primary);
   color: var(--text-primary);
-  background: var(--bg-main);
+  background: var(--bg-surface);
   border: 1px solid var(--border-medium);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   touch-action: manipulation;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .classificar-filtro-data-options__item--selected {
-  border-color: var(--accent-primary, #6eb5ff);
-  background: rgba(110, 181, 255, 0.08);
+  border-color: var(--accent-border);
+  background: var(--accent-muted);
 }
 
-.classificar-filtro-fornecedor-search {
+.classificar-filtro-fornecedor-search,
+.classificar-filtro-fornecedor-search.input-finance__field {
   display: block;
   width: 100%;
   box-sizing: border-box;
   margin-bottom: var(--space-3);
-  padding: var(--space-3);
-  font-size: var(--font-primary);
-  color: var(--text-primary);
-  background: var(--bg-main);
-  border: 1px solid var(--border-medium);
-  border-radius: 8px;
 }
 
 .classificar-filtro-fornecedor-search::placeholder {
@@ -2227,16 +2228,17 @@ html.keyboard-open .date-header__row {
   margin-bottom: var(--space-1);
   font-size: var(--font-primary);
   color: var(--text-primary);
-  background: var(--bg-main);
+  background: var(--bg-surface);
   border: 1px solid var(--border-medium);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   touch-action: manipulation;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .classificar-filtro-fornecedor-list__item--selected {
-  border-color: var(--accent-primary, #6eb5ff);
-  background: rgba(110, 181, 255, 0.08);
+  border-color: var(--accent-border);
+  background: var(--accent-muted);
 }
 
 .classificar-filtro-fornecedor-list__check {
@@ -2244,14 +2246,15 @@ html.keyboard-open .date-header__row {
   width: 18px;
   height: 18px;
   border: 1px solid var(--border-medium);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: transparent;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .classificar-filtro-fornecedor-list__check--on {
-  border-color: var(--accent-primary, #6eb5ff);
-  background: var(--accent-primary, #6eb5ff);
-  box-shadow: inset 0 0 0 2px var(--bg-main);
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--bg-surface);
 }
 
 .classificar-filtro-fornecedor-list__label {
@@ -2314,37 +2317,33 @@ html.keyboard-open .date-header__row {
   text-align: center;
 }
 
-.classificar-filtro-sheet__footer {
+.classificar-filtro-sheet__footer,
+.classificar-filtro-sheet__footer.modal-finance__footer,
+.classificar-filtro-sheet__footer.modal-finance__actions {
   display: flex;
+  flex-direction: row;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--border-medium);
+  border-top: 1px solid var(--border-subtle);
   background: var(--bg-surface);
   flex-shrink: 0;
 }
 
-.classificar-filtro-sheet__btn {
+.classificar-filtro-sheet__footer .button-finance {
   flex: 1;
   min-height: 44px;
-  border-radius: 8px;
-  font-size: var(--font-primary);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-  border: none;
+  --button-finance-font-size: var(--font-primary);
 }
 
-.classificar-filtro-sheet__btn--secondary {
-  color: var(--text-secondary);
-  background: transparent;
-  border: 1px solid var(--border-medium);
+.classificar-filtro-sheet__btn--secondary.button-finance--ghost {
+  --button-finance-border: 1px solid var(--border-medium);
+  --button-finance-color: var(--text-secondary);
+  --button-finance-hover-border: var(--border-medium);
+  --button-finance-hover-color: var(--text-primary);
 }
 
-.classificar-filtro-sheet__btn--primary {
-  color: var(--bg-main);
-  background: var(--accent-primary, #6eb5ff);
-}
-
+.classificar-filtro-sheet__btn--primary.button-finance--primary:disabled,
 .classificar-filtro-sheet__btn--primary:disabled {
   opacity: 0.45;
   cursor: not-allowed;
