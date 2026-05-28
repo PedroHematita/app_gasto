@@ -182,6 +182,42 @@ html.keyboard-open .date-header__row {
   padding: 0 4px;
 }
 
+/* Campos na tela principal (Novo Gasto) — superfície elevada, sem borda */
+.floating-field--main-bg .floating-field__input,
+.floating-field--main-bg .floating-field__select,
+.input-finance--main-bg .floating-field__input,
+.input-finance--main-bg .floating-field__select {
+  background: var(--surface-1);
+  border: none;
+  color: var(--text-muted);
+}
+
+.floating-field--main-bg .floating-field__input:focus,
+.floating-field--main-bg .floating-field__select:focus,
+.input-finance--main-bg .floating-field__input:focus,
+.input-finance--main-bg .floating-field__select:focus {
+  border: none;
+}
+
+.floating-field--main-bg .floating-field__input:focus ~ .floating-field__select-arrow,
+.floating-field--main-bg .floating-field__select:focus ~ .floating-field__select-arrow,
+.input-finance--main-bg .floating-field__input:focus ~ .floating-field__select-arrow,
+.input-finance--main-bg .floating-field__select:focus ~ .floating-field__select-arrow {
+  color: var(--text-muted);
+}
+
+.floating-field--main-bg .floating-field__input:focus ~ .floating-field__label,
+.floating-field--main-bg .floating-field__input.has-value ~ .floating-field__label,
+.floating-field--main-bg .floating-field__select:focus ~ .floating-field__label,
+.floating-field--main-bg .floating-field__select.has-value ~ .floating-field__label,
+.input-finance--main-bg .floating-field__input:focus ~ .floating-field__label,
+.input-finance--main-bg .floating-field__input.has-value ~ .floating-field__label,
+.input-finance--main-bg .floating-field__select:focus ~ .floating-field__label,
+.input-finance--main-bg .floating-field__select.has-value ~ .floating-field__label {
+  color: var(--text-muted);
+  background: var(--bg-main);
+}
+
 /* When on main bg (not inside a card) */
 .input-finance--main-bg .floating-field__input:focus ~ .floating-field__label,
 .input-finance--main-bg .floating-field__input.has-value ~ .floating-field__label,
@@ -269,13 +305,13 @@ html.keyboard-open .date-header__row {
 
 .total-bar__label {
   font-size: var(--font-secondary);
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-weight: var(--weight-regular);
 }
 
 .total-bar__value {
   font-size: var(--font-display);
-  color: var(--accent);
+  color: var(--text-primary);
   font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
 }
@@ -365,7 +401,7 @@ html.keyboard-open .date-header__row {
   --button-finance-bg: var(--accent);
   --button-finance-border: none;
   --button-finance-color: var(--text-primary);
-  --button-finance-hover-bg: #6b5ef0;
+  --button-finance-hover-bg: var(--accent-hover);
 }
 
 .button-finance--secondary,
@@ -442,11 +478,11 @@ html.keyboard-open .date-header__row {
 
 /* ===== ACTION BUTTONS ===== */
 .btn-launch {
-  --button-finance-bg: var(--accent-dark);
-  --button-finance-border: 1px solid var(--accent);
+  --button-finance-bg: var(--accent);
+  --button-finance-border: none;
   --button-finance-radius: var(--radius-md);
-  --button-finance-color: var(--text-accent-medium);
-  --button-finance-hover-bg: #251f4a;
+  --button-finance-color: var(--text-primary);
+  --button-finance-hover-bg: var(--accent-hover);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -505,7 +541,7 @@ html.keyboard-open .date-header__row {
   align-items: center;
   gap: 6px 10px;
   font-size: 11px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 
 .compromissos-strip__chip {
@@ -536,7 +572,7 @@ html.keyboard-open .date-header__row {
 
 .compromissos-strip__link {
   margin-left: auto;
-  color: var(--accent);
+  color: var(--text-muted);
   font-weight: 500;
 }
 
@@ -1621,16 +1657,16 @@ html.keyboard-open .date-header__row {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent-dark);
+  background: var(--accent);
   border: none;
   border-radius: var(--radius-md);
-  color: var(--accent);
+  color: var(--text-primary);
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
 }
 
 .date-header__calendar-btn:hover {
-  background: #251f4a;
+  background: var(--accent-hover);
 }
 
 /* delete-confirm: overlay legado (alias de modal-finance--centered + --z-dialog) */

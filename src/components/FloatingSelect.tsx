@@ -124,7 +124,7 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
 
       <label className="floating-field__label" style={{
         top: 0, transform: 'translateY(-50%)', fontSize: 10,
-        color: disabled ? 'var(--text-inactive)' : open ? 'var(--accent)' : 'var(--accent)',
+        color: disabled ? 'var(--text-inactive)' : 'var(--text-muted)',
         background: labelBg, padding: '0 5px',
         opacity: disabled ? 0.6 : 1
       }}>

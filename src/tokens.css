@@ -1,15 +1,15 @@
 /* ===== DESIGN TOKENS ===== */
 :root {
   /* SEMANTIC FOUNDATION (Etapa 1 - sem mudança visual) */
-  --bg-base: #0f0f0f;
-  --surface-1: #161616;
-  --surface-2: #1a1b1e;
-  --surface-card: #151515;
+  --bg-base: #1C1D1F;
+  --surface-1: #2B2C2E;
+  --surface-2: #2f3032;
+  --surface-card: #2B2C2E;
   --bg-overlay: rgba(0, 0, 0, 0.6);
   --border-strong: #2d2d2d;
-  --border-focus: var(--accent);
-  --accent-hover: #6f62ee;
-  --accent-muted: rgba(124, 111, 255, 0.14);
+  --border-focus: rgba(220, 97, 92, 0.5);
+  --accent-hover: #b04e4a;
+  --accent-muted: rgba(220, 97, 92, 0.14);
   --status-success: #5fcf8b;
   --status-danger: #ff4444;
   --status-warning: #ffcc00;
@@ -28,24 +28,25 @@
   --border-subtle: #2a2a2a;
   --border-medium: var(--border-strong);
   
-  --accent: #7c6fff;
-  --accent-dark: #1e1a3a;
-  --accent-border: #3d2fa0;
+  --accent: #DC615C;
+  --accent-dark: #b04e4a;
+  --accent-border: #DC615C;
   
-  --color-text-base: #e0e0e0;
+  --color-text-base: #F0F0EB;
   --text-primary: var(--color-text-base);
-  --text-secondary: rgba(224, 224, 224, 0.4);
-  --text-inactive: rgba(224, 224, 224, 0.25);
+  --text-muted: #ACACAC;
+  --text-secondary: var(--text-muted);
+  --text-inactive: rgba(172, 172, 172, 0.55);
   
-  --text-accent-light: #c0b4ff;
-  --text-accent-medium: #9f8fff;
+  --text-accent-light: #F0F0EB;
+  --text-accent-medium: #ACACAC;
   
   /* Semantic Colors */
   --color-error: var(--status-danger);
   --color-warning: var(--status-warning);
   
-  --total-bg: #1a1530;
-  --total-border: #2e2060;
+  --total-bg: var(--bg-base);
+  --total-border: transparent;
   --separator: #1a1a1a;
   
   --whatsapp-green: #128c3e;
