@@ -1,3 +1,64 @@
+## Design System — Paleta da empresa (60-30-10)
+
+**Tokens base (commit `a4ca1b8`):**
+- 60% fundo: `--bg-base` / `--bg-main` → `#1C1D1F`
+- 30% superfícies: `--surface-1` / `--bg-surface` → `#2B2C2E`
+- 10% accent: `--accent` → `#DC615C` (apenas ações primárias e nav ativo)
+- Texto alto contraste: `--text-primary` → `#F0F0EB`
+- Texto muted: `--text-muted` → `#ACACAC`
+- Sem bordas em campos/cards — limites por delta de luminosidade
+
+### Problemas críticos descobertos (pós `a4ca1b8`)
+
+**Problema 1 — Fundo não propagou para todas as páginas**
+`--bg-base: #1C1D1F` foi aplicado, mas telas de lista ainda usavam `--bg-screen: #0a0a0a`. **Resolvido no Commit 2** (`--bg-screen: var(--bg-base)`).
+
+**Problema 2 — Modo Edição visualmente quebrado**
+Estado de edição em Novo Gasto concentra ~10 pontos de coral (borda lateral, labels focados, badges, botões, item NOVO). Viola gravemente a regra 60-30-10. Causa raiz: regra global de floating label em foco (`color: var(--accent)`) + classes `.item-form--editing`, `.item-row--editing`, `.btn-save-main` primário.
+
+**Problema 3 — Estados especiais não foram pensados**
+Modo edição, foco, item recém-criado herdam accent automaticamente. Precisam de regras próprias (Opção A: discreta — ver plano Passo 2).
+
+### Regras obrigatórias do design system
+
+**Regra 8 — Análise de contraste antes de aplicar mudanças**
+
+Antes de aplicar qualquer mudança de paleta em massa:
+1. Inventariar todos os elementos que vão receber accent na tela afetada
+2. Contar quantos pontos de accent vão aparecer na mesma tela
+3. Alertar se passar de 3–4 pontos (viola 60-30-10)
+4. Listar elementos competindo visualmente (dois botões preenchidos lado a lado, três cores em sequência, etc.)
+
+Se passar de 3–4 pontos, **parar e reportar** antes de aplicar.
+
+**Regra 9 — Estados especiais precisam de tratamento próprio**
+
+Estados como modo edição, modo seleção, campo focado, estado vencido, item recém-criado **não podem herdar accent automaticamente**.
+
+Cada estado especial deve:
+1. Ser identificado antes da aplicação
+2. Ter regra própria (discreta, médio destaque ou destaque forte)
+3. Ser revisado quanto ao impacto visual total da tela
+
+**Default:** `--accent-muted`, fundo levemente elevado, badge muted — **nunca** coral preenchido em vários elementos simultaneamente.
+
+**Regra 10 — Floating Label nunca muda de cor por estado**
+
+Em FloatingInput, FloatingSelect e CurrencyInput, o label permanece em `#ACACAC` (`--text-muted`) em todos os estados: normal, focado, preenchido, disabled (com opacidade reduzida).
+
+Não usar accent no label. Foco indicado por outline externo, não por mudança de cor do label.
+
+### Revisão de Tema — próximos passos (pós Commit 2)
+
+1. **Passo 1 — Meus Gastos:** aplicar paleta completa (busca, cards, botões secundários, etc.).
+2. **Passo 2 — Modo Edição:** corrigir ~10 pontos de coral (Opção A discreta).
+3. **Passo 3 — Ajustes menores:** bullet de pendências semântico, botões disabled sem borda residual.
+4. **Hardcode `#151515`** em `SalvarCompromissoModal.tsx` (tabela de parcelas).
+5. **Token `--border` undefined** em 14 lugares (Admin/OrgSelector) — commit futuro se necessário.
+6. **Validação visual Admin/OrgSelector** em uso real (multi-org / Super Admin).
+
+---
+
 ## Dívida técnica registrada
 
 ### Design System — Etapa 8 (limpeza + acessibilidade)
@@ -9,7 +70,8 @@
 - Modais: `modal-overlay`, `modal-sheet`, `ph-title` → convivem com `modal-finance` / `bottom-sheet-finance` (sheets de cotação e fluxos legados ainda usam classes antigas).
 
 **Corrigido na Etapa 8 (sem commit ainda):**
-- Token `--bg-screen` para fundo `#0a0a0a` das telas lista (Classificar, Meus Gastos, Cotações).
+- Token `--bg-screen` alinhado a `--bg-base` (`#1C1D1F`) — Commit 2 Passo 0.
+- Aliases legados Admin/Org: `--card-bg`, `--bg-color` definidos em `tokens.css`.
 - Escala `--z-*` documentada em `tokens.css` (valores legados numéricos em `index.css` preservados).
 - `:focus-visible` global para controles do design system (botões, nav, chips, TH da tabela Classificar, cards clicáveis).
 - `BottomNav`: `aria-current="page"`, ícones com `aria-hidden`.

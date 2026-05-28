@@ -24,6 +24,8 @@
   /* COLORS */
   --bg-main: var(--bg-base);
   --bg-surface: var(--surface-1);
+  --card-bg: var(--surface-1);
+  --bg-color: var(--bg-surface);
   --bg-edit: #0d0d1a;
   --border-subtle: #2a2a2a;
   --border-medium: var(--border-strong);
@@ -86,8 +88,12 @@
   /* Layout fixo — altura reservada para a navegação inferior (alinha com paddingBottom das telas) */
   --layout-bottom-nav-offset: 70px;
 
-  /* Fundo de telas de lista (levemente mais escuro que --bg-main) */
-  --bg-screen: #0a0a0a;
+  /*
+   * @deprecated: prefer var(--bg-base) directly.
+   * Mantido como alias para compatibilidade.
+   * Não criar novas referências a este token.
+   */
+  --bg-screen: var(--bg-base);
 
   /* Escala z-index de referência (aliases legados em index.css preservados) */
   --z-table-sticky: 2;
