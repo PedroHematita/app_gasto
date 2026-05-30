@@ -802,6 +802,56 @@ export function daysOverdueFromPrevistaBR(previstaBR: string): number {
   return diff > 0 ? diff : 0;
 }
 
+export type CompromissoUrgencyLevel = 'vencido' | 'breve' | 'ordem';
+
+export type CompromissoUrgencyBadge = {
+  level: CompromissoUrgencyLevel;
+  label: string;
+};
+
+/** Dias até o vencimento (negativo = já passou). */
+export function daysUntilDueFromDataBR(dataBR: string): number | null {
+  const due = parseDateBR(dataBR);
+  if (!due) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  due.setHours(0, 0, 0, 0);
+  return Math.floor((due.getTime() - today.getTime()) / 86400000);
+}
+
+/** Badge visual derivado apenas da data de vencimento (sem alterar status de negócio). */
+export function compromissoUrgencyBadgeFromDataBR(
+  dataBR: string,
+  options?: { feminine?: boolean },
+): CompromissoUrgencyBadge {
+  const days = daysUntilDueFromDataBR(dataBR);
+  const feminine = options?.feminine ?? false;
+
+  if (days === null) {
+    return { level: 'ordem', label: '—' };
+  }
+
+  if (days < 0) {
+    const n = Math.abs(days);
+    const prefix = feminine ? 'Vencida há' : 'Vencido há';
+    return {
+      level: 'vencido',
+      label: `${prefix} ${n} dia${n === 1 ? '' : 's'}`,
+    };
+  }
+
+  if (days === 0) {
+    return { level: 'breve', label: 'Vence hoje' };
+  }
+
+  const label = `Vence em ${days} dia${days === 1 ? '' : 's'}`;
+  if (days <= 7) {
+    return { level: 'breve', label };
+  }
+
+  return { level: 'ordem', label };
+}
+
 export function compareDateBR(a: string, b: string): number {
   const da = parseDateBR(a);
   const db = parseDateBR(b);

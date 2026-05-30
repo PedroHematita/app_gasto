@@ -3021,6 +3021,60 @@ html.keyboard-open .date-header__row {
   color: var(--text-muted);
 }
 
+/* Compromissos pendentes — mesmo padrão de leitura dos cards mensais */
+.gasto-card--compromisso-pendente .gasto-card__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.gasto-card--compromisso-pendente .gasto-card__meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gasto-card--compromisso-pendente .gasto-card__meta-sub {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.gasto-card--compromisso-pendente .gasto-card__fornecedor {
+  line-height: 1.25;
+}
+
+.gasto-card--compromisso-pendente .gasto-card__date,
+.gasto-card--compromisso-pendente .gasto-card__meio {
+  line-height: 1.25;
+}
+
+.gasto-card--compromisso-pendente .gasto-card__value-col {
+  gap: var(--space-1);
+}
+
+.meus-gastos-screen .meus-gastos-status-card .gasto-card--compromisso-pendente.card-finance__item {
+  padding: var(--space-3) var(--space-4);
+}
+
+.meus-gastos-screen .meus-gastos-status-card .gasto-card--compromisso-pendente + .gasto-card--compromisso-pendente::before,
+.meus-gastos-screen .meus-gastos-status-card .card-finance__item.gasto-card--compromisso-pendente + .card-finance__item.gasto-card--compromisso-pendente::before {
+  border-top: 4px solid var(--separator);
+}
+
+.meus-gastos-screen .meus-gastos-status-card .meus-gastos-sub-title {
+  padding: var(--space-2) var(--space-4) var(--space-1);
+}
+
+.meus-gastos-screen .meus-gastos-status-card .meus-gastos-sub-title--separator {
+  margin-top: 0;
+  padding-top: var(--space-3);
+  border-top: 4px solid var(--separator);
+}
+
 /* Search (Etapa 6b — input-finance) */
 .input-finance--search,
 .meus-gastos-search.input-finance {
@@ -3465,6 +3519,40 @@ html.keyboard-open .date-header__row {
   font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
   line-height: 1.25;
+}
+
+.gasto-card__value-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.compromisso-urgency-badge {
+  display: inline-block;
+  font-size: var(--font-auxiliary);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: var(--weight-medium);
+  line-height: var(--line-height-single);
+  white-space: nowrap;
+  text-transform: none;
+}
+
+.compromisso-urgency-badge--vencido {
+  background: color-mix(in srgb, var(--status-danger) 14%, transparent);
+  color: var(--status-danger);
+}
+
+.compromisso-urgency-badge--breve {
+  background: color-mix(in srgb, var(--status-warning) 14%, transparent);
+  color: var(--status-warning);
+}
+
+.compromisso-urgency-badge--ordem {
+  background: color-mix(in srgb, var(--status-success) 12%, transparent);
+  color: var(--status-success);
 }
 
 .gasto-card__bottom {

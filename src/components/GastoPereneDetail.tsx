@@ -15,6 +15,7 @@ import {
   labelPeriodicidade,
   labelStatusCompromisso,
   compromissoDisplayTitle,
+  compromissoUrgencyBadgeFromDataBR,
 } from '../utils';
 import type { CompromissoRecord, GastoPereneRecord } from '../types';
 
@@ -304,7 +305,12 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
           {historico.length === 0 ? (
             <p className="gasto-perene-hist__empty">Nenhum compromisso gerado ainda.</p>
           ) : (
-            historico.map((c) => (
+            historico.map((c) => {
+              const isAberto = c.status === 'pendente' || c.status === 'vencido';
+              const urgency = isAberto
+                ? compromissoUrgencyBadgeFromDataBR(c.dataPrevistaPagamento)
+                : null;
+              return (
               <button
                 key={c.id}
                 type="button"
@@ -313,16 +319,28 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
               >
                 <div className="gasto-perene-hist__top">
                   <span className="gasto-perene-hist__nome">{compromissoDisplayTitle(c)}</span>
-                  <span className="gasto-perene-hist__total">{formatCurrency(c.total)}</span>
+                  <div className="gasto-card__value-col">
+                    <span className="gasto-perene-hist__total">{formatCurrency(c.total)}</span>
+                    {urgency && (
+                      <span
+                        className={`compromisso-urgency-badge compromisso-urgency-badge--${urgency.level}`}
+                      >
+                        {urgency.label}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="gasto-perene-hist__bottom">
                   <span>{c.dataPrevistaPagamento}</span>
-                  <span className={`compromisso-card__status ${statusClass(c.status)}`}>
-                    {labelStatusCompromisso(c.status)}
-                  </span>
+                  {!isAberto && (
+                    <span className={`compromisso-card__status ${statusClass(c.status)}`}>
+                      {labelStatusCompromisso(c.status)}
+                    </span>
+                  )}
                 </div>
               </button>
-            ))
+              );
+            })
           )}
         </div>
       </div>

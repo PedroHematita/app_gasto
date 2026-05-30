@@ -5,7 +5,7 @@ import {
   formatCurrency,
   formatDateBR,
   compromissoDisplayTitle,
-  daysOverdueFromPrevistaBR,
+  compromissoUrgencyBadgeFromDataBR,
   compareDateBR,
   labelPeriodicidade,
   gastoPereneToPeriodInput,
@@ -773,25 +773,27 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                   <div className="meus-gastos-sub-title">Compromissos únicos</div>
                 )}
                 {unicos.map((c) => {
-                  const diasVenc = daysOverdueFromPrevistaBR(c.dataPrevistaPagamento);
-                  const statusMeio =
-                    c.status === 'vencido'
-                      ? `vencido há ${diasVenc} dia${diasVenc === 1 ? '' : 's'}`
-                      : 'pendente';
+                  const urgency = compromissoUrgencyBadgeFromDataBR(c.dataPrevistaPagamento);
                   return (
                     <button
                       key={c.id}
                       type="button"
-                      className="gasto-card card-finance__item card-finance--clickable"
+                      className="gasto-card gasto-card--compromisso-pendente card-finance__item card-finance--clickable"
                       onClick={() => onSelectCompromisso(c)}
                     >
-                      <div className="gasto-card__top">
-                        <span className="gasto-card__fornecedor">{compromissoDisplayTitle(c)}</span>
-                        <span className="gasto-card__total">{formatCurrency(c.total)}</span>
-                      </div>
-                      <div className="gasto-card__bottom">
-                        <span className="gasto-card__date">{c.dataPrevistaPagamento}</span>
-                        <span className="gasto-card__meio">{statusMeio}</span>
+                      <div className="gasto-card__row">
+                        <div className="gasto-card__meta">
+                          <span className="gasto-card__fornecedor">{compromissoDisplayTitle(c)}</span>
+                          <span className="gasto-card__date">{c.dataPrevistaPagamento}</span>
+                        </div>
+                        <div className="gasto-card__value-col">
+                          <span className="gasto-card__total">{formatCurrency(c.total)}</span>
+                          <span
+                            className={`compromisso-urgency-badge compromisso-urgency-badge--${urgency.level}`}
+                          >
+                            {urgency.label}
+                          </span>
+                        </div>
                       </div>
                     </button>
                   );
@@ -808,11 +810,9 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                   </div>
                 )}
                 {parcelasFlat.map(({ parcela, compromisso }) => {
-                  const diasVenc = daysOverdueFromPrevistaBR(parcela.dataVencimentoBR);
-                  const statusMeio =
-                    parcela.status === 'vencido'
-                      ? `vencida há ${diasVenc} dia${diasVenc === 1 ? '' : 's'}`
-                      : 'pendente';
+                  const urgency = compromissoUrgencyBadgeFromDataBR(parcela.dataVencimentoBR, {
+                    feminine: true,
+                  });
                   // Título: primeiro item dos itens do compromisso (descricao) ou fornecedor
                   const descricao =
                     compromisso.items[0]?.descricao || compromisso.fornecedor || 'Parcela';
@@ -820,22 +820,29 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                     <button
                       key={parcela.id}
                       type="button"
-                      className="gasto-card card-finance__item card-finance--clickable"
+                      className="gasto-card gasto-card--compromisso-pendente card-finance__item card-finance--clickable"
                       onClick={() => onSelectCompromisso(compromisso)}
                     >
-                      <div className="gasto-card__top">
-                        <span className="gasto-card__fornecedor">
-                          {descricao}
-                        </span>
-                        <span className="gasto-card__total">
-                          {formatCurrency(parcela.valorCentavos)}
-                        </span>
-                      </div>
-                      <div className="gasto-card__bottom">
-                        <span className="gasto-card__date">{parcela.dataVencimentoBR}</span>
-                        <span className="gasto-card__meio">
-                          Parcela {parcela.numeroParcela}/{parcela.totalParcelas} · {statusMeio}
-                        </span>
+                      <div className="gasto-card__row">
+                        <div className="gasto-card__meta">
+                          <span className="gasto-card__fornecedor">{descricao}</span>
+                          <div className="gasto-card__meta-sub">
+                            <span className="gasto-card__date">{parcela.dataVencimentoBR}</span>
+                            <span className="gasto-card__meio">
+                              Parcela {parcela.numeroParcela}/{parcela.totalParcelas}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="gasto-card__value-col">
+                          <span className="gasto-card__total">
+                            {formatCurrency(parcela.valorCentavos)}
+                          </span>
+                          <span
+                            className={`compromisso-urgency-badge compromisso-urgency-badge--${urgency.level}`}
+                          >
+                            {urgency.label}
+                          </span>
+                        </div>
                       </div>
                     </button>
                   );
