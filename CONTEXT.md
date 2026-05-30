@@ -48,14 +48,18 @@ Em FloatingInput, FloatingSelect e CurrencyInput, o label permanece em `#ACACAC`
 
 Não usar accent no label. Foco indicado por outline externo, não por mudança de cor do label.
 
-### Revisão de Tema — próximos passos (pós Commit 2)
+### Revisão de Tema — próximos passos
 
-1. **Passo 1 — Meus Gastos:** aplicar paleta completa (busca, cards, botões secundários, etc.).
-2. **Passo 2 — Modo Edição:** corrigir ~10 pontos de coral (Opção A discreta).
-3. **Passo 3 — Ajustes menores:** bullet de pendências semântico, botões disabled sem borda residual.
-4. **Hardcode `#151515`** em `SalvarCompromissoModal.tsx` (tabela de parcelas).
-5. **Token `--border` undefined** em 14 lugares (Admin/OrgSelector) — commit futuro se necessário.
-6. **Validação visual Admin/OrgSelector** em uso real (multi-org / Super Admin).
+**Concluído:**
+- **Passo 0** (`d8860b2`): propaga `--bg-base` para todas as telas; aliases `--card-bg`, `--bg-color`.
+- **Passo 1** (`bb30998`): paleta completa em Meus Gastos (busca, cards status/histórico, botões secundários, resumo).
+
+**Pendente:**
+1. **Passo 2 — Modo Edição:** corrigir ~10 pontos de coral (Opção A discreta).
+2. **Passo 3 — Ajustes menores:** bullet de pendências semântico, botões disabled sem borda residual.
+3. **Hardcode `#151515`** em `SalvarCompromissoModal.tsx` (tabela de parcelas).
+4. **Token `--border` undefined** em 14 lugares (Admin/OrgSelector) — commit futuro se necessário.
+5. **Validação visual Admin/OrgSelector** em uso real (multi-org / Super Admin).
 
 ---
 
@@ -69,9 +73,9 @@ Não usar accent no label. Foco indicado por outline externo, não por mudança 
 - Cards: `gasto-card`, `meus-gastos-month-card` → mapeados a `card-finance`.
 - Modais: `modal-overlay`, `modal-sheet`, `ph-title` → convivem com `modal-finance` / `bottom-sheet-finance` (sheets de cotação e fluxos legados ainda usam classes antigas).
 
-**Corrigido na Etapa 8 (sem commit ainda):**
-- Token `--bg-screen` alinhado a `--bg-base` (`#1C1D1F`) — Commit 2 Passo 0.
-- Aliases legados Admin/Org: `--card-bg`, `--bg-color` definidos em `tokens.css`.
+**Corrigido na Etapa 8 (commits da revisão de tema):**
+- Token `--bg-screen` alinhado a `--bg-base` (`#1C1D1F`) — `d8860b2`.
+- Aliases legados Admin/Org: `--card-bg`, `--bg-color` definidos em `tokens.css` — `d8860b2`.
 - Escala `--z-*` documentada em `tokens.css` (valores legados numéricos em `index.css` preservados).
 - `:focus-visible` global para controles do design system (botões, nav, chips, TH da tabela Classificar, cards clicáveis).
 - `BottomNav`: `aria-current="page"`, ícones com `aria-hidden`.
