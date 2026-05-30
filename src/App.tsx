@@ -19,11 +19,11 @@ import { GastoPereneDetail } from './components/GastoPereneDetail';
 import { GastoPereneFormModal } from './components/GastoPereneFormModal';
 import { SalvarCompromissoModal } from './components/SalvarCompromissoModal';
 import { CompromissosSummaryStrip } from './components/CompromissosSummaryStrip';
+import { ScreenHeader } from './components/ScreenHeader';
 import { PriceWarningModal } from './components/PriceWarningModal';
 import { OrgSelector } from './components/OrgSelector';
 import { AdminGateway } from './components/admin/AdminGateway';
 import { AdminPanel } from './components/admin/AdminPanel';
-import { LogoutButton } from './components/LogoutButton';
 import { OrgProvider, useOrg } from './contexts/OrgContext';
 import {
   formatDateBR,
@@ -936,14 +936,16 @@ function AppInner() {
         </div>
       )}
 
-      {/* Date header & Logout */}
-      <div className="date-header" style={{ paddingTop: (!isEditMode && hasDraft) ? 8 : 16, position: 'relative' }}>
-        {!isEditMode && (
-          <div style={{ position: 'absolute', top: (!isEditMode && hasDraft) ? 8 : 16, right: 16, zIndex: 10 }}>
-            <LogoutButton onLogoutComplete={() => window.location.reload()} />
-          </div>
-        )}
-        <div className="date-header__row" style={{ paddingRight: !isEditMode ? 40 : 0 }}>
+      {!isEditMode && (
+        <ScreenHeader
+          title="Novo Gasto"
+          subtitle="Registre uma compra, compromisso ou pagamento"
+        />
+      )}
+
+      {/* Date header */}
+      <div className="date-header" style={{ paddingTop: !isEditMode && hasDraft ? 8 : 0 }}>
+        <div className="date-header__row">
           <FloatingInput
             id="input-data"
             label="Data da compra"

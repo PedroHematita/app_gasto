@@ -39,6 +39,7 @@ import { ClassificarSelecionadosSheet } from './ClassificarSelecionadosSheet';
 import { ClassificarFiltroFornecedorSheet } from './ClassificarFiltroFornecedorSheet';
 import { ClassificarFiltroPagamentoSheet } from './ClassificarFiltroPagamentoSheet';
 import { ClassificarGastoRow } from './ClassificarGastoRow';
+import { ScreenHeader } from '../ScreenHeader';
 
 interface ClassificarGastosScreenProps {
   orgId: string;
@@ -294,15 +295,13 @@ export const ClassificarGastosScreen: React.FC<ClassificarGastosScreenProps> = (
       className={`app-container classificar-gastos-screen ${selectionMode ? 'classificar-gastos-screen--selecting' : 'classificar-gastos-screen--idle'}`}
     >
       <header className="classificar-gastos-screen__header">
-        <h1 className="classificar-gastos-screen__title">Classificar Gastos</h1>
-        {!loading && gastosBrutos.length > 0 && (
-          <p className="classificar-gastos-screen__hint">{hintText}</p>
-        )}
-        {!loading && gastosVisiveis.length > 0 && (
-          <p className="classificar-gastos-screen__total">
-            Total: <strong>{formatCurrency(totalVisivelCents)}</strong>
-          </p>
-        )}
+        <ScreenHeader title="Classificar Gastos" subtitle={hintText}>
+          {!loading && gastosVisiveis.length > 0 && (
+            <p className="screen-header__meta">
+              Total: <strong>{formatCurrency(totalVisivelCents)}</strong>
+            </p>
+          )}
+        </ScreenHeader>
         {!loading && gastosBrutos.length > 0 && (
           <div
             className="classificar-gastos-screen__classificacao-filtro"

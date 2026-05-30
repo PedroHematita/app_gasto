@@ -2375,7 +2375,13 @@ html.keyboard-open .date-header__row {
 }
 
 .classificar-gastos-screen__header {
-  padding: var(--space-4) var(--space-4) var(--space-2);
+  padding: 0 var(--space-4) var(--space-2);
+}
+
+.classificar-gastos-screen__header .screen-header {
+  padding-left: 0;
+  padding-right: 0;
+  padding-top: var(--space-4);
 }
 
 .classificar-gastos-screen__title {
@@ -2385,22 +2391,11 @@ html.keyboard-open .date-header__row {
 }
 
 .classificar-gastos-screen__hint {
-  margin-top: var(--space-2);
-  font-size: var(--font-secondary);
-  color: var(--text-inactive);
-  line-height: var(--line-height-multi);
+  display: none;
 }
 
 .classificar-gastos-screen__total {
-  margin-top: var(--space-2);
-  font-size: var(--font-secondary);
-  color: var(--text-secondary);
-  line-height: var(--line-height-multi);
-}
-
-.classificar-gastos-screen__total strong {
-  font-weight: var(--weight-medium);
-  color: var(--text-primary);
+  display: none;
 }
 
 .classificar-gastos-screen__classificacao-filtro {
@@ -2985,10 +2980,97 @@ html.keyboard-open .date-header__row {
   background: var(--bg-screen);
 }
 
-/* Header (Etapa 6c) */
+/* ===== SCREEN HEADER — telas principais ===== */
+.screen-header {
+  padding: var(--space-4);
+  padding-bottom: var(--space-3);
+}
+
+.screen-header__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.screen-header__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.screen-header__title {
+  font-size: var(--font-display);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  line-height: var(--line-height-single);
+  margin: 0;
+}
+
+.screen-header__subtitle {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-secondary);
+  color: var(--text-muted);
+  line-height: var(--line-height-multi);
+}
+
+.screen-header__extra {
+  margin-top: var(--space-2);
+}
+
+.screen-header__meta {
+  margin: 0;
+  font-size: var(--font-secondary);
+  color: var(--text-muted);
+  line-height: var(--line-height-multi);
+}
+
+.screen-header__meta strong {
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+
+.screen-header__action {
+  flex-shrink: 0;
+}
+
+.screen-header__icon-btn.button-finance {
+  --button-finance-width: 44px;
+  --button-finance-padding: 0;
+  --button-finance-bg: var(--accent);
+  --button-finance-border: none;
+  --button-finance-radius: var(--radius-md);
+  --button-finance-color: var(--text-primary);
+  --button-finance-hover-bg: var(--accent-hover);
+  --button-finance-hover-color: var(--text-primary);
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.screen-logout-discrete {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-3) var(--space-4) var(--space-2);
+}
+
+.screen-logout-discrete .logout-button--discrete {
+  width: auto;
+  height: auto;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-secondary);
+  color: var(--text-inactive);
+}
+
+.screen-logout-discrete .logout-button--discrete:hover {
+  color: var(--text-muted);
+}
+
+/* Header legado — alias visual Meus Gastos / Cotações */
 .meus-gastos-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-3);
   padding: var(--space-4);
@@ -2996,22 +3078,23 @@ html.keyboard-open .date-header__row {
 }
 
 .meus-gastos-header__title {
-  font-size: var(--font-primary);
+  font-size: var(--font-display);
   font-weight: var(--weight-medium);
   color: var(--text-primary);
   line-height: var(--line-height-single);
   margin: 0;
 }
 
-.meus-gastos-header__new.button-finance {
+.meus-gastos-header__new.button-finance,
+.screen-header__icon-btn.button-finance {
   --button-finance-width: 44px;
   --button-finance-padding: 0;
-  --button-finance-bg: var(--accent-dark);
+  --button-finance-bg: var(--accent);
   --button-finance-border: none;
   --button-finance-radius: var(--radius-md);
-  --button-finance-color: var(--accent);
-  --button-finance-hover-bg: #251f4a;
-  --button-finance-hover-color: var(--text-accent-medium);
+  --button-finance-color: var(--text-primary);
+  --button-finance-hover-bg: var(--accent-hover);
+  --button-finance-hover-color: var(--text-primary);
   flex-shrink: 0;
   width: 44px;
   height: 44px;
@@ -3020,8 +3103,9 @@ html.keyboard-open .date-header__row {
   justify-content: center;
 }
 
-/* Meus Gastos — paleta empresa (Passo 1) */
-.meus-gastos-screen .meus-gastos-header__new.button-finance {
+/* Meus Gastos — paleta empresa (Passo 1) — mantido por compatibilidade */
+.meus-gastos-screen .meus-gastos-header__new.button-finance,
+.meus-gastos-screen .screen-header__icon-btn.button-finance {
   --button-finance-bg: var(--accent);
   --button-finance-color: var(--text-primary);
   --button-finance-hover-bg: var(--accent-hover);
@@ -4256,23 +4340,7 @@ html.keyboard-open .date-header__row {
 }
 
 .cotacao-header__new-btn {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: var(--accent-dark);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-md);
-  color: var(--text-accent-medium);
-  font-family: 'Inter', sans-serif;
-  font-size: 12px;
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-}
-
-.cotacao-header__new-btn:hover {
-  background: #251f4a;
+  display: none;
 }
 
 .cotacao-detail-screen {

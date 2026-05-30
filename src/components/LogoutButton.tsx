@@ -5,9 +5,14 @@ import { supabase } from '../lib/supabase';
 interface LogoutButtonProps {
   onLogoutComplete?: () => void;
   style?: React.CSSProperties;
+  className?: string;
 }
 
-export const LogoutButton: React.FC<LogoutButtonProps> = ({ onLogoutComplete, style }) => {
+export const LogoutButton: React.FC<LogoutButtonProps> = ({
+  onLogoutComplete,
+  style,
+  className = '',
+}) => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const handleLogout = async () => {
@@ -31,6 +36,7 @@ export const LogoutButton: React.FC<LogoutButtonProps> = ({ onLogoutComplete, st
       <button
         onClick={() => setShowConfirm(true)}
         type="button"
+        className={`logout-button ${className}`.trim()}
         style={{
           background: 'transparent',
           border: 'none',

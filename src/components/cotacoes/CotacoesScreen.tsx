@@ -4,6 +4,7 @@ import { fetchCotacoesList } from '../../lib/cotacoesDb';
 import type { CotacaoListCard } from '../../types';
 import { formatCurrency } from '../../utils';
 import { NovaCotacaoSheet } from './NovaCotacaoSheet';
+import { ScreenHeader, ScreenHeaderIconButton } from '../ScreenHeader';
 
 interface CotacoesScreenProps {
   orgId: string;
@@ -28,17 +29,14 @@ export function CotacoesScreen({ orgId, refreshKey, onOpenDetail }: CotacoesScre
 
   return (
     <div className="app-container cotacoes-screen" style={{ paddingBottom: 72 }}>
-      <div className="meus-gastos-header">
-        <h1 className="meus-gastos-header__title">Cotações</h1>
-        <button
-          type="button"
-          className="cotacao-header__new-btn"
-          onClick={() => setShowNova(true)}
-        >
-          <Plus size={18} aria-hidden />
-          <span>Nova cotação</span>
-        </button>
-      </div>
+      <ScreenHeader
+        title="Cotações"
+        action={
+          <ScreenHeaderIconButton onClick={() => setShowNova(true)} ariaLabel="Nova cotação">
+            <Plus size={18} aria-hidden />
+          </ScreenHeaderIconButton>
+        }
+      />
 
       <div className="meus-gastos-search input-finance input-finance--search">
         <Search size={14} className="meus-gastos-search__icon" aria-hidden />

@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { ChevronDown, ChevronUp, Plus, Search } from 'lucide-react';
+import { ScreenHeader, ScreenHeaderIconButton } from './ScreenHeader';
+import { LogoutButton } from './LogoutButton';
 import { fetchGastos, fetchCompromissosAtivos, fetchGastosPerenesAtivos } from '../lib/supabase';
 import {
   formatCurrency,
@@ -943,17 +945,14 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
 
   return (
     <div className="app-container meus-gastos-screen" style={{ paddingBottom: 70 }}>
-      <div className="meus-gastos-header">
-        <h1 className="meus-gastos-header__title">Meus Gastos</h1>
-        <button
-          type="button"
-          className="meus-gastos-header__new button-finance"
-          onClick={onNewGasto}
-          aria-label="Novo gasto"
-        >
-          <Plus size={18} aria-hidden />
-        </button>
-      </div>
+      <ScreenHeader
+        title="Meus Gastos"
+        action={
+          <ScreenHeaderIconButton onClick={onNewGasto} ariaLabel="Novo gasto">
+            <Plus size={18} aria-hidden />
+          </ScreenHeaderIconButton>
+        }
+      />
 
       <div className="meus-gastos-search input-finance input-finance--search">
         <Search size={14} className="meus-gastos-search__icon" aria-hidden />
@@ -1071,6 +1070,13 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
           )}
         </>
       )}
+
+      <div className="screen-logout-discrete">
+        <LogoutButton
+          className="logout-button--discrete"
+          onLogoutComplete={() => window.location.reload()}
+        />
+      </div>
     </div>
   );
 };
