@@ -26,8 +26,9 @@
   --bg-surface: var(--surface-1);
   --card-bg: var(--surface-1);
   --bg-color: var(--bg-surface);
-  --bg-edit: #0d0d1a;
+  --bg-edit: var(--surface-1);
   --border-subtle: #2a2a2a;
+  --border-soft: rgba(255, 255, 255, 0.08);
   --border-medium: var(--border-strong);
   
   --accent: #DC615C;
@@ -49,7 +50,7 @@
   
   --total-bg: var(--bg-base);
   --total-border: transparent;
-  --separator: #1a1a1a;
+  --separator: #252628;
   
   --whatsapp-green: #128c3e;
   --whatsapp-bg: #0d1a0d;

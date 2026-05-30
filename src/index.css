@@ -22,16 +22,52 @@ html, body, #root {
 }
 
 /* ===== ACESSIBILIDADE — foco visível (Etapa 8) ===== */
-.button-finance:focus-visible,
-.bottom-nav__item:focus-visible,
-.classificar-gastos-table__th-btn:focus-visible,
-.classificar-gastos-screen__classificacao-chip:focus-visible,
-.classificar-gastos-screen__limpar-filtros:focus-visible,
-.classificar-gastos-screen__limpar-cta:focus-visible,
-.cotacao-filter-clear:focus-visible,
-.detail-header__back:focus-visible,
-.cotacao-header__new-btn:focus-visible,
-.meus-gastos-header__new:focus-visible,
+/* Suprime outline padrão do browser (amarelo) em clique/toque */
+button,
+[type="button"],
+[type="submit"],
+[type="reset"],
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus:not(:focus-visible),
+[type="button"]:focus:not(:focus-visible),
+[type="submit"]:focus:not(:focus-visible),
+[type="reset"]:focus:not(:focus-visible),
+[role="button"]:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Foco por teclado — paleta do tema (substitui amarelo nativo) */
+button:focus-visible,
+[type="button"]:focus-visible,
+[type="submit"]:focus-visible,
+[type="reset"]:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+button:disabled:focus-visible,
+[type="button"]:disabled:focus-visible,
+[type="submit"]:disabled:focus-visible,
+[type="reset"]:disabled:focus-visible,
+[role="button"]:disabled:focus-visible {
+  outline: none;
+}
+
+/* Botões de ícone / ghost — foco discreto, sem coral forte */
+.item-row__edit-btn:focus-visible,
+.item-form__cancel-edit:focus-visible,
+.date-header__calendar-btn:focus-visible,
+.datepicker-nav__btn:focus-visible,
+.clear-draft-row button:focus-visible,
+.compromissos-strip:focus-visible {
+  outline: 1px solid var(--border-soft);
+  outline-offset: 2px;
+}
+
 .gasto-card:focus-visible,
 .card-finance--clickable:focus-visible {
   outline: 2px solid var(--border-focus);
@@ -236,12 +272,40 @@ html.keyboard-open .date-header__row {
   background: var(--bg-surface);
 }
 
-/* When in edit mode bg */
+/* When in edit mode bg — mesma superfície que main-bg (Passo 2, Regra 10) */
+.floating-field--edit-bg .floating-field__input,
+.floating-field--edit-bg .floating-field__select,
+.input-finance--edit-bg .floating-field__input,
+.input-finance--edit-bg .floating-field__select {
+  background: var(--surface-1);
+  border: none;
+  color: var(--text-muted);
+}
+
+.floating-field--edit-bg .floating-field__input:focus,
+.floating-field--edit-bg .floating-field__select:focus,
+.input-finance--edit-bg .floating-field__input:focus,
+.input-finance--edit-bg .floating-field__select:focus {
+  border: none;
+}
+
+.floating-field--edit-bg .floating-field__input:focus ~ .floating-field__select-arrow,
+.floating-field--edit-bg .floating-field__select:focus ~ .floating-field__select-arrow,
+.input-finance--edit-bg .floating-field__input:focus ~ .floating-field__select-arrow,
+.input-finance--edit-bg .floating-field__select:focus ~ .floating-field__select-arrow {
+  color: var(--text-muted);
+}
+
+.floating-field--edit-bg .floating-field__input:focus ~ .floating-field__label,
+.floating-field--edit-bg .floating-field__input.has-value ~ .floating-field__label,
+.floating-field--edit-bg .floating-field__select:focus ~ .floating-field__label,
+.floating-field--edit-bg .floating-field__select.has-value ~ .floating-field__label,
 .input-finance--edit-bg .floating-field__input:focus ~ .floating-field__label,
 .input-finance--edit-bg .floating-field__input.has-value ~ .floating-field__label,
-.floating-field--edit-bg .floating-field__input:focus ~ .floating-field__label,
-.floating-field--edit-bg .floating-field__input.has-value ~ .floating-field__label {
-  background: var(--bg-edit);
+.input-finance--edit-bg .floating-field__select:focus ~ .floating-field__label,
+.input-finance--edit-bg .floating-field__select.has-value ~ .floating-field__label {
+  color: var(--text-muted);
+  background: var(--bg-main);
 }
 
 /* Validação: fornecedor obrigatório */
@@ -322,26 +386,82 @@ html.keyboard-open .date-header__row {
 }
 
 .item-form--editing {
-  border-left: 4px solid var(--accent);
-  background: var(--bg-edit);
+  margin: 0 var(--space-4) var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-2);
+  background: var(--surface-1);
+  border: 1px solid var(--surface-2);
+  border-radius: var(--radius-lg);
+  box-sizing: border-box;
 }
 
 .item-form__editing-badge {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--separator);
   font-size: 11px;
-  color: var(--text-accent-medium);
+}
+
+.item-form__editing-badge-title {
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
 }
 
 .item-form__editing-badge-number {
-  background: var(--accent);
-  color: #fff;
-  font-size: 9px;
-  font-weight: var(--weight-medium);
+  background: var(--accent-muted);
+  color: var(--accent);
+  font-size: var(--font-auxiliary);
+  font-weight: 600;
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.03em;
+}
+
+/* Poços escuros dentro do card de edição — separação por luminosidade */
+.item-form--editing .floating-field--edit-bg .floating-field__input,
+.item-form--editing .floating-field--edit-bg .floating-field__select,
+.item-form--editing .input-finance--edit-bg .floating-field__input,
+.item-form--editing .input-finance--edit-bg .floating-field__select {
+  background: var(--bg-base);
+  color: var(--text-primary);
+}
+
+.item-form--editing .floating-field--edit-bg .floating-field__input:focus ~ .floating-field__label,
+.item-form--editing .floating-field--edit-bg .floating-field__input.has-value ~ .floating-field__label,
+.item-form--editing .floating-field--edit-bg .floating-field__select:focus ~ .floating-field__label,
+.item-form--editing .floating-field--edit-bg .floating-field__select.has-value ~ .floating-field__label,
+.item-form--editing .input-finance--edit-bg .floating-field__input:focus ~ .floating-field__label,
+.item-form--editing .input-finance--edit-bg .floating-field__input.has-value ~ .floating-field__label,
+.item-form--editing .input-finance--edit-bg .floating-field__select:focus ~ .floating-field__label,
+.item-form--editing .input-finance--edit-bg .floating-field__select.has-value ~ .floating-field__label {
+  color: var(--text-muted);
+  background: var(--bg-base);
+}
+
+.item-form--editing .floating-field--edit-bg .floating-field__input:focus,
+.item-form--editing .floating-field--edit-bg .floating-field__select:focus,
+.item-form--editing .input-finance--edit-bg .floating-field__input:focus,
+.item-form--editing .input-finance--edit-bg .floating-field__select:focus {
+  box-shadow: 0 0 0 1px var(--surface-2);
+}
+
+.item-form__cancel-edit {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+
+.item-form__cancel-edit:hover {
+  color: var(--text-primary);
 }
 
 .clear-draft-row {
@@ -518,6 +638,16 @@ html.keyboard-open .date-header__row {
 
 .btn-save-draft:disabled {
   --button-finance-disabled-border: var(--border-subtle);
+}
+
+/* Modo edição de item (Novo Gasto) — Salvar gasto / Compromisso viram secundários */
+.app-container:has(.item-form--editing) .btn-save-actions-row .btn-save-main,
+.app-container:has(.item-form--editing) .btn-save-actions-row .btn-save-draft {
+  --button-finance-bg: var(--surface-1);
+  --button-finance-border: none;
+  --button-finance-color: var(--text-muted);
+  --button-finance-hover-bg: var(--surface-2);
+  --button-finance-hover-color: var(--text-muted);
 }
 
 .modal-overlay--datepicker-front {
@@ -987,10 +1117,28 @@ html.keyboard-open .date-header__row {
 }
 
 .item-row--editing {
-  background: var(--accent-dark);
-  border-radius: 4px;
-  padding: 12px 8px;
-  margin: 0 -8px;
+  padding: 12px 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: inset 2px 0 0 var(--surface-2);
+}
+
+.item-row--editing .item-row__number {
+  color: var(--text-muted);
+}
+
+.item-row--editing .item-row__desc {
+  color: var(--text-primary);
+}
+
+.item-row--editing .item-row__qty {
+  color: var(--text-muted);
+}
+
+.item-row--editing .item-row__edit-btn {
+  color: var(--text-primary);
 }
 
 .item-row__top {
@@ -1016,13 +1164,13 @@ html.keyboard-open .date-header__row {
 }
 
 .item-row__desc--new {
-  color: var(--text-accent-light);
+  color: var(--text-primary);
 }
 
 .item-row__badge {
   display: inline-block;
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-muted);
+  color: var(--accent);
   font-size: var(--font-auxiliary);
   font-weight: var(--weight-medium);
   padding: 4px 4px;
@@ -1036,15 +1184,25 @@ html.keyboard-open .date-header__row {
 .item-row__edit-btn {
   background: none;
   border: none;
-  color: var(--text-inactive);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
   cursor: pointer;
   padding: 4px;
   flex-shrink: 0;
-  transition: color 0.2s;
+  transition: color 0.2s, background 0.2s;
 }
 
 .item-row__edit-btn:hover {
-  color: var(--accent);
+  color: var(--text-muted);
+}
+
+.item-row__edit-btn:active:not(:disabled) {
+  background: var(--interactive-hover);
+  color: var(--text-primary);
+}
+
+.item-row__edit-btn:focus-visible {
+  color: var(--text-primary);
 }
 
 .item-row__bottom {

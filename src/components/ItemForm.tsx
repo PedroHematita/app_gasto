@@ -46,7 +46,7 @@ export const ItemForm: React.FC<ItemFormProps> = ({
     <div className={`item-form ${isEditing ? 'item-form--editing' : ''}`}>
       {isEditing && (
         <div className="item-form__editing-badge">
-          <span>Editando item</span>
+          <span className="item-form__editing-badge-title">Editando item</span>
           <span className="item-form__editing-badge-number">#{editingItem.ordem}</span>
         </div>
       )}
@@ -121,17 +121,7 @@ export const ItemForm: React.FC<ItemFormProps> = ({
         <button
           onClick={onCancelEdit}
           type="button"
-          style={{
-            width: '100%',
-            marginTop: 8,
-            padding: 8,
-            background: 'transparent',
-            border: 'none',
-            color: '#888',
-            fontSize: 11,
-            cursor: 'pointer',
-            fontFamily: 'Inter, sans-serif',
-          }}
+          className="item-form__cancel-edit"
         >
           Cancelar edição
         </button>
