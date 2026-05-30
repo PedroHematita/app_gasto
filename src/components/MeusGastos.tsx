@@ -595,20 +595,22 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                         <button
                           key={linha.id}
                           type="button"
-                          className="gasto-card card-finance__item card-finance--clickable card-finance--nested meus-gastos-futuros-item"
+                          className="gasto-card gasto-card--futuro-linha card-finance__item card-finance--clickable card-finance--nested meus-gastos-futuros-item"
                           onClick={() => handleFuturosLinhaClick(linha)}
                         >
-                          <div className="gasto-card__top">
-                            <span className="gasto-card__fornecedor">{linha.titulo}</span>
-                            <span className="gasto-card__total">{formatCurrency(linha.valorCents)}</span>
-                          </div>
-                          <div className="gasto-card__bottom">
-                            <span className="gasto-card__date">{formatDateBR(linha.dataRef)}</span>
-                            <span
-                              className={`gasto-card__badge gasto-card__badge--${linha.origem}`}
-                            >
-                              {linha.origem}
-                            </span>
+                          <div className="gasto-card__row">
+                            <div className="gasto-card__meta">
+                              <span className="gasto-card__fornecedor">{linha.titulo}</span>
+                              <span className="gasto-card__date">{formatDateBR(linha.dataRef)}</span>
+                            </div>
+                            <div className="gasto-card__value-col">
+                              <span className="gasto-card__total">{formatCurrency(linha.valorCents)}</span>
+                              <span
+                                className={`gasto-futuro-origem-badge gasto-futuro-origem-badge--${linha.origem}`}
+                              >
+                                {linha.origem}
+                              </span>
+                            </div>
                           </div>
                         </button>
                       ))}

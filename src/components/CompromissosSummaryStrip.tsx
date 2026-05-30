@@ -1,37 +1,38 @@
+import type { FC } from 'react';
+import type { CompromissoPendentesUrgencySummary } from '../utils';
+import { formatCompromissosPendentesUrgencySummary } from '../utils';
+
 interface CompromissosSummaryStripProps {
-  vencidos: number;
-  pendentes: number;
+  summary: CompromissoPendentesUrgencySummary;
   onOpenMeusGastosCompromissos: () => void;
 }
 
-export const CompromissosSummaryStrip: React.FC<CompromissosSummaryStripProps> = ({
-  vencidos,
-  pendentes,
+export const CompromissosSummaryStrip: FC<CompromissosSummaryStripProps> = ({
+  summary,
   onOpenMeusGastosCompromissos,
 }) => {
-  if (vencidos === 0 && pendentes === 0) return null;
+  if (summary.total === 0) return null;
+
+  const urgencyClass = summary.maxLevel ?? 'ordem';
 
   return (
     <button
       type="button"
-      className="compromissos-strip"
+      className={`compromissos-alert compromissos-alert--${urgencyClass}`}
       onClick={onOpenMeusGastosCompromissos}
     >
-      <span className="compromissos-strip__inner">
-        {vencidos > 0 && (
-          <span className="compromissos-strip__chip">
-            <span className="compromissos-strip__dot compromissos-strip__dot--danger" />
-            {vencidos} vencido{vencidos === 1 ? '' : 's'}
+      <span className="compromissos-alert__marker" aria-hidden="true" />
+      <span className="compromissos-alert__body">
+        <span className="compromissos-alert__title">
+          {summary.total} compromisso{summary.total === 1 ? '' : 's'} pendente
+          {summary.total === 1 ? '' : 's'}
+        </span>
+        <span className="compromissos-alert__row">
+          <span className="compromissos-alert__summary">
+            {formatCompromissosPendentesUrgencySummary(summary)}
           </span>
-        )}
-        {vencidos > 0 && pendentes > 0 && <span className="compromissos-strip__sep">|</span>}
-        {pendentes > 0 && (
-          <span className="compromissos-strip__chip">
-            <span className="compromissos-strip__dot compromissos-strip__dot--purple" />
-            {pendentes} pendente{pendentes === 1 ? '' : 's'}
-          </span>
-        )}
-        <span className="compromissos-strip__link">ver compromissos ›</span>
+          <span className="compromissos-alert__link">Ver compromissos ›</span>
+        </span>
       </span>
     </button>
   );

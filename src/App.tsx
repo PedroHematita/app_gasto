@@ -31,6 +31,8 @@ import {
   compromissoDisplayTitle,
   appendObservacaoDiferencaValor,
   scaleItemsValorToTotal,
+  summarizeCompromissosPendentesUrgency,
+  type CompromissoPendentesUrgencySummary,
 } from './utils';
 import {
   supabase,
@@ -38,7 +40,7 @@ import {
   updateGasto,
   fetchPriceHistory,
   saveCompromisso,
-  fetchCompromissoIndicatorCounts,
+  fetchCompromissosAtivos,
   fetchCompromissoById,
   fetchGastoById,
   linkCompromissoQuitado,
@@ -162,11 +164,19 @@ function AppInner() {
   const [showSalvarCompromissoModal, setShowSalvarCompromissoModal] = useState(false);
   const [showQuitPaymentModal, setShowQuitPaymentModal] = useState(false);
   const [quitValorRealizadoCents, setQuitValorRealizadoCents] = useState(0);
-  const [compromissoIndicatorCounts, setCompromissoIndicatorCounts] = useState({
-    vencidos: 0,
-    pendentes: 0,
-  });
+  const [compromissosPendentesSummary, setCompromissosPendentesSummary] =
+    useState<CompromissoPendentesUrgencySummary>({
+      total: 0,
+      vencidos: 0,
+      breve: 0,
+      maxLevel: null,
+    });
   const [focusCompromissosNonce, setFocusCompromissosNonce] = useState(0);
+
+  const refreshCompromissosPendentesSummary = useCallback(async (targetOrgId: string) => {
+    const list = await fetchCompromissosAtivos(targetOrgId);
+    setCompromissosPendentesSummary(summarizeCompromissosPendentesUrgency(list));
+  }, []);
 
   const [showGastoPereneModal, setShowGastoPereneModal] = useState(false);
   const [selectedGastoPereneId, setSelectedGastoPereneId] = useState<string | null>(null);
@@ -191,8 +201,8 @@ function AppInner() {
   useEffect(() => {
     if (!authenticated || !supabase || !orgId) return;
     if (screen !== 'main' && screen !== 'gasto_edit') return;
-    fetchCompromissoIndicatorCounts(orgId)
-      .then(setCompromissoIndicatorCounts)
+    fetchCompromissosAtivos(orgId)
+      .then((list) => setCompromissosPendentesSummary(summarizeCompromissosPendentesUrgency(list)))
       .catch(() => {});
   }, [authenticated, screen, refreshKey, orgId]);
 
@@ -570,8 +580,7 @@ function AppInner() {
         setShowSalvarCompromissoModal(false);
         resetAll();
         setRefreshKey((k) => k + 1);
-        const c = await fetchCompromissoIndicatorCounts(orgId);
-        setCompromissoIndicatorCounts(c);
+        await refreshCompromissosPendentesSummary(orgId);
       } catch (error) {
         console.error(error);
         alert('Erro ao salvar compromisso. Verifique o console.');
@@ -603,9 +612,8 @@ function AppInner() {
       /* ignore */
     }
     setRefreshKey((k) => k + 1);
-    const c = await fetchCompromissoIndicatorCounts(orgId);
-    setCompromissoIndicatorCounts(c);
-  }, [orgId]);
+    await refreshCompromissosPendentesSummary(orgId);
+  }, [orgId, refreshCompromissosPendentesSummary]);
 
   const handleQuitCompromissoSave = useCallback(async () => {
     if (!selectedCompromisso) return;
@@ -673,8 +681,7 @@ function AppInner() {
       setSelectedCompromisso(null);
       setScreen('meus_gastos');
       setRefreshKey((k) => k + 1);
-      const counts = await fetchCompromissoIndicatorCounts(orgId);
-      setCompromissoIndicatorCounts(counts);
+      await refreshCompromissosPendentesSummary(orgId);
     } catch (error) {
       console.error('Error quitting compromisso:', error);
       alert('Erro ao quitar. Verifique o console.');
@@ -998,8 +1005,7 @@ function AppInner() {
 
       {!isEditMode && (
         <CompromissosSummaryStrip
-          vencidos={compromissoIndicatorCounts.vencidos}
-          pendentes={compromissoIndicatorCounts.pendentes}
+          summary={compromissosPendentesSummary}
           onOpenMeusGastosCompromissos={handleOpenCompromissosFromStrip}
         />
       )}

@@ -697,75 +697,173 @@ html.keyboard-open .date-header__row {
   z-index: 200;
 }
 
-.compromissos-strip {
+.compromissos-alert {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  padding: 8px 16px 4px;
+  padding: 0 var(--space-4) var(--space-2);
   background: transparent;
   border: none;
   cursor: pointer;
   text-align: left;
 }
 
-.compromissos-strip__inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.compromissos-strip__chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.compromissos-strip__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+.compromissos-alert__marker {
+  width: 3px;
+  border-radius: 2px;
   flex-shrink: 0;
+  margin: 2px 0;
 }
 
-.compromissos-strip__dot--danger {
-  background: #ff4444;
+.compromissos-alert--vencido .compromissos-alert__marker {
+  background: var(--badge-vencido);
 }
 
-.compromissos-strip__dot--purple {
-  background: #a855f7;
+.compromissos-alert--breve .compromissos-alert__marker {
+  background: var(--badge-breve);
 }
 
-.compromissos-strip__sep {
-  color: var(--border-medium);
-  opacity: 0.8;
+.compromissos-alert--ordem .compromissos-alert__marker {
+  background: var(--text-muted);
 }
 
-.compromissos-strip__link {
-  margin-left: auto;
+.compromissos-alert__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-1);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+}
+
+.compromissos-alert__title {
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  line-height: var(--line-height-single);
+}
+
+.compromissos-alert__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.compromissos-alert__summary {
+  font-size: var(--font-secondary);
   color: var(--text-muted);
-  font-weight: 500;
+  line-height: var(--line-height-single);
 }
 
-.compromisso-badge {
+.compromissos-alert__link {
+  flex-shrink: 0;
+  font-size: var(--font-secondary);
+  color: var(--text-muted);
+  font-weight: var(--weight-medium);
+  line-height: var(--line-height-single);
+}
+
+.compromissos-alert:hover .compromissos-alert__link {
+  color: var(--text-primary);
+}
+
+.compromissos-alert:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.compromisso-badge,
+.compromisso-urgency-badge,
+.gasto-futuro-origem-badge,
+.gasto-card__badge {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 11px;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  line-height: 1;
+  padding: 3px 6px;
   font-weight: 600;
+  white-space: nowrap;
   text-transform: lowercase;
+  vertical-align: middle;
+}
+
+.gasto-futuro-origem-badge {
+  color: var(--badge-rascunho);
+}
+
+.compromisso-urgency-badge {
+  text-transform: none;
+}
+
+.compromisso-badge--vencido,
+.compromisso-urgency-badge--vencido {
+  color: var(--badge-vencido);
+}
+
+.compromisso-urgency-badge--breve {
+  color: var(--badge-breve);
+}
+
+.compromisso-urgency-badge--ordem {
+  color: var(--badge-ordem);
 }
 
 .compromisso-badge--pendente {
-  background: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
+  color: var(--badge-pendente);
 }
 
-.compromisso-badge--vencido {
-  background: rgba(255, 68, 68, 0.12);
-  color: #ff6666;
+.compromisso-badge--quitado {
+  color: var(--badge-pago);
+}
+
+.compromisso-badge--cancelado {
+  color: var(--badge-cancelado);
+}
+
+.gasto-futuro-origem-badge--perene {
+  color: var(--badge-perene);
+}
+
+.gasto-futuro-origem-badge--rascunho {
+  color: var(--badge-rascunho);
+}
+
+.gasto-futuro-origem-badge--parcelado,
+.gasto-futuro-origem-badge--parcela {
+  color: var(--badge-parcelado);
+}
+
+.gasto-futuro-origem-badge--realizado {
+  color: var(--badge-realizado);
+}
+
+.gasto-card__badge--perene {
+  color: var(--badge-perene);
+}
+
+.gasto-card__badge--parcela,
+.gasto-card__badge--parcelado {
+  color: var(--badge-parcelado);
+}
+
+.gasto-card__badge--rascunho {
+  color: var(--badge-rascunho);
+}
+
+.gasto-card__badge--realizado {
+  color: var(--badge-realizado);
 }
 
 .compromisso-meta {
@@ -858,8 +956,6 @@ html.keyboard-open .date-header__row {
 }
 
 .compromisso-parcelas-card__item-badge {
-  font-size: var(--font-auxiliary);
-  padding: 2px 8px;
   display: inline-block;
   margin-top: var(--space-1);
 }
@@ -1241,12 +1337,14 @@ html.keyboard-open .date-header__row {
 
 .item-row__badge {
   display: inline-block;
-  background: var(--accent-muted);
+  background: transparent;
+  border: 1px solid var(--accent);
   color: var(--accent);
-  font-size: var(--font-auxiliary);
-  font-weight: var(--weight-medium);
-  padding: 4px 4px;
-  border-radius: 3px;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
   margin-left: 8px;
   vertical-align: middle;
   text-transform: uppercase;
@@ -3021,14 +3119,16 @@ html.keyboard-open .date-header__row {
   color: var(--text-muted);
 }
 
-/* Compromissos pendentes — mesmo padrão de leitura dos cards mensais */
-.gasto-card--compromisso-pendente .gasto-card__row {
+/* Lista meta-split — Compromissos pendentes e Gastos futuros */
+.gasto-card--compromisso-pendente .gasto-card__row,
+.gasto-card--futuro-linha .gasto-card__row {
   display: flex;
   align-items: flex-start;
   gap: var(--space-2);
 }
 
-.gasto-card--compromisso-pendente .gasto-card__meta {
+.gasto-card--compromisso-pendente .gasto-card__meta,
+.gasto-card--futuro-linha .gasto-card__meta {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -3043,17 +3143,21 @@ html.keyboard-open .date-header__row {
   gap: var(--space-2);
 }
 
-.gasto-card--compromisso-pendente .gasto-card__fornecedor {
+.gasto-card--compromisso-pendente .gasto-card__fornecedor,
+.gasto-card--futuro-linha .gasto-card__fornecedor {
   line-height: 1.25;
 }
 
 .gasto-card--compromisso-pendente .gasto-card__date,
-.gasto-card--compromisso-pendente .gasto-card__meio {
+.gasto-card--compromisso-pendente .gasto-card__meio,
+.gasto-card--futuro-linha .gasto-card__date {
   line-height: 1.25;
 }
 
-.gasto-card--compromisso-pendente .gasto-card__value-col {
+.gasto-card--compromisso-pendente .gasto-card__value-col,
+.gasto-card--futuro-linha .gasto-card__value-col {
   gap: var(--space-1);
+  align-self: flex-start;
 }
 
 .meus-gastos-screen .meus-gastos-status-card .gasto-card--compromisso-pendente.card-finance__item {
@@ -3072,6 +3176,15 @@ html.keyboard-open .date-header__row {
 .meus-gastos-screen .meus-gastos-status-card .meus-gastos-sub-title--separator {
   margin-top: 0;
   padding-top: var(--space-3);
+  border-top: 4px solid var(--separator);
+}
+
+.meus-gastos-futuros-month .gasto-card--futuro-linha.card-finance__item {
+  padding: var(--space-3) var(--space-4);
+}
+
+.meus-gastos-futuros-month .gasto-card--futuro-linha + .gasto-card--futuro-linha::before,
+.meus-gastos-futuros-month .card-finance__item.gasto-card--futuro-linha + .card-finance__item.gasto-card--futuro-linha::before {
   border-top: 4px solid var(--separator);
 }
 
@@ -3529,32 +3642,6 @@ html.keyboard-open .date-header__row {
   flex-shrink: 0;
 }
 
-.compromisso-urgency-badge {
-  display: inline-block;
-  font-size: var(--font-auxiliary);
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-weight: var(--weight-medium);
-  line-height: var(--line-height-single);
-  white-space: nowrap;
-  text-transform: none;
-}
-
-.compromisso-urgency-badge--vencido {
-  background: color-mix(in srgb, var(--status-danger) 14%, transparent);
-  color: var(--status-danger);
-}
-
-.compromisso-urgency-badge--breve {
-  background: color-mix(in srgb, var(--status-warning) 14%, transparent);
-  color: var(--status-warning);
-}
-
-.compromisso-urgency-badge--ordem {
-  background: color-mix(in srgb, var(--status-success) 12%, transparent);
-  color: var(--status-success);
-}
-
 .gasto-card__bottom {
   display: flex;
   justify-content: space-between;
@@ -3572,36 +3659,6 @@ html.keyboard-open .date-header__row {
   color: var(--text-muted);
   font-weight: var(--weight-regular);
   text-align: right;
-}
-
-.gasto-card__badge {
-  flex-shrink: 0;
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-medium);
-  color: var(--text-secondary);
-  font-weight: var(--weight-medium);
-  text-transform: lowercase;
-}
-
-.gasto-card__badge--perene {
-  border-color: #6b6399;
-  color: #b6ade8;
-  background: rgba(107, 99, 153, 0.15);
-}
-
-.gasto-card__badge--parcela {
-  border-color: #3b82f6;
-  color: #93c5fd;
-  background: rgba(59, 130, 246, 0.15);
-}
-
-.gasto-card__badge--parcelado,
-.gasto-card__badge--rascunho,
-.gasto-card__badge--realizado {
-  border-color: var(--border-medium);
-  background: transparent;
 }
 
 .gasto-card__perene-line {

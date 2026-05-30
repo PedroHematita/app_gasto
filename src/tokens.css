@@ -16,6 +16,18 @@
   --status-info: #8f87df;
   --text-success: var(--status-success);
   --text-danger: var(--status-danger);
+
+  /* Badge outline — texto e borda na mesma cor, fundo transparente */
+  --badge-vencido: #DC615C;
+  --badge-breve: #D6A84F;
+  --badge-ordem: #5FCF8B;
+  --badge-perene: #8F7AD8;
+  --badge-rascunho: #ACACAC;
+  --badge-parcelado: #7FA6C9;
+  --badge-pago: #5FCF8B;
+  --badge-realizado: #5FCF8B;
+  --badge-cancelado: #8A8A8A;
+  --badge-pendente: #ACACAC;
   --interactive-hover: rgba(255, 255, 255, 0.04);
   --interactive-pressed: rgba(255, 255, 255, 0.08);
   --interactive-disabled: rgba(255, 255, 255, 0.12);

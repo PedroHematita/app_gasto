@@ -852,6 +852,68 @@ export function compromissoUrgencyBadgeFromDataBR(
   return { level: 'ordem', label };
 }
 
+export type CompromissoPendentesUrgencySummary = {
+  total: number;
+  vencidos: number;
+  breve: number;
+  maxLevel: CompromissoUrgencyLevel | null;
+};
+
+function urgencyLevelFromDataBR(dataBR: string): CompromissoUrgencyLevel {
+  return compromissoUrgencyBadgeFromDataBR(dataBR).level;
+}
+
+/** Contagem de urgência por data de vencimento (mesma regra dos badges). */
+export function summarizeCompromissosPendentesUrgency(
+  compromissos: CompromissoRecord[],
+): CompromissoPendentesUrgencySummary {
+  let total = 0;
+  let vencidos = 0;
+  let breve = 0;
+  let maxLevel: CompromissoUrgencyLevel | null = null;
+
+  const consider = (dataBR: string) => {
+    total += 1;
+    const level = urgencyLevelFromDataBR(dataBR);
+    if (level === 'vencido') vencidos += 1;
+    else if (level === 'breve') breve += 1;
+
+    if (level === 'vencido') maxLevel = 'vencido';
+    else if (level === 'breve' && maxLevel !== 'vencido') maxLevel = 'breve';
+    else if (level === 'ordem' && maxLevel === null) maxLevel = 'ordem';
+  };
+
+  for (const c of compromissos) {
+    if (c.status !== 'pendente' && c.status !== 'vencido') continue;
+
+    if (c.tipo === 'parcelado') {
+      for (const p of c.parcelas ?? []) {
+        if (p.status !== 'pendente' && p.status !== 'vencido') continue;
+        consider(p.dataVencimentoBR);
+      }
+    } else {
+      consider(c.dataPrevistaPagamento);
+    }
+  }
+
+  return { total, vencidos, breve, maxLevel: total > 0 ? maxLevel : null };
+}
+
+export function formatCompromissosPendentesUrgencySummary(
+  summary: CompromissoPendentesUrgencySummary,
+): string {
+  const { vencidos, breve } = summary;
+  if (vencidos > 0) {
+    const parts = [`${vencidos} vencido${vencidos === 1 ? '' : 's'}`];
+    if (breve > 0) parts.push(`${breve} vencem em breve`);
+    return parts.join(' · ');
+  }
+  if (breve > 0) {
+    return `${breve} vence${breve === 1 ? '' : 'm'} nos próximos 7 dias`;
+  }
+  return 'Nenhum vencimento urgente';
+}
+
 export function compareDateBR(a: string, b: string): number {
   const da = parseDateBR(a);
   const db = parseDateBR(b);

@@ -143,10 +143,10 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
   }
 
   const statusClass = (s: CompromissoRecord['status']) => {
-    if (s === 'quitado') return 'gasto-perene-hist__pill--muted';
-    if (s === 'vencido') return 'compromisso-card__status--danger';
-    if (s === 'cancelado') return 'gasto-perene-hist__pill--muted';
-    return 'compromisso-card__status--purple';
+    if (s === 'quitado') return 'compromisso-badge--quitado';
+    if (s === 'vencido') return 'compromisso-badge--vencido';
+    if (s === 'cancelado') return 'compromisso-badge--cancelado';
+    return 'compromisso-badge--pendente';
   };
 
   return (
@@ -333,7 +333,7 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
                 <div className="gasto-perene-hist__bottom">
                   <span>{c.dataPrevistaPagamento}</span>
                   {!isAberto && (
-                    <span className={`compromisso-card__status ${statusClass(c.status)}`}>
+                    <span className={`compromisso-badge ${statusClass(c.status)}`}>
                       {labelStatusCompromisso(c.status)}
                     </span>
                   )}
