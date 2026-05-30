@@ -1939,7 +1939,7 @@ html.keyboard-open .date-header__row {
   padding: 12px 0 8px;
   background: none;
   border: none;
-  color: var(--text-inactive);
+  color: var(--text-muted);
   font-family: 'Inter', sans-serif;
   font-size: var(--font-auxiliary);
   cursor: pointer;
@@ -2614,6 +2614,105 @@ html.keyboard-open .date-header__row {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Meus Gastos — paleta empresa (Passo 1) */
+.meus-gastos-screen .meus-gastos-header__new.button-finance {
+  --button-finance-bg: var(--accent);
+  --button-finance-color: var(--text-primary);
+  --button-finance-hover-bg: var(--accent-hover);
+  --button-finance-hover-color: var(--text-primary);
+}
+
+.meus-gastos-screen .meus-gastos-search__icon {
+  color: var(--text-muted);
+}
+
+.meus-gastos-screen .meus-gastos-search__input,
+.meus-gastos-screen .meus-gastos-search .input-finance__field {
+  background: var(--surface-1);
+  border: none;
+  color: var(--text-muted);
+}
+
+.meus-gastos-screen .meus-gastos-search__input:focus,
+.meus-gastos-screen .meus-gastos-search .input-finance__field:focus {
+  border: none;
+}
+
+.meus-gastos-screen .meus-gastos-search__input::placeholder,
+.meus-gastos-screen .meus-gastos-search .input-finance__field::placeholder {
+  color: var(--text-muted);
+}
+
+.meus-gastos-screen .meus-gastos-perene-cta__btn {
+  --button-finance-bg: var(--surface-1);
+  --button-finance-border: none;
+  --button-finance-color: var(--text-muted);
+  --button-finance-hover-bg: var(--surface-2);
+  --button-finance-hover-color: var(--text-muted);
+  --button-finance-hover-border: none;
+}
+
+.meus-gastos-screen .meus-gastos-summary__count,
+.meus-gastos-screen .meus-gastos-summary__paid-label,
+.meus-gastos-screen .meus-gastos-summary__toggle-all-btn {
+  color: var(--text-muted);
+}
+
+.meus-gastos-screen .meus-gastos-summary__toggle-all-btn:hover {
+  color: var(--text-muted);
+}
+
+.meus-gastos-screen .meus-gastos-summary__total {
+  color: var(--text-primary);
+}
+
+.meus-gastos-screen .meus-gastos-year,
+.meus-gastos-screen .meus-gastos-year__total,
+.meus-gastos-screen .meus-gastos-futuros-year-header__title {
+  color: var(--text-muted);
+}
+
+.meus-gastos-screen .meus-gastos-status-card {
+  background: var(--surface-1);
+  border: none;
+}
+
+.meus-gastos-screen .meus-gastos-status-card > .meus-gastos-month-header .meus-gastos-month-header__title,
+.meus-gastos-screen .meus-gastos-status-card > .meus-gastos-month-header .meus-gastos-month-header__total {
+  color: var(--text-primary);
+}
+
+.meus-gastos-screen .meus-gastos-status-card > .meus-gastos-month-header .meus-gastos-month-header__count,
+.meus-gastos-screen .meus-gastos-status-card > .meus-gastos-month-header .meus-gastos-month-header__icon {
+  color: var(--text-muted);
+}
+
+.meus-gastos-screen .meus-gastos-year ~ .meus-gastos-month-card .meus-gastos-month-header__title,
+.meus-gastos-screen .meus-gastos-year ~ .meus-gastos-month-card .meus-gastos-month-header__count,
+.meus-gastos-screen .meus-gastos-year ~ .meus-gastos-month-card .meus-gastos-month-header__total,
+.meus-gastos-screen .meus-gastos-year ~ .meus-gastos-month-card .meus-gastos-month-header__icon,
+.meus-gastos-screen .meus-gastos-futuros-month .meus-gastos-month-header__title,
+.meus-gastos-screen .meus-gastos-futuros-month .meus-gastos-month-header__count,
+.meus-gastos-screen .meus-gastos-futuros-month .meus-gastos-month-header__total,
+.meus-gastos-screen .meus-gastos-futuros-month .meus-gastos-month-header__icon {
+  color: var(--text-muted);
+}
+
+.meus-gastos-screen .meus-gastos-year ~ .meus-gastos-month-card .meus-gastos-month-header--expanded .meus-gastos-month-header__title,
+.meus-gastos-screen .meus-gastos-year ~ .meus-gastos-month-card .meus-gastos-month-header--expanded .meus-gastos-month-header__count,
+.meus-gastos-screen .meus-gastos-futuros-month .meus-gastos-month-header--expanded .meus-gastos-month-header__title,
+.meus-gastos-screen .meus-gastos-futuros-month .meus-gastos-month-header--expanded .meus-gastos-month-header__count {
+  color: var(--text-muted);
+}
+
+.meus-gastos-screen .meus-gastos-status-card > .meus-gastos-month-header--expanded .meus-gastos-month-header__title {
+  color: var(--text-primary);
+}
+
+.meus-gastos-screen .meus-gastos-status-card > .meus-gastos-month-header--expanded .meus-gastos-month-header__count {
+  color: var(--text-muted);
 }
 
 /* Search (Etapa 6b — input-finance) */

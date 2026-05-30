@@ -474,7 +474,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     const isExpanded = futurosSectionExpanded;
 
     return (
-      <div className="meus-gastos-month-card card-finance card-finance--section">
+      <div className="meus-gastos-month-card meus-gastos-status-card card-finance card-finance--section">
         <button
           type="button"
           className={`meus-gastos-month-header ${isExpanded ? 'meus-gastos-month-header--expanded' : ''}`}
@@ -629,7 +629,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     const { sumCents, byId } = pereneForecast;
 
     return (
-      <div className="meus-gastos-month-card card-finance card-finance--section">
+      <div className="meus-gastos-month-card meus-gastos-status-card card-finance card-finance--section">
         <button
           type="button"
           className={`meus-gastos-month-header ${isExpanded ? 'meus-gastos-month-header--expanded' : ''}`}
@@ -740,7 +740,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     const isExpanded = displayCompromissosExpanded;
 
     return (
-      <div className="meus-gastos-month-card card-finance card-finance--section" ref={compromissosSectionRef}>
+      <div className="meus-gastos-month-card meus-gastos-status-card card-finance card-finance--section" ref={compromissosSectionRef}>
         <button
           type="button"
           className={`meus-gastos-month-header ${isExpanded ? 'meus-gastos-month-header--expanded' : ''}`}
