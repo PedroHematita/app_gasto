@@ -264,12 +264,41 @@ html.keyboard-open .date-header__row {
   background: var(--bg-main);
 }
 
-/* Inside modal/card surface */
+/* Inside modal/card surface — poços escuros sobre superfície do card */
+.floating-field--surface-bg .floating-field__input,
+.floating-field--surface-bg .floating-field__select,
+.input-finance--surface-bg .floating-field__input,
+.input-finance--surface-bg .floating-field__select {
+  background: var(--bg-base);
+  border: none;
+  color: var(--text-primary);
+}
+
+.floating-field--surface-bg .floating-field__input:focus,
+.floating-field--surface-bg .floating-field__select:focus,
+.input-finance--surface-bg .floating-field__input:focus,
+.input-finance--surface-bg .floating-field__select:focus {
+  border: none;
+  box-shadow: 0 0 0 1px var(--surface-2);
+}
+
+.floating-field--surface-bg .floating-field__input:focus ~ .floating-field__select-arrow,
+.floating-field--surface-bg .floating-field__select:focus ~ .floating-field__select-arrow,
+.input-finance--surface-bg .floating-field__input:focus ~ .floating-field__select-arrow,
+.input-finance--surface-bg .floating-field__select:focus ~ .floating-field__select-arrow {
+  color: var(--text-muted);
+}
+
+.floating-field--surface-bg .floating-field__input:focus ~ .floating-field__label,
+.floating-field--surface-bg .floating-field__input.has-value ~ .floating-field__label,
+.floating-field--surface-bg .floating-field__select:focus ~ .floating-field__label,
+.floating-field--surface-bg .floating-field__select.has-value ~ .floating-field__label,
 .input-finance--surface-bg .floating-field__input:focus ~ .floating-field__label,
 .input-finance--surface-bg .floating-field__input.has-value ~ .floating-field__label,
-.floating-field--surface-bg .floating-field__input:focus ~ .floating-field__label,
-.floating-field--surface-bg .floating-field__input.has-value ~ .floating-field__label {
-  background: var(--bg-surface);
+.input-finance--surface-bg .floating-field__select:focus ~ .floating-field__label,
+.input-finance--surface-bg .floating-field__select.has-value ~ .floating-field__label {
+  color: var(--text-muted);
+  background: var(--bg-base);
 }
 
 /* When in edit mode bg — mesma superfície que main-bg (Passo 2, Regra 10) */
@@ -525,7 +554,6 @@ html.keyboard-open .date-header__row {
 }
 
 .button-finance--secondary,
-.btn-save-draft,
 .btn-launch {
   --button-finance-bg: transparent;
   --button-finance-border: 1px solid var(--accent);
@@ -634,10 +662,25 @@ html.keyboard-open .date-header__row {
 
 .btn-save-draft {
   flex: 1;
+  --button-finance-bg: transparent;
+  --button-finance-border: 1px solid var(--accent);
+  --button-finance-color: var(--accent);
+  --button-finance-hover-bg: var(--accent-muted);
+  --button-finance-hover-border: var(--accent);
+  --button-finance-hover-color: var(--text-primary);
+  --button-finance-transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-save-draft:active:not(:disabled) {
+  transform: scale(0.98);
+  background: var(--interactive-pressed);
+  color: var(--text-primary);
 }
 
 .btn-save-draft:disabled {
-  --button-finance-disabled-border: var(--border-subtle);
+  --button-finance-disabled-bg: var(--surface-1);
+  --button-finance-disabled-border: var(--surface-2);
+  --button-finance-disabled-color: var(--text-inactive);
 }
 
 /* Modo edição de item (Novo Gasto) — Salvar gasto / Compromisso viram secundários */
@@ -1361,10 +1404,29 @@ html.keyboard-open .date-header__row {
 .modal-finance__title,
 .modal-sheet__title {
   font-size: var(--font-secondary);
-  color: var(--text-secondary);
+  color: var(--text-primary);
   text-align: center;
   margin-bottom: var(--space-5);
   font-weight: var(--weight-medium);
+}
+
+/* Textarea e campos soltos dentro de modal-sheet (ex.: observações gasto perene) */
+.modal-sheet textarea.floating-field__input,
+.modal-sheet .floating-field:not(.floating-field--main-bg):not(.floating-field--edit-bg) .floating-field__input,
+.modal-sheet .floating-field:not(.floating-field--main-bg):not(.floating-field--edit-bg) .floating-field__select {
+  background: var(--bg-base);
+  border: none;
+  color: var(--text-primary);
+}
+
+.modal-sheet textarea.floating-field__input:focus,
+.modal-sheet .floating-field:not(.floating-field--main-bg):not(.floating-field--edit-bg) .floating-field__input:focus {
+  box-shadow: 0 0 0 1px var(--surface-2);
+}
+
+.modal-sheet .floating-field:has(textarea.floating-field__input) .floating-field__label {
+  color: var(--text-muted) !important;
+  background: var(--bg-base) !important;
 }
 
 .modal-finance__body,
@@ -1545,19 +1607,42 @@ html.keyboard-open .date-header__row {
   font-weight: var(--weight-medium);
   cursor: pointer;
   text-align: center;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
   background: transparent;
+  border: 1px solid transparent;
 }
 
 .payment-tab--inactive {
-  border: 1px solid var(--border-medium);
-  color: var(--text-secondary);
+  background: var(--surface-1);
+  border-color: var(--surface-2);
+  color: var(--text-muted);
+}
+
+.payment-tab--inactive:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--surface-2);
+  color: var(--text-primary);
 }
 
 .payment-tab--active {
-  border: 1px solid var(--accent);
-  background: var(--accent-dark);
-  color: var(--text-accent-medium);
+  border-color: var(--accent);
+  background: var(--accent-muted);
+  color: var(--text-primary);
+}
+
+.payment-tab--active:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-muted);
+  color: var(--text-primary);
+}
+
+.payment-tab:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.payment-tab:focus-visible {
+  outline: 1px solid var(--border-soft);
+  outline-offset: 2px;
 }
 
 /* Attach button */
@@ -3106,6 +3191,19 @@ html.keyboard-open .date-header__row {
   flex: 1;
   padding: 8px 4px;
   font-size: 11px;
+}
+
+/* Período 30/60/90 — ativo igual ao botão + (coral sólido) */
+.meus-gastos-screen .meus-gastos-perene-window-tabs .payment-tab--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.meus-gastos-screen .meus-gastos-perene-window-tabs .payment-tab--active:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--text-primary);
 }
 
 .meus-gastos-futuros-toggle {

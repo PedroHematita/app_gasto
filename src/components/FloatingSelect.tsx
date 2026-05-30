@@ -69,7 +69,10 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
     setSearch('');
   }, [onChange]);
 
-  const labelBg = bgVariant === 'edit' ? 'var(--bg-base)' : bgVariant === 'surface' ? 'var(--bg-surface)' : 'var(--bg-main)';
+  const labelBg =
+    bgVariant === 'edit' || bgVariant === 'surface'
+      ? 'var(--bg-base)'
+      : 'var(--bg-main)';
 
   return (
     <div className={`floating-field input-finance ${bgClass} ${className}`} ref={containerRef} style={{ position: 'relative' }}>
