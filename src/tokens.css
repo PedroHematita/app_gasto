@@ -18,7 +18,7 @@
   --text-danger: var(--status-danger);
 
   /* Badge outline — texto e borda na mesma cor, fundo transparente */
-  --badge-vencido: #DC615C;
+  --badge-vencido: #AF2C34;
   --badge-breve: #D6A84F;
   --badge-ordem: #5FCF8B;
   --badge-perene: #8F7AD8;
