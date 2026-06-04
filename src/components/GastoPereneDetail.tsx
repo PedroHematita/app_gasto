@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Pencil } from 'lucide-react';
 import { CurrencyInput } from './CurrencyInput';
 import { FloatingInput } from './FloatingInput';
 import { FloatingSelect } from './FloatingSelect';
@@ -150,8 +150,8 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
   };
 
   return (
-    <div className="app-container gasto-perene-detail" style={{ paddingBottom: 32 }}>
-      <div className="detail-header">
+    <div className="app-container gasto-perene-detail detail-screen">
+      <header className="detail-header">
         <button
           className="detail-header__back"
           onClick={onBack}
@@ -161,35 +161,51 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
           <ChevronLeft size={20} aria-hidden />
         </button>
         <span className="detail-header__title">Gasto perene</span>
-        <span style={{ width: 56 }} />
-      </div>
+        {!editing ? (
+          <button
+            type="button"
+            className="detail-header__action"
+            onClick={() => setEditing(true)}
+          >
+            <Pencil size={16} aria-hidden />
+            <span>Editar</span>
+          </button>
+        ) : (
+          <span className="detail-header__spacer" aria-hidden />
+        )}
+      </header>
 
       <div className="detail-content">
-        <div className="detail-info">
-          <div className="detail-info__fornecedor">{record.fornecedor}</div>
-          <div className="gasto-perene-detail__meta">
-            <span>{labelPeriodicidade(record.periodicidade)}</span>
-            <span> · </span>
-            <span>{formatVencimentoGastoPerene(record)}</span>
-          </div>
-        </div>
+        {!editing ? (
+          <section className="detail-summary-card" aria-label="Resumo do gasto perene">
+            <h2 className="detail-summary-card__title">{record.fornecedor}</h2>
+            <p className="detail-summary-card__meta">
+              {labelPeriodicidade(record.periodicidade)} · {formatVencimentoGastoPerene(record)}
+            </p>
+            <div className="detail-summary-card__total-row">
+              <span className="detail-summary-card__total-label">Valor previsto</span>
+              <span className="detail-summary-card__total-value">
+                {formatCurrency(record.valorPrevistoCents)}
+              </span>
+            </div>
+          </section>
+        ) : null}
 
         {!editing ? (
-          <>
-            <div className="gasto-perene-detail__row">
-              <span className="gasto-perene-detail__label">Valor previsto</span>
-              <span className="gasto-perene-detail__value">{formatCurrency(record.valorPrevistoCents)}</span>
-            </div>
+          <section className="detail-section" aria-labelledby="gasto-perene-dados">
+            <h3 id="gasto-perene-dados" className="detail-section__title">
+              Dados
+            </h3>
             <div className="gasto-perene-detail__row">
               <span className="gasto-perene-detail__label">Data de início</span>
               <span>{record.dataInicio}</span>
             </div>
-            {record.dataTermino && (
+            {record.dataTermino ? (
               <div className="gasto-perene-detail__row">
                 <span className="gasto-perene-detail__label">Data de término</span>
                 <span>{record.dataTermino}</span>
               </div>
-            )}
+            ) : null}
             <div className="gasto-perene-detail__row">
               <span className="gasto-perene-detail__label">Status</span>
               <span>{record.status === 'ativo' ? 'ativo' : 'encerrado'}</span>
@@ -200,9 +216,9 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
                 <p>{record.observacoes}</p>
               </div>
             ) : null}
-          </>
+          </section>
         ) : (
-          <div style={{ paddingTop: 8 }}>
+          <section className="detail-section" aria-label="Editar gasto perene">
             <CurrencyInput
               label="Valor previsto"
               valueCents={valorCents}
@@ -241,7 +257,7 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
                   top: 0,
                   transform: 'translateY(-50%)',
                   fontSize: 10,
-                  color: 'var(--accent)',
+                  color: 'var(--text-muted)',
                   background: 'var(--bg-main)',
                   padding: '0 5px',
                 }}
@@ -259,6 +275,7 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
             </button>
             <button
               type="button"
+              className="button-finance button-finance--ghost"
               onClick={() => {
                 setEditing(false);
                 setValorCents(record.valorPrevistoCents);
@@ -266,42 +283,29 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
                 setMesNome(record.mesVencimento ? MESES[record.mesVencimento - 1] : 'Janeiro');
                 setObservacoes(record.observacoes);
               }}
-              style={{
-                width: '100%',
-                marginTop: 8,
-                padding: '12px',
-                background: 'transparent',
-                border: '1px solid var(--border-medium)',
-                borderRadius: 8,
-                color: 'var(--text-inactive)',
-                cursor: 'pointer',
-              }}
             >
               Cancelar edição
             </button>
-          </div>
+          </section>
         )}
 
-        {!editing && (
-          <div className="gasto-perene-detail__actions">
-            <button type="button" className="btn-save-draft" onClick={() => setEditing(true)}>
-              Editar
+        {!editing && record.status === 'ativo' && (
+          <div className="detail-actions">
+            <button
+              type="button"
+              className="gasto-perene-detail__encerrar button-finance button-finance--ghost"
+              onClick={() => setShowEncerrarConfirm(true)}
+              disabled={saving}
+            >
+              Encerrar gasto perene
             </button>
-            {record.status === 'ativo' && (
-              <button
-                type="button"
-                className="gasto-perene-detail__encerrar"
-                onClick={() => setShowEncerrarConfirm(true)}
-                disabled={saving}
-              >
-                Encerrar gasto perene
-              </button>
-            )}
           </div>
         )}
 
-        <div className="gasto-perene-hist">
-          <h3 className="gasto-perene-hist__title">Compromissos deste gasto perene</h3>
+        <section className="detail-section gasto-perene-hist" aria-labelledby="gasto-perene-hist-title">
+          <h3 id="gasto-perene-hist-title" className="detail-section__title">
+            Compromissos gerados
+          </h3>
           {historico.length === 0 ? (
             <p className="gasto-perene-hist__empty">Nenhum compromisso gerado ainda.</p>
           ) : (
@@ -342,7 +346,7 @@ export const GastoPereneDetail: React.FC<GastoPereneDetailProps> = ({
               );
             })
           )}
-        </div>
+        </section>
       </div>
 
       {showEncerrarConfirm && (

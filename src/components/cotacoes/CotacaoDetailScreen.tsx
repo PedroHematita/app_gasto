@@ -136,8 +136,8 @@ export function CotacaoDetailScreen({
   }
 
   return (
-    <div className="app-container cotacao-detail-screen">
-      <div className="detail-header">
+    <div className="app-container cotacao-detail-screen detail-screen">
+      <header className="detail-header">
         <button
           className="detail-header__back"
           onClick={onBack}
@@ -147,35 +147,51 @@ export function CotacaoDetailScreen({
           <ChevronLeft size={20} aria-hidden />
         </button>
         <span className="detail-header__title">Cotação</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button className="detail-header__edit" type="button" onClick={() => setShowEdit(true)}>
-            <Pencil size={16} />
-            <span>Editar</span>
+        <div className="detail-header__actions">
+          <button
+            type="button"
+            className="detail-header__icon-btn button-finance"
+            onClick={() => setShowEdit(true)}
+            aria-label="Editar cotação"
+          >
+            <Pencil size={18} aria-hidden />
           </button>
           <button
             type="button"
-            className="detail-header__edit"
+            className="detail-header__icon-btn button-finance button-finance--primary"
             onClick={() => setShowAddPreco(true)}
             aria-label="Adicionar preço"
           >
-            <Plus size={16} aria-hidden />
+            <Plus size={18} aria-hidden />
           </button>
         </div>
-      </div>
+      </header>
 
       <div className="detail-content cotacao-detail-content">
-        <div className="cotacao-detail__product">
-          <div className="cotacao-detail__product-title">{cotacao.descricao}</div>
-          <div className="cotacao-detail__product-meta">
-            {cotacao.unidadeMedida}
+        <section className="detail-summary-card" aria-label="Resumo da cotação">
+          <h2 className="detail-summary-card__title">{cotacao.descricao}</h2>
+          <p className="detail-summary-card__meta">Unidade: {cotacao.unidadeMedida}</p>
+          <div className="detail-summary-card__stats">
+            <div className="detail-summary-card__stat-row">
+              <span>Menor preço unitário</span>
+              <span className="detail-summary-card__stat-value">
+                {stats.min != null ? formatCurrency(stats.min) : '—'}
+              </span>
+            </div>
+            <div className="detail-summary-card__stat-row">
+              <span>Média</span>
+              <span className="detail-summary-card__stat-value">
+                {stats.avg != null ? formatCurrency(stats.avg) : '—'}
+              </span>
+            </div>
+            <div className="detail-summary-card__stat-row">
+              <span>Tendência</span>
+              <span className="detail-summary-card__stat-value">{tendenciaNode}</span>
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div className="cotacao-detail__stats-inline">
-          Menor: {stats.min != null ? formatCurrency(stats.min) : '—'} &middot; Média: {stats.avg != null ? formatCurrency(stats.avg) : '—'} &middot; Tendência: {tendenciaNode}
-        </div>
-
-        <div className="cotacao-detail__filter-wrap">
+        <section className="detail-section cotacao-detail__filter-wrap" aria-label="Filtro de preços">
           <div className="cotacao-detail__filter-row">
             <div className="cotacao-detail__filter-input">
               <FloatingInput
@@ -197,9 +213,9 @@ export function CotacaoDetailScreen({
               </button>
             ) : null}
           </div>
-        </div>
+        </section>
 
-        <div className="cotacao-detail__chart-wrap">
+        <section className="detail-section cotacao-detail__chart-wrap" aria-label="Gráfico de preços">
           {chartPoints.length >= 2 ? (
             <CotacaoLineChart pointsChrono={chartPoints} />
           ) : (
@@ -207,15 +223,15 @@ export function CotacaoDetailScreen({
               Adicione mais registros para ver a evolução do preço
             </div>
           )}
-        </div>
+        </section>
 
-        <div className="cotacao-detail__table-wrap">
+        <section className="detail-section cotacao-detail__table-wrap" aria-label="Histórico de preços">
           <CotacaoPrecosTable
             rows={filtered}
             quantidadeCotacao={cotacao.quantidade}
             onDelete={(id) => void handleDeletePreco(id)}
           />
-        </div>
+        </section>
       </div>
 
       {showEdit && (

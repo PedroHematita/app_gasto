@@ -29,6 +29,8 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
 
   const isParcelado = compromisso.tipo === 'parcelado';
   const parcelas = compromisso.parcelas || [];
+  const showQuitarUnico =
+    !isParcelado && (compromisso.status === 'pendente' || compromisso.status === 'vencido');
 
   const totalPago = parcelas
     .filter((p) => p.status === 'quitado')
@@ -53,8 +55,8 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
   };
 
   return (
-    <div className="app-container" style={{ paddingBottom: 24 }}>
-      <div className="detail-header">
+    <div className="app-container detail-screen">
+      <header className="detail-header">
         <button
           className="detail-header__back"
           onClick={onBack}
@@ -64,13 +66,13 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
           <ChevronLeft size={20} aria-hidden />
         </button>
         <span className="detail-header__title">Compromisso</span>
-        <span style={{ width: 56 }} />
-      </div>
+        <span className="detail-header__spacer" aria-hidden />
+      </header>
 
       <div className="detail-content">
-        <div className="detail-info">
-          <div className="detail-info__fornecedor">{title}</div>
-          <div className="detail-info__date">Compra: {compromisso.dataCompra}</div>
+        <section className="detail-summary-card" aria-label="Resumo do compromisso">
+          <h2 className="detail-summary-card__title">{title}</h2>
+          <p className="detail-summary-card__meta">Compra em {compromisso.dataCompra}</p>
           {!isParcelado && (
             <div className="detail-info__prevista-line">
               <span className="detail-info__date detail-info__date--inline">
@@ -88,29 +90,50 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
               vencido há {dias} dia{dias === 1 ? '' : 's'}
             </p>
           )}
-        </div>
-
-        <div className="detail-items-title">Itens</div>
-        {sortedItems.map((item) => (
-          <div key={item.id} className="detail-item">
-            <div className="detail-item__top">
-              <span className="detail-item__num">{item.ordem}</span>
-              <span className="detail-item__desc">{item.descricao}</span>
-            </div>
-            <div className="detail-item__bottom">
-              <span className="detail-item__qty">
-                {item.quantidade} {item.unidade}
-              </span>
-              <span className="detail-item__value">{formatCurrency(item.valorCentavos)}</span>
-            </div>
+          <div className="detail-summary-card__total-row">
+            <span className="detail-summary-card__total-label">Total do compromisso</span>
+            <span className="detail-summary-card__total-value">
+              {formatCurrency(compromisso.total)}
+            </span>
           </div>
-        ))}
+          {showQuitarUnico && (
+            <button
+              className="btn-compromisso-quitar button-finance button-finance--primary detail-summary-card__cta"
+              onClick={onRequestQuit}
+              type="button"
+            >
+              Quitar compromisso
+            </button>
+          )}
+        </section>
+
+        <section className="detail-section" aria-labelledby="compromisso-detail-itens">
+          <h3 id="compromisso-detail-itens" className="detail-section__title">
+            Itens
+          </h3>
+          {sortedItems.map((item) => (
+            <div key={item.id} className="detail-item">
+              <div className="detail-item__top">
+                <span className="detail-item__num">{item.ordem}</span>
+                <span className="detail-item__desc">{item.descricao}</span>
+              </div>
+              <div className="detail-item__bottom">
+                <span className="detail-item__qty">
+                  {item.quantidade} {item.unidade}
+                </span>
+                <span className="detail-item__value">
+                  {formatCurrency(item.valorCentavos)}
+                </span>
+              </div>
+            </div>
+          ))}
+        </section>
 
         {isParcelado && (
-          <>
-            <div className="detail-items-title" style={{ marginTop: 24, marginBottom: 10 }}>
-              Parcelas do Compromisso
-            </div>
+          <section className="detail-section" aria-labelledby="compromisso-detail-parcelas">
+            <h3 id="compromisso-detail-parcelas" className="detail-section__title">
+              Parcelas
+            </h3>
             <div className="card-finance card-finance--section compromisso-parcelas-card">
               {parcelas.map((p, idx) => {
                 const isPendente = p.status === 'pendente' || p.status === 'vencido';
@@ -156,7 +179,6 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
                 );
               })}
 
-              {/* Resumo */}
               <div className="compromisso-parcelas-card__summary">
                 <div className="compromisso-parcelas-card__summary-row">
                   <span>Total Pago:</span>
@@ -176,22 +198,10 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
                 </div>
               </div>
             </div>
-          </>
-        )}
-
-        {!isParcelado && (
-          <div className="total-bar total-bar--panel">
-            <span className="total-bar__label">Total do compromisso</span>
-            <span className="total-bar__value">{formatCurrency(compromisso.total)}</span>
-          </div>
+          </section>
         )}
 
         <div className="compromisso-detail-actions">
-          {!isParcelado && (
-            <button className="btn-compromisso-quitar button-finance button-finance--primary" onClick={onRequestQuit} type="button">
-              Quitar compromisso
-            </button>
-          )}
           <button
             type="button"
             className="btn-compromisso-secondary button-finance button-finance--ghost"
@@ -221,7 +231,7 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
             <div className="compromisso-cancel-confirm__actions modal-finance__actions modal-finance__footer">
               <button
                 type="button"
-                  className="btn-compromisso-secondary button-finance button-finance--ghost"
+                className="btn-compromisso-secondary button-finance button-finance--ghost"
                 disabled={cancelling}
                 onClick={() => setShowCancelConfirm(false)}
               >
@@ -229,7 +239,7 @@ export const CompromissoDetail: React.FC<CompromissoDetailProps> = ({
               </button>
               <button
                 type="button"
-                  className="btn-compromisso-secondary button-finance button-finance--ghost"
+                className="btn-compromisso-secondary button-finance button-finance--ghost"
                 disabled={cancelling}
                 onClick={handleConfirmCancel}
               >

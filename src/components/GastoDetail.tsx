@@ -34,9 +34,8 @@ export const GastoDetail: React.FC<GastoDetailProps> = ({
   );
 
   return (
-    <div className="app-container" style={{ paddingBottom: 24 }}>
-      {/* Header */}
-      <div className="detail-header">
+    <div className="app-container detail-screen">
+      <header className="detail-header">
         <button
           className="detail-header__back"
           onClick={onBack}
@@ -46,81 +45,86 @@ export const GastoDetail: React.FC<GastoDetailProps> = ({
           <ChevronLeft size={20} aria-hidden />
         </button>
         <span className="detail-header__title">Gasto #{gasto.seq}</span>
-        <button className="detail-header__edit" onClick={onEdit} type="button">
-          <Pencil size={16} />
+        <button className="detail-header__action" onClick={onEdit} type="button">
+          <Pencil size={16} aria-hidden />
           <span>Editar</span>
         </button>
-      </div>
+      </header>
 
       <div className="detail-content">
-        {/* Fornecedor & date */}
-        <div className="detail-info">
-          <div className="detail-info__fornecedor">
+        <section className="detail-summary-card" aria-label="Resumo do gasto">
+          <h2 className="detail-summary-card__title">
             {gasto.fornecedor || 'Sem fornecedor'}
+          </h2>
+          <p className="detail-summary-card__meta">Compra em {gasto.dataCompra}</p>
+          <div className="detail-chips detail-summary-card__chips">
+            <span className="detail-chip">
+              {gasto.formaPagamento === 'À Vista'
+                ? 'À Vista'
+                : `Parcelado em ${gasto.parcelas || 2}x`}
+            </span>
+            <span className="detail-chip">{gasto.meioPagamento}</span>
+            <span className="detail-chip">{gasto.instituicaoFinanceira}</span>
           </div>
-          <div className="detail-info__date">{gasto.dataCompra}</div>
-        </div>
+          <div className="detail-summary-card__total-row">
+            <span className="detail-summary-card__total-label">Gasto total</span>
+            <span className="detail-summary-card__total-value">
+              {formatCurrency(gasto.total)}
+            </span>
+          </div>
+        </section>
 
-        {/* Payment chips */}
-        <div className="detail-chips">
-          <span className="detail-chip">
-            {gasto.formaPagamento === 'À Vista' ? 'À Vista' : `Parcelado em ${gasto.parcelas || 2}x`}
-          </span>
-          <span className="detail-chip">{gasto.meioPagamento}</span>
-          <span className="detail-chip">{gasto.instituicaoFinanceira}</span>
-        </div>
-
-        {/* Items table */}
-        <div className="detail-items-title">Itens</div>
-        {sortedItems.map((item) => (
-          <div key={item.id} className="detail-item">
-            <div className="detail-item__top">
-              <span className="detail-item__num">{item.ordem}</span>
-              <span className="detail-item__desc">{item.descricao}</span>
+        <section className="detail-section" aria-labelledby="gasto-detail-itens">
+          <h3 id="gasto-detail-itens" className="detail-section__title">
+            Itens
+          </h3>
+          {sortedItems.map((item) => (
+            <div key={item.id} className="detail-item">
+              <div className="detail-item__top">
+                <span className="detail-item__num">{item.ordem}</span>
+                <span className="detail-item__desc">{item.descricao}</span>
+              </div>
+              <div className="detail-item__bottom">
+                <span className="detail-item__qty">
+                  {item.quantidade} {item.unidade}
+                </span>
+                <span className="detail-item__value">
+                  {formatCurrency(item.valorCentavos)}
+                </span>
+              </div>
             </div>
-            <div className="detail-item__bottom">
-              <span className="detail-item__qty">{item.quantidade} {item.unidade}</span>
-              <span className="detail-item__value">{formatCurrency(item.valorCentavos)}</span>
-            </div>
-          </div>
-        ))}
+          ))}
+        </section>
 
-        {/* Total */}
-        <div className="total-bar total-bar--panel">
-          <span className="total-bar__label">Gasto total</span>
-          <span className="total-bar__value">{formatCurrency(gasto.total)}</span>
-        </div>
+        {gasto.observacoes ? (
+          <section className="detail-section" aria-labelledby="gasto-detail-obs">
+            <h3 id="gasto-detail-obs" className="detail-section__title">
+              Observações
+            </h3>
+            <p className="detail-obs__value">{gasto.observacoes}</p>
+          </section>
+        ) : null}
 
-        {/* Observações */}
-        {gasto.observacoes && (
-          <div className="detail-obs">
-            <span className="detail-obs__label">Observações</span>
-            <span className="detail-obs__value">{gasto.observacoes}</span>
-          </div>
-        )}
-
-        {/* Actions */}
-        <button
-          className="btn-whatsapp"
-          onClick={() => openWhatsApp(whatsAppMessage)}
-          type="button"
-          style={{ marginTop: 16 }}
-        >
-          <Share2 size={16} />
-          Compartilhar no WhatsApp
-        </button>
-
-        {gasto.comprovanteUrl && (
+        <section className="detail-actions" aria-label="Ações">
           <button
-            className="btn-new-expense"
-            onClick={() => window.open(gasto.comprovanteUrl, '_blank')}
+            className="btn-whatsapp"
+            onClick={() => openWhatsApp(whatsAppMessage)}
             type="button"
-            style={{ marginTop: 8 }}
           >
-            <Image size={16} />
-            Ver comprovante
+            <Share2 size={16} aria-hidden />
+            Compartilhar no WhatsApp
           </button>
-        )}
+          {gasto.comprovanteUrl ? (
+            <button
+              className="btn-new-expense"
+              onClick={() => window.open(gasto.comprovanteUrl, '_blank')}
+              type="button"
+            >
+              <Image size={16} aria-hidden />
+              Ver comprovante
+            </button>
+          ) : null}
+        </section>
       </div>
     </div>
   );
