@@ -790,10 +790,9 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
   flex-direction: column;
   gap: 2px;
   padding: var(--space-2) var(--space-3);
-  background: #17181A;
+  background: var(--surface-1);
   border: none;
   border-radius: var(--radius-sm);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 
 .compromissos-alert__title {
@@ -1135,7 +1134,7 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
 
 .compromissos-section__subtotal-value {
   font-variant-numeric: tabular-nums;
-  color: #c084fc;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -1188,7 +1187,7 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
 }
 
 .compromisso-card__status--purple {
-  color: #c084fc;
+  color: var(--text-secondary);
 }
 
 /* Resumo Meus Gastos */
@@ -1273,7 +1272,8 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
 }
 
 .compromissos-money {
-  color: #c084fc;
+  color: var(--text-primary);
+  font-variant-numeric: var(--font-tabular);
 }
 
 /* Empty states (Etapa 6) */
@@ -2409,7 +2409,7 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
 }
 
 .bottom-nav__item span {
-  font-size: 8px;
+  font-size: var(--font-auxiliary);
   letter-spacing: 0.02em;
 }
 

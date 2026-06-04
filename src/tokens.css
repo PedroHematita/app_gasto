@@ -45,6 +45,8 @@
   --border-subtle: #2a2a2a;
   --border-soft: rgba(255, 255, 255, 0.08);
   --border-medium: var(--border-strong);
+  /* Alias legado — Admin/OrgSelector (preferir --border-soft em código novo) */
+  --border: var(--border-soft);
   
   --accent: #DC615C;
   --accent-dark: #b04e4a;

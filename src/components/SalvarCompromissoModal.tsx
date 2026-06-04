@@ -312,10 +312,10 @@ export const SalvarCompromissoModal: React.FC<SalvarCompromissoModalProps> = ({
               {/* Tabela de parcelas */}
               <div
                 style={{
-                  background: '#151515',
-                  borderRadius: 14,
+                  background: 'var(--bg-base)',
+                  borderRadius: 'var(--radius-lg)',
                   padding: '12px 16px',
-                  border: '1px solid #222',
+                  border: '1px solid var(--border-subtle)',
                   marginTop: 12,
                 }}
               >
@@ -325,12 +325,12 @@ export const SalvarCompromissoModal: React.FC<SalvarCompromissoModalProps> = ({
                     display: 'grid',
                     gridTemplateColumns: '60px 1fr 110px',
                     fontSize: 11,
-                    color: '#888',
+                    color: 'var(--text-muted)',
                     fontWeight: 600,
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em',
                     paddingBottom: 8,
-                    borderBottom: '1px solid #222',
+                    borderBottom: '1px solid var(--border-subtle)',
                     marginBottom: 6,
                   }}
                 >
@@ -349,14 +349,15 @@ export const SalvarCompromissoModal: React.FC<SalvarCompromissoModalProps> = ({
                         gridTemplateColumns: '60px 1fr 110px',
                         alignItems: 'center',
                         padding: '8px 0',
-                        borderBottom: i === parcelas.length - 1 ? 'none' : '1px solid #222',
+                        borderBottom:
+                          i === parcelas.length - 1 ? 'none' : '1px solid var(--border-subtle)',
                       }}
                     >
                       {/* Parcela (ex: 1/2) */}
                       <div
                         style={{
                           fontSize: 14,
-                          color: '#888',
+                          color: 'var(--text-muted)',
                           fontWeight: 500,
                         }}
                       >
@@ -377,7 +378,7 @@ export const SalvarCompromissoModal: React.FC<SalvarCompromissoModalProps> = ({
                             background: 'transparent',
                             border: 'none',
                             outline: 'none',
-                            color: '#fff',
+                            color: 'var(--text-primary)',
                             fontSize: 14,
                             fontWeight: 500,
                             width: '100%',
@@ -408,7 +409,7 @@ export const SalvarCompromissoModal: React.FC<SalvarCompromissoModalProps> = ({
                             background: 'transparent',
                             border: 'none',
                             outline: 'none',
-                            color: '#fff',
+                            color: 'var(--text-primary)',
                             fontSize: 14,
                             width: '75px',
                             padding: '4px 0',
@@ -421,7 +422,7 @@ export const SalvarCompromissoModal: React.FC<SalvarCompromissoModalProps> = ({
                           style={{
                             background: 'transparent',
                             border: 'none',
-                            color: '#888',
+                            color: 'var(--text-muted)',
                             cursor: 'pointer',
                             padding: '4px',
                             display: 'flex',
@@ -446,7 +447,10 @@ export const SalvarCompromissoModal: React.FC<SalvarCompromissoModalProps> = ({
               {totalCents > 0 && (() => {
                 const soma = parcelas.reduce((s, p) => s + p.valorCentavos, 0);
                 const diff = soma - totalCents;
-                const color = Math.abs(diff) > totalCents * 0.05 ? '#e07070' : '#888';
+                const color =
+                  Math.abs(diff) > totalCents * 0.05
+                    ? 'var(--text-danger)'
+                    : 'var(--text-muted)';
                 return (
                   <div
                     style={{
