@@ -226,11 +226,21 @@ export const SalvarCompromissoModal: React.FC<SalvarCompromissoModalProps> = ({
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
-          <div className="modal-sheet__handle" />
-          <div className="modal-sheet__title">Salvar Compromisso</div>
+      <div className="modal-overlay modal-finance" onClick={onClose} role="presentation">
+        <div
+          className="modal-sheet payment-modal-sheet modal-sheet--form modal-finance__container"
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-labelledby="salvar-compromisso-title"
+        >
+          <header className="modal-form-shell__header">
+            <div className="modal-sheet__handle modal-finance__handle" aria-hidden />
+            <h2 id="salvar-compromisso-title" className="modal-sheet__title">
+              Salvar Compromisso
+            </h2>
+          </header>
 
+          <div className="modal-form-shell__body">
           {/* Seletor de modo */}
           <div className="payment-tabs" style={{ marginBottom: 16 }}>
             <div className="payment-tabs__row">
@@ -472,8 +482,9 @@ export const SalvarCompromissoModal: React.FC<SalvarCompromissoModalProps> = ({
             </div>
           )}
 
-          {/* Botões */}
-          <div className="salvar-compromisso-actions">
+          </div>
+
+          <footer className="modal-form-shell__footer modal-form-shell__footer--row">
             <button
               type="button"
               onClick={onClose}
@@ -481,10 +492,14 @@ export const SalvarCompromissoModal: React.FC<SalvarCompromissoModalProps> = ({
             >
               Cancelar
             </button>
-            <button className="btn-save-modal button-finance button-finance--primary" onClick={handleSalvar} type="button">
+            <button
+              className="btn-save-modal button-finance button-finance--primary"
+              onClick={handleSalvar}
+              type="button"
+            >
               {modo === 'unico' ? 'Salvar compromisso' : `Salvar ${parcelas.length} parcelas`}
             </button>
-          </div>
+          </footer>
         </div>
       </div>
 

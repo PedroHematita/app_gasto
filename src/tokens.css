@@ -107,6 +107,8 @@
   --layout-bottom-nav-offset: 70px;
   /* Barra fixa Salvar / Compromisso na tela de cadastro (padding do conteúdo rolável) */
   --cadastro-action-bar-height: 76px;
+  /* Rodapé fixo em modais de formulário (PaymentModal, SalvarCompromisso) */
+  --modal-form-footer-min-height: 120px;
 
   /*
    * @deprecated: prefer var(--bg-base) directly.

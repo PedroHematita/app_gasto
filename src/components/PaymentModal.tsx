@@ -114,12 +114,28 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     onChange({ comprovanteFile: file });
   };
 
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-sheet__handle" />
-        <div className="modal-sheet__title">{modalTitle}</div>
+  const primaryLabel = saving
+    ? 'Salvando...'
+    : isEditing
+      ? 'Confirmar alterações'
+      : saveButtonLabel ?? 'Salvar gasto';
 
+  return (
+    <div className="modal-overlay modal-finance" onClick={onClose} role="presentation">
+      <div
+        className="modal-sheet payment-modal-sheet modal-sheet--form modal-finance__container"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-labelledby="payment-modal-title"
+      >
+        <header className="modal-form-shell__header">
+          <div className="modal-sheet__handle modal-finance__handle" aria-hidden />
+          <h2 id="payment-modal-title" className="modal-sheet__title">
+            {modalTitle}
+          </h2>
+        </header>
+
+        <div className="modal-form-shell__body">
         {isQuitMode && (
           <>
             <div className="quit-valores-block">
@@ -267,19 +283,26 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         <div className="btn-attach__hint">
           {payment.comprovanteFile ? 'toque para substituir' : 'opcional'}
         </div>
+        </div>
 
-        <button
-          className="btn-save-modal button-finance button-finance--primary"
-          onClick={handleAttemptSave}
-          disabled={saving}
-          type="button"
-        >
-          {saving
-            ? 'Salvando...'
-            : isEditing
-              ? 'Confirmar alterações'
-              : saveButtonLabel ?? 'Salvar gasto'}
-        </button>
+        <footer className="modal-form-shell__footer">
+          <button
+            type="button"
+            className="button-finance button-finance--ghost"
+            onClick={onClose}
+            disabled={saving}
+          >
+            Cancelar
+          </button>
+          <button
+            className="btn-save-modal button-finance button-finance--primary"
+            onClick={handleAttemptSave}
+            disabled={saving}
+            type="button"
+          >
+            {primaryLabel}
+          </button>
+        </footer>
       </div>
 
       {/* Warning Modal for low parcel value */}
