@@ -155,7 +155,7 @@ export const AdminLinks: React.FC = () => {
         </div>
         
         {errorMsg && (
-          <div style={{ fontSize: 12, color: '#f87171', marginTop: 12 }}>{errorMsg}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-danger)', marginTop: 12 }}>{errorMsg}</div>
         )}
 
         <button
@@ -196,7 +196,7 @@ export const AdminLinks: React.FC = () => {
                 background: 'rgba(248, 113, 113, 0.1)', border: 'none',
                 width: 32, height: 32, borderRadius: 8,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: '#f87171'
+                cursor: 'pointer', color: 'var(--text-danger)'
               }}
               title="Remover vínculo"
             >

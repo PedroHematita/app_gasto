@@ -1102,9 +1102,9 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
   --button-finance-padding: 14px;
   --button-finance-radius: 8px;
   --button-finance-bg: #333;
-  --button-finance-color: #ff4444;
+  --button-finance-color: var(--text-danger);
   --button-finance-hover-bg: #3a3a3a;
-  --button-finance-hover-color: #ff4444;
+  --button-finance-hover-color: var(--text-danger);
 }
 
 .compromissos-section {
@@ -1461,11 +1461,11 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
   top: 0;
   bottom: 0;
   width: 80px;
-  background: #3a1111;
+  background: var(--danger-surface);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ff4444;
+  color: var(--text-danger);
   font-size: 11px;
   font-weight: var(--weight-medium);
   border-radius: 4px;
@@ -1555,9 +1555,9 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
 }
 
 .delete-confirm__btn--delete {
-  background: #3a1111;
-  border: 1px solid #662222;
-  color: #ff4444;
+  background: var(--danger-surface);
+  border: 1px solid var(--danger-border);
+  color: var(--text-danger);
 }
 
 .bottom-sheet-finance,
@@ -1650,7 +1650,7 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
   --button-finance-bg: var(--status-danger);
   --button-finance-border: none;
   --button-finance-color: var(--text-primary);
-  --button-finance-hover-bg: #e03e3e;
+  --button-finance-hover-bg: var(--status-danger-hover);
   --button-finance-hover-color: var(--text-primary);
   --button-finance-font-weight: var(--weight-medium);
 }
@@ -1670,7 +1670,7 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
 
 .ph-title--danger,
 .modal-finance__title--danger {
-  color: #ff4444;
+  color: var(--text-danger);
   margin-bottom: 12px;
 }
 
@@ -2191,7 +2191,7 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
 
 .input-finance__option:hover,
 .custom-dropdown__item:hover {
-  background: var(--accent-dark);
+  background: var(--interactive-hover);
 }
 
 .input-finance__option--active,
@@ -2218,7 +2218,7 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
 }
 .input-finance__dropdown::-webkit-scrollbar-thumb,
 .custom-dropdown::-webkit-scrollbar-thumb {
-  background: var(--accent-border);
+  background: var(--surface-2);
   border-radius: 4px;
 }
 
@@ -2350,7 +2350,7 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
 }
 
 .datepicker-day:hover:not(:disabled):not(.datepicker-day--empty) {
-  background: rgba(124, 111, 255, 0.1);
+  background: var(--interactive-hover);
 }
 
 .datepicker-day--empty {
@@ -2814,7 +2814,7 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
 .classificar-classificacao-erro {
   margin: var(--space-3) var(--space-1) 0;
   font-size: var(--font-secondary);
-  color: #f87171;
+  color: var(--text-danger);
   text-align: center;
 }
 
@@ -2867,12 +2867,13 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
 }
 
 .classificar-gastos-table__row--selected {
-  background: rgba(124, 111, 255, 0.12);
-  box-shadow: inset 3px 0 0 var(--accent);
+  background: var(--accent-muted);
+  box-shadow: inset 3px 0 0 var(--surface-2);
 }
 
 .classificar-gastos-table__row--selected:hover {
-  background: rgba(124, 111, 255, 0.16);
+  background: var(--interactive-pressed);
+  box-shadow: inset 3px 0 0 var(--surface-2);
 }
 
 .classificar-gastos-table__row--selection-mode {
@@ -3180,6 +3181,7 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
 .meus-gastos-screen .meus-gastos-search__input:focus,
 .meus-gastos-screen .meus-gastos-search .input-finance__field:focus {
   border: none;
+  box-shadow: 0 0 0 1px var(--surface-2);
 }
 
 .meus-gastos-screen .meus-gastos-search__input::placeholder,
@@ -3364,7 +3366,8 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
 
 .meus-gastos-search__input:focus,
 .meus-gastos-search .input-finance__field:focus {
-  border-color: var(--accent);
+  border-color: var(--border-medium);
+  box-shadow: 0 0 0 1px var(--surface-2);
 }
 
 .meus-gastos-search__input::placeholder,

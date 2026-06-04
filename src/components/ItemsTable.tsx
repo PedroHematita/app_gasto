@@ -83,7 +83,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#ff4444',
+                    color: 'var(--text-danger)',
                     fontSize: 11,
                     fontWeight: 500,
                     cursor: 'pointer',

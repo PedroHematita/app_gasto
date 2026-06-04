@@ -68,7 +68,7 @@ export const AdminUsers: React.FC = () => {
                     </div>
                   ))
                 ) : (
-                  <span style={{ fontSize: 10, color: '#f87171' }}>Sem vínculos</span>
+                  <span style={{ fontSize: 10, color: 'var(--text-danger)' }}>Sem vínculos</span>
                 )}
               </div>
             </div>

@@ -11,7 +11,10 @@
   --accent-hover: #b04e4a;
   --accent-muted: rgba(220, 97, 92, 0.14);
   --status-success: #5fcf8b;
-  --status-danger: #ff4444;
+  --status-danger: #AF2C34;
+  --status-danger-hover: #c73540;
+  --danger-surface: rgba(175, 44, 52, 0.14);
+  --danger-border: rgba(175, 44, 52, 0.4);
   --status-warning: #ffcc00;
   --status-info: #8f87df;
   --text-success: var(--status-success);

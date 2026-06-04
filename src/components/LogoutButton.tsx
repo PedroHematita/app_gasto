@@ -80,7 +80,7 @@ export const LogoutButton: React.FC<LogoutButtonProps> = ({
               <button
                 type="button"
                 className="btn-compromisso-secondary"
-                style={{ color: '#f87171' }}
+                style={{ color: 'var(--text-danger)' }}
                 onClick={handleLogout}
               >
                 Sair
