@@ -126,11 +126,26 @@ export const GastoPereneFormModal: React.FC<GastoPereneFormModalProps> = ({ orgI
 
   return (
     <>
-      <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1100 }}>
-        <div className="modal-sheet" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
-          <div className="modal-sheet__handle" />
-          <div className="modal-sheet__title">Novo gasto perene</div>
+      <div
+        className="modal-overlay modal-finance"
+        onClick={onClose}
+        style={{ zIndex: 1100 }}
+        role="presentation"
+      >
+        <div
+          className="modal-sheet payment-modal-sheet modal-sheet--form modal-finance__container"
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-labelledby="gasto-perene-form-title"
+        >
+          <header className="modal-form-shell__header">
+            <div className="modal-sheet__handle modal-finance__handle" aria-hidden />
+            <h2 id="gasto-perene-form-title" className="modal-sheet__title">
+              Novo gasto perene
+            </h2>
+          </header>
 
+          <div className="modal-form-shell__body">
           <FloatingInput
             id="input-gp-fornecedor"
             label="Fornecedor / Descrição"
@@ -273,33 +288,26 @@ export const GastoPereneFormModal: React.FC<GastoPereneFormModalProps> = ({ orgI
               Observações
             </label>
           </div>
+          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 0 8px' }}>
+          <footer className="modal-form-shell__footer">
             <button
               type="button"
+              className="button-finance button-finance--ghost"
               onClick={onClose}
-              style={{
-                width: '100%',
-                padding: '12px',
-                background: 'transparent',
-                border: '1px solid var(--border-medium)',
-                borderRadius: 8,
-                color: 'var(--text-inactive)',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}
+              disabled={saving}
             >
               Cancelar
             </button>
             <button
-              className="btn-save-modal"
+              className="btn-save-modal button-finance button-finance--primary"
               onClick={validateAndSave}
               type="button"
               disabled={saving}
             >
               {saving ? 'Salvando…' : 'Salvar gasto perene'}
             </button>
-          </div>
+          </footer>
         </div>
       </div>
 

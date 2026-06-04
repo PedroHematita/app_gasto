@@ -41,11 +41,21 @@ export function NovaCotacaoSheet({ orgId, onClose, onSaved }: NovaCotacaoSheetPr
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-sheet price-history-sheet" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-sheet__handle" />
-        <div className="ph-title">Nova cotação</div>
-        <div style={{ padding: '8px 20px 20px' }}>
+    <div className="modal-overlay modal-finance" onClick={onClose} role="presentation">
+      <div
+        className="modal-sheet payment-modal-sheet modal-sheet--form modal-finance__container price-history-sheet"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-labelledby="cotacao-nova-title"
+      >
+        <header className="modal-form-shell__header">
+          <div className="modal-sheet__handle modal-finance__handle" aria-hidden />
+          <h2 id="cotacao-nova-title" className="ph-title">
+            Nova cotação
+          </h2>
+        </header>
+
+        <div className="modal-form-shell__body">
           <FloatingInput
             id="cotacao-nova-desc"
             label="Descrição do produto"
@@ -64,16 +74,26 @@ export function NovaCotacaoSheet({ orgId, onClose, onSaved }: NovaCotacaoSheetPr
               bgVariant="surface"
             />
           </div>
+        </div>
+
+        <footer className="modal-form-shell__footer modal-form-shell__footer--row">
           <button
             type="button"
-            className="btn-save-main"
-            style={{ marginTop: 8 }}
+            className="button-finance button-finance--ghost"
+            onClick={onClose}
+            disabled={saving}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="btn-save-modal button-finance button-finance--primary"
             disabled={saving}
             onClick={() => void handleSalvar()}
           >
             {saving ? 'Salvando…' : 'Salvar cotação'}
           </button>
-        </div>
+        </footer>
       </div>
     </div>
   );

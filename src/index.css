@@ -1089,7 +1089,8 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
   margin-bottom: var(--space-3);
 }
 
-.modal-form-shell__header .modal-sheet__title {
+.modal-form-shell__header .modal-sheet__title,
+.modal-form-shell__header .ph-title {
   margin-bottom: 0;
 }
 
