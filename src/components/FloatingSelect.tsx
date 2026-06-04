@@ -103,7 +103,7 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Filtrar..."
           className="floating-field__input has-value"
-          style={{ caretColor: 'var(--accent)' }}
+          style={{ caretColor: 'var(--text-primary)' }}
           autoComplete="off"
         />
       )}

@@ -912,7 +912,11 @@ function AppInner() {
   const isEditMode = screen === 'gasto_edit' && editingGastoId;
 
   return (
-    <div className="app-container" style={{ paddingBottom: isEditMode ? 0 : 70 }}>
+    <div
+      className={`app-container app-container--cadastro${
+        isEditMode ? ' app-container--cadastro-edit' : ''
+      }`}
+    >
       {/* Edit mode header */}
       {isEditMode && (
         <div className="edit-mode-header">
@@ -1036,35 +1040,42 @@ function AppInner() {
         onDelete={handleDelete}
       />
 
-      {!isEditMode ? (
-        <div className="btn-save-actions-row">
+      <footer
+        className={`cadastro-action-bar${
+          isEditMode ? ' cadastro-action-bar--no-bottom-nav' : ''
+        }`}
+        aria-label="Ações do cadastro"
+      >
+        {!isEditMode ? (
+          <div className="btn-save-actions-row">
+            <button
+              className="btn-save-main"
+              disabled={items.length === 0}
+              onClick={handleOpenPayment}
+              type="button"
+            >
+              Salvar gasto
+            </button>
+            <button
+              className="btn-save-draft"
+              disabled={items.length === 0}
+              onClick={handleSalvarCompromissoClick}
+              type="button"
+            >
+              Salvar Compromisso
+            </button>
+          </div>
+        ) : (
           <button
-            className="btn-save-main"
+            className="btn-save-main btn-save-main--solo"
             disabled={items.length === 0}
             onClick={handleOpenPayment}
             type="button"
           >
-            Salvar gasto
+            Salvar alterações
           </button>
-          <button
-            className="btn-save-draft"
-            disabled={items.length === 0}
-            onClick={handleSalvarCompromissoClick}
-            type="button"
-          >
-            Salvar Compromisso
-          </button>
-        </div>
-      ) : (
-        <button
-          className="btn-save-main"
-          disabled={items.length === 0}
-          onClick={handleOpenPayment}
-          type="button"
-        >
-          Salvar alterações
-        </button>
-      )}
+        )}
+      </footer>
 
       {showSalvarCompromissoModal && (
         <SalvarCompromissoModal
