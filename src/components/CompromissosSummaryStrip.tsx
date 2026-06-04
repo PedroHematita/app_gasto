@@ -24,7 +24,9 @@ export const CompromissosSummaryStrip: FC<CompromissosSummaryStripProps> = ({
       <span className="compromissos-alert__marker" aria-hidden="true" />
       <span className="compromissos-alert__body">
         <span className="compromissos-alert__title">
-          {summary.total} compromisso{summary.total === 1 ? '' : 's'} pendente
+          <span className="compromissos-alert__count">{summary.total}</span>
+          {' '}
+          compromisso{summary.total === 1 ? '' : 's'} pendente
           {summary.total === 1 ? '' : 's'}
         </span>
         <span className="compromissos-alert__row">

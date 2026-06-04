@@ -750,6 +750,7 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
   z-index: 200;
 }
 
+/* Faixa informativa — cadastro (Calm UI / Muted Metadata; não competir com campos) */
 .compromissos-alert {
   display: flex;
   align-items: stretch;
@@ -760,27 +761,30 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
   padding: 0 var(--space-4) var(--space-2);
   background: transparent;
   border: none;
+  box-shadow: none;
   cursor: pointer;
   text-align: left;
 }
 
 .compromissos-alert__marker {
-  width: 3px;
-  border-radius: 2px;
+  width: 2px;
+  border-radius: 1px;
   flex-shrink: 0;
-  margin: 2px 0;
+  align-self: stretch;
+  margin: 1px 0;
+  opacity: 0.7;
 }
 
 .compromissos-alert--vencido .compromissos-alert__marker {
-  background: var(--badge-vencido);
+  background: var(--border-medium);
 }
 
 .compromissos-alert--breve .compromissos-alert__marker {
-  background: var(--badge-breve);
+  background: var(--border-subtle);
 }
 
 .compromissos-alert--ordem .compromissos-alert__marker {
-  background: var(--text-muted);
+  background: var(--border-subtle);
 }
 
 .compromissos-alert__body {
@@ -789,10 +793,16 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: var(--space-2) var(--space-3);
-  background: var(--surface-1);
+  padding: 6px var(--space-2);
+  background: var(--bg-base);
   border: none;
+  box-shadow: none;
   border-radius: var(--radius-sm);
+  transition: background 0.2s ease;
+}
+
+.compromissos-alert:hover .compromissos-alert__body {
+  background: color-mix(in srgb, var(--bg-base) 88%, var(--interactive-hover));
 }
 
 .compromissos-alert__title {
@@ -800,6 +810,13 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
   font-weight: var(--weight-regular);
   color: var(--text-muted);
   line-height: var(--line-height-single);
+}
+
+.compromissos-alert__count {
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  opacity: 0.82;
+  font-variant-numeric: var(--font-tabular);
 }
 
 .compromissos-alert__row {
@@ -811,25 +828,28 @@ html.keyboard-open .app-container--cadastro.app-container--cadastro-edit {
 }
 
 .compromissos-alert__summary {
-  font-size: var(--font-secondary);
+  font-size: var(--font-auxiliary);
   color: var(--text-muted);
   line-height: var(--line-height-single);
 }
 
 .compromissos-alert__link {
   flex-shrink: 0;
-  font-size: var(--font-secondary);
+  font-size: var(--font-auxiliary);
   color: var(--text-muted);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-regular);
   line-height: var(--line-height-single);
+  text-decoration: none;
 }
 
 .compromissos-alert:hover .compromissos-alert__link {
-  color: var(--text-primary);
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .compromissos-alert:focus-visible {
-  outline: 2px solid var(--border-focus);
+  outline: 1px solid var(--border-medium);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
