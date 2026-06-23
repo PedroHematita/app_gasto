@@ -668,8 +668,11 @@ function AppInner() {
         }
       }
 
-      if (selectedParcela) {
-        await linkParcelaQuitada(selectedParcela.id, inserted.id);
+      const parcelaQuitada = selectedParcela;
+      const compromissoId = selectedCompromisso.id;
+
+      if (parcelaQuitada) {
+        await linkParcelaQuitada(parcelaQuitada.id, inserted.id);
       } else {
         await linkCompromissoQuitado(selectedCompromisso.id, inserted.id);
       }
@@ -678,17 +681,23 @@ function AppInner() {
       setPayment({ ...defaultPayment });
       setQuitValorRealizadoCents(0);
       setSelectedParcela(null);
-      setSelectedCompromisso(null);
-      setScreen('meus_gastos');
       setRefreshKey((k) => k + 1);
       await refreshCompromissosPendentesSummary(orgId);
+
+      if (parcelaQuitada) {
+        const fresh = await fetchCompromissoById(compromissoId);
+        if (fresh) setSelectedCompromisso(fresh);
+      } else {
+        setSelectedCompromisso(null);
+        setScreen('meus_gastos');
+      }
     } catch (error) {
       console.error('Error quitting compromisso:', error);
       alert('Erro ao quitar. Verifique o console.');
     } finally {
       setSaving(false);
     }
-  }, [selectedCompromisso, selectedParcela, payment, quitValorRealizadoCents, orgId]);
+  }, [selectedCompromisso, selectedParcela, payment, quitValorRealizadoCents, orgId, refreshCompromissosPendentesSummary]);
 
   // Org loading
   if (orgLoading) {

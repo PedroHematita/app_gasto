@@ -1059,5 +1059,5 @@ export const MEIOS_PAGAMENTO = [
 ];
 
 export const INSTITUICOES = [
-  'Nubank', 'C6 Madrigal', 'Nubank PJ', '(não se aplica)',
+  'Nubank', 'C6 Madrigal', 'Nubank PJ', 'Mercado Pago', '(não se aplica)',
 ];

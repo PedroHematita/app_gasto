@@ -755,19 +755,31 @@ export async function linkCompromissoQuitado(compromissoId: string, gastoId: str
 export async function linkParcelaQuitada(parcelaId: string, gastoId: string): Promise<void> {
   if (!supabase) throw new Error('Supabase não configurado');
 
-  // 1. Atualiza a parcela para quitado e vincula o gasto
+  // 1. Marca a parcela como quitada (campo obrigatório — não depender de gasto_id)
   const { data: updatedParcela, error: updateError } = await supabase
     .from('compromisso_parcelas')
-    .update({ status: 'quitado', gasto_id: gastoId })
+    .update({ status: 'quitado' })
     .eq('id', parcelaId)
     .select('compromisso_id')
     .single();
 
-  if (updateError || !updatedParcela) throw updateError || new Error('Parcela não encontrada');
+  if (updateError || !updatedParcela) {
+    throw updateError || new Error('Parcela não encontrada');
+  }
+
+  // 2. Vínculo com o gasto gerado (coluna opcional em bancos legados)
+  const { error: linkError } = await supabase
+    .from('compromisso_parcelas')
+    .update({ gasto_id: gastoId })
+    .eq('id', parcelaId);
+
+  if (linkError) {
+    console.warn('linkParcelaQuitada: gasto_id não vinculado (coluna ausente ou RLS):', linkError.message);
+  }
 
   const compId = updatedParcela.compromisso_id;
 
-  // 2. Busca todas as parcelas do mesmo compromisso para ver se estão todas concluídas (quitado/cancelado)
+  // 3. Se todas as parcelas concluídas, marca o compromisso pai como quitado
   const { data: parcelas, error: fetchError } = await supabase
     .from('compromisso_parcelas')
     .select('status')
@@ -775,7 +787,9 @@ export async function linkParcelaQuitada(parcelaId: string, gastoId: string): Pr
 
   if (fetchError || !parcelas) throw fetchError;
 
-  const todasConcluidas = parcelas.every(p => p.status === 'quitado' || p.status === 'cancelado');
+  const todasConcluidas = parcelas.every(
+    (p) => p.status === 'quitado' || p.status === 'cancelado',
+  );
   if (todasConcluidas) {
     const { error: compError } = await supabase
       .from('compromissos')

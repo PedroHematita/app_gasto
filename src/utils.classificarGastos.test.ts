@@ -36,6 +36,7 @@ import {
   valorTabelaClassificacao,
   CLASSIFICACAO_GASTO_OPCOES,
   montarPayloadClassificacaoSimples,
+  INSTITUICOES,
   validarClassificacaoMassa,
   validarClassificacaoMassaComAuth,
   CLASSIFICAR_FILTRO_PAGAMENTO_VAZIO,
@@ -963,5 +964,48 @@ describe('idsVisiveisParaClassificacao', () => {
   it('retorna interseção com gastos visíveis', () => {
     const visiveis = [row({ id: 'a' }), row({ id: 'b' }), row({ id: 'c' })];
     expect(idsVisiveisParaClassificacao(new Set(['a', 'c', 'x']), visiveis)).toEqual(['a', 'c']);
+  });
+});
+
+describe('INSTITUICOES', () => {
+  it('inclui Mercado Pago como opção canônica', () => {
+    expect(INSTITUICOES).toContain('Mercado Pago');
+  });
+});
+
+describe('Mercado Pago — classificação e exibição', () => {
+  it('filtro por instituição encontra gastos com Mercado Pago', () => {
+    const filtro = { formas: [], meios: [], instituicoes: ['Mercado Pago'] };
+    expect(
+      gastoPassaFiltroPagamentoClassificacao(
+        row({ id: '1', instituicaoFinanceira: 'Mercado Pago' }),
+        filtro
+      )
+    ).toBe(true);
+    expect(
+      gastoPassaFiltroPagamentoClassificacao(
+        row({ id: '2', instituicaoFinanceira: 'Nubank' }),
+        filtro
+      )
+    ).toBe(false);
+  });
+
+  it('listarInstituicoesClassificacao inclui Mercado Pago dos registros', () => {
+    expect(
+      listarInstituicoesClassificacao([
+        row({ id: '1', instituicaoFinanceira: 'Mercado Pago' }),
+        row({ id: '2', instituicaoFinanceira: 'Nubank' }),
+      ])
+    ).toEqual(['Mercado Pago', 'Nubank']);
+  });
+
+  it('badge exibe Mercado Pago sem alteração', () => {
+    expect(
+      badgePagamentoClassificacao({
+        formaPagamento: 'À Vista',
+        parcelas: null,
+        instituicaoFinanceira: 'Mercado Pago',
+      })
+    ).toBe('À Vista · Mercado Pago');
   });
 });
