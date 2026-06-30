@@ -11,6 +11,8 @@ import { DatePickerSheet } from './components/DatePickerSheet';
 import { BottomNav } from './components/BottomNav';
 import { MeusGastos } from './components/MeusGastos';
 import { ClassificarGastosScreen } from './components/classificar/ClassificarGastosScreen';
+import { ClassificarMtdScreen } from './components/classificar/ClassificarMtdScreen';
+import { ClassificarMtdSheet } from './components/classificar/ClassificarMtdSheet';
 import { CotacoesScreen } from './components/cotacoes/CotacoesScreen';
 import { CotacaoDetailScreen } from './components/cotacoes/CotacaoDetailScreen';
 import { GastoDetail } from './components/GastoDetail';
@@ -43,6 +45,7 @@ import {
   fetchCompromissosAtivos,
   fetchCompromissoById,
   fetchGastoById,
+  classificarItensMtdEmMassa,
   linkCompromissoQuitado,
   linkParcelaQuitada,
   uploadComprovante,
@@ -104,6 +107,9 @@ function AppInner() {
   // Screen state
   const [screen, setScreen] = useState<Screen>('main');
   const [gastoDetailReturnScreen, setGastoDetailReturnScreen] = useState<Screen>('meus_gastos');
+  const [showMtdSheetOnDetail, setShowMtdSheetOnDetail] = useState(false);
+  const [mtdDetailItemId, setMtdDetailItemId] = useState<string | null>(null);
+  const [savingMtdOnDetail, setSavingMtdOnDetail] = useState(false);
   const [adminChoice, setAdminChoice] = useState<'admin' | 'user' | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -417,6 +423,7 @@ function AppInner() {
       const forma = payment.formaPagamento === 'a_vista' ? 'À Vista' : 'Parcelado';
       const parcelasFinal = payment.formaPagamento === 'a_vista' ? 1 : payment.parcelas;
       const itemsPayload = items.map((item) => ({
+        id: item.id,
         ordem: item.ordem,
         descricao: item.descricao,
         quantidade: item.quantidade,
@@ -517,6 +524,56 @@ function AppInner() {
     setSelectedGasto(g);
     setScreen('gasto_detail');
   }, []);
+
+  const handleOpenGastoDetailFromClassificarMtd = useCallback(async (gastoId: string) => {
+    const g = await fetchGastoById(gastoId);
+    if (!g) {
+      alert('Não foi possível abrir o detalhe deste gasto.');
+      return;
+    }
+    setGastoDetailReturnScreen('classificar_mtd');
+    setSelectedGasto(g);
+    setScreen('gasto_detail');
+  }, []);
+
+  const handleClassificarMtdFromDetail = useCallback((itemId: string) => {
+    setMtdDetailItemId(itemId);
+    setShowMtdSheetOnDetail(true);
+  }, []);
+
+  const handleAplicarMtdFromDetail = useCallback(
+    async (payload: {
+      direcionamentoMtd: string;
+      classificacaoGeralMtd: string;
+      naturezaMtdRaiz: string;
+      naturezaMtdCaminho: string[];
+    }) => {
+      if (!selectedGasto || !mtdDetailItemId || !supabase) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) {
+        alert('Usuário não autenticado.');
+        return;
+      }
+      setSavingMtdOnDetail(true);
+      const result = await classificarItensMtdEmMassa({
+        itemIds: [mtdDetailItemId],
+        orgId,
+        payload,
+        responsavelClassificacao: user.id,
+      });
+      setSavingMtdOnDetail(false);
+      if (!result.ok) {
+        alert(result.error);
+        return;
+      }
+      const updated = await fetchGastoById(selectedGasto.id);
+      if (updated) setSelectedGasto(updated);
+      setShowMtdSheetOnDetail(false);
+      setMtdDetailItemId(null);
+      setRefreshKey((k) => k + 1);
+    },
+    [selectedGasto, mtdDetailItemId, orgId]
+  );
 
   // Start editing a gasto
   const handleStartEdit = useCallback(() => {
@@ -796,6 +853,20 @@ function AppInner() {
     );
   }
 
+  // Classificar MTD
+  if (screen === 'classificar_mtd') {
+    return (
+      <>
+        <ClassificarMtdScreen
+          orgId={orgId}
+          refreshKey={refreshKey}
+          onOpenGastoDetail={handleOpenGastoDetailFromClassificarMtd}
+        />
+        <BottomNav active="classificar_mtd" onNavigate={handleNavigate} />
+      </>
+    );
+  }
+
   // Meus Gastos
   if (screen === 'meus_gastos') {
     return (
@@ -908,12 +979,38 @@ function AppInner() {
 
   // Gasto Detail
   if (screen === 'gasto_detail' && selectedGasto) {
+    const mtd = selectedGasto.mtd;
+    const canMtd = mtd && mtd.tipoGasto === 'Empresarial';
+    const mtdDetailItem = mtdDetailItemId
+      ? selectedGasto.items.find((i) => i.id === mtdDetailItemId)
+      : null;
+    const itemMtd = mtdDetailItem?.mtd;
     return (
-      <GastoDetail
-        gasto={selectedGasto}
-        onBack={() => setScreen(gastoDetailReturnScreen)}
-        onEdit={handleStartEdit}
-      />
+      <>
+        <GastoDetail
+          gasto={selectedGasto}
+          onBack={() => setScreen(gastoDetailReturnScreen)}
+          onEdit={handleStartEdit}
+          onClassificarMtdItem={canMtd ? handleClassificarMtdFromDetail : undefined}
+        />
+        {showMtdSheetOnDetail && canMtd && mtdDetailItem && (
+          <ClassificarMtdSheet
+            selectedCount={1}
+            totalCents={mtdDetailItem.valorCentavos}
+            saving={savingMtdOnDetail}
+            initialDirecionamento={itemMtd?.direcionamentoMtd ?? ''}
+            initialClassificacaoGeral={itemMtd?.classificacaoGeralMtd ?? ''}
+            initialNaturezaCaminho={itemMtd?.naturezaMtdCaminho ?? []}
+            onClose={() => {
+              if (!savingMtdOnDetail) {
+                setShowMtdSheetOnDetail(false);
+                setMtdDetailItemId(null);
+              }
+            }}
+            onApply={handleAplicarMtdFromDetail}
+          />
+        )}
+      </>
     );
   }
 

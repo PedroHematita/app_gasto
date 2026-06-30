@@ -1,19 +1,51 @@
 import { ChevronLeft, Pencil, Share2, Image } from 'lucide-react';
 import { formatCurrency, buildWhatsAppMessage, openWhatsApp } from '../utils';
+import {
+  classificacaoGeralMtdLabel,
+  direcionamentoMtdLabel,
+  mtdCaminhoExibicao,
+} from '../lib/mtdTaxonomia';
+import {
+  gastoElegivelMtd,
+  itemMtdEstaClassificado,
+  statusMtdExibicaoItem,
+} from '../lib/mtdClassificacao';
 import type { GastoRecord, PaymentData } from '../types';
 
 interface GastoDetailProps {
   gasto: GastoRecord;
   onBack: () => void;
   onEdit: () => void;
+  onClassificarMtdItem?: (itemId: string) => void;
+}
+
+function formatMtdDateTime(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return '—';
+  }
 }
 
 export const GastoDetail: React.FC<GastoDetailProps> = ({
   gasto,
   onBack,
   onEdit,
+  onClassificarMtdItem,
 }) => {
   const sortedItems = [...gasto.items].sort((a, b) => a.ordem - b.ordem);
+  const mtd = gasto.mtd;
+  const showMtdSection = mtd && gastoElegivelMtd(mtd.tipoGasto);
+  const itensClassificados = sortedItems.filter((i) => i.mtd && itemMtdEstaClassificado(i.mtd)).length;
+  const itensTotal = sortedItems.length;
 
   const paymentForWhatsApp: PaymentData = {
     fornecedor: gasto.fornecedor,
@@ -74,26 +106,112 @@ export const GastoDetail: React.FC<GastoDetailProps> = ({
           </div>
         </section>
 
+        {mtd && !gastoElegivelMtd(mtd.tipoGasto) && mtd.tipoGasto === 'Pessoal' && (
+          <section className="detail-section detail-mtd-section" aria-labelledby="gasto-detail-mtd">
+            <h3 id="gasto-detail-mtd" className="detail-section__title">
+              Classificação MTD
+            </h3>
+            <p className="detail-mtd-section__nao-aplica">
+              MTD não se aplica a gastos pessoais.
+            </p>
+          </section>
+        )}
+
+        {showMtdSection && mtd && (
+          <section className="detail-section detail-mtd-section" aria-labelledby="gasto-detail-mtd-emp">
+            <h3 id="gasto-detail-mtd-emp" className="detail-section__title">
+              Classificação MTD
+            </h3>
+            <p className="detail-mtd-section__status">
+              {itensClassificados}/{itensTotal} itens classificados
+              {itensClassificados === 0 && (
+                <span className="detail-mtd-section__status--pendente"> · Pendente</span>
+              )}
+              {itensClassificados > 0 && itensClassificados < itensTotal && (
+                <span className="detail-mtd-section__status--pendente"> · Parcial</span>
+              )}
+            </p>
+          </section>
+        )}
+
         <section className="detail-section" aria-labelledby="gasto-detail-itens">
           <h3 id="gasto-detail-itens" className="detail-section__title">
             Itens
           </h3>
-          {sortedItems.map((item) => (
-            <div key={item.id} className="detail-item">
-              <div className="detail-item__top">
-                <span className="detail-item__num">{item.ordem}</span>
-                <span className="detail-item__desc">{item.descricao}</span>
+          {sortedItems.map((item) => {
+            const itemMtd = item.mtd;
+            const classificado = itemMtd && itemMtdEstaClassificado(itemMtd);
+            return (
+              <div key={item.id} className="detail-item detail-item--mtd">
+                <div className="detail-item__top">
+                  <span className="detail-item__num">{item.ordem}</span>
+                  <span className="detail-item__desc">{item.descricao}</span>
+                </div>
+                <div className="detail-item__bottom">
+                  <span className="detail-item__qty">
+                    {item.quantidade} {item.unidade}
+                  </span>
+                  <span className="detail-item__value">
+                    {formatCurrency(item.valorCentavos)}
+                  </span>
+                </div>
+                {showMtdSection && itemMtd && (
+                  <div className="detail-item-mtd">
+                    {!classificado ? (
+                      <>
+                        <p className="detail-item-mtd__status detail-item-mtd__status--pendente">
+                          Não Classificado MTD
+                        </p>
+                        {onClassificarMtdItem && (
+                          <button
+                            type="button"
+                            className="button-finance button-finance--ghost detail-item-mtd__btn"
+                            onClick={() => onClassificarMtdItem(item.id)}
+                          >
+                            Classificar MTD
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <dl className="detail-item-mtd__list">
+                          <div>
+                            <dt>Direcionamento</dt>
+                            <dd>{direcionamentoMtdLabel(itemMtd.direcionamentoMtd)}</dd>
+                          </div>
+                          <div>
+                            <dt>Classificação geral</dt>
+                            <dd>{classificacaoGeralMtdLabel(itemMtd.classificacaoGeralMtd)}</dd>
+                          </div>
+                          <div>
+                            <dt>Natureza MTD</dt>
+                            <dd>{mtdCaminhoExibicao(itemMtd.naturezaMtdCaminho)}</dd>
+                          </div>
+                          <div>
+                            <dt>Resumo</dt>
+                            <dd>{statusMtdExibicaoItem(itemMtd)}</dd>
+                          </div>
+                          <div>
+                            <dt>Classificado em</dt>
+                            <dd>{formatMtdDateTime(itemMtd.mtdClassificadoEm)}</dd>
+                          </div>
+                        </dl>
+                        {onClassificarMtdItem && (
+                          <button
+                            type="button"
+                            className="button-finance button-finance--ghost detail-item-mtd__btn"
+                            onClick={() => onClassificarMtdItem(item.id)}
+                          >
+                            Editar MTD
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
-              <div className="detail-item__bottom">
-                <span className="detail-item__qty">
-                  {item.quantidade} {item.unidade}
-                </span>
-                <span className="detail-item__value">
-                  {formatCurrency(item.valorCentavos)}
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </section>
 
         {gasto.observacoes ? (

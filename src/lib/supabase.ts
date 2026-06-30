@@ -2,6 +2,9 @@ import { createClient } from '@supabase/supabase-js';
 import type {
   GastoRecord,
   GastoClassificacaoRow,
+  GastoMtdGravacaoPayload,
+  GastoMtdGrupo,
+  GastoMtdInfo,
   CompromissoRecord,
   CompromissoStatus,
   CompromissoParcela,
@@ -13,6 +16,18 @@ import { mapGastoClassificacaoRowFromDb, sortGastosClassificacaoDesc } from '../
 import { requireFornecedorTrimmed } from '../utils';
 import { isFormaPagamentoParcelado } from './gastosParceladosFuturos';
 import { listPeriodsDueThroughToday } from './gastosPerenePeriods';
+import {
+  computarMtdStatusGasto,
+  contagemMtdItens,
+  mapGastoMtdGrupoFromDb,
+  mapItemMtdInfoFromDb,
+  sortGastosMtdGruposDesc,
+} from './mtdClassificacao';
+import {
+  MTD_STATUS_CLASSIFICADO,
+  MTD_STATUS_NAO_CLASSIFICADO,
+  mtdPayloadEstaCompleto,
+} from './mtdTaxonomia';
 
 /** `null` à vista; número de parcelas só quando forma é parcelado (ex.: `'Parcelado'`). */
 function numeroParcelasParaDb(formaPagamento: string, parcelas: number | undefined): number | null {
@@ -271,6 +286,191 @@ export async function fetchGastosParaClassificacao(
   return sortGastosClassificacaoDesc(rows);
 }
 
+const ITEM_MTD_COLS =
+  'direcionamento_mtd, classificacao_geral_mtd, natureza_mtd_raiz, natureza_mtd_caminho, mtd_status, mtd_classificado_em, mtd_classificado_por';
+
+const GASTO_MTD_GRUPO_SELECT = `
+  id, data_compra, created_at, fornecedor, forma_pagamento, meio_pagamento, instituicao_financeira,
+  numero_parcelas, total, quem_gastou, tipo_gasto, setor, data_classificacao, responsavel_classificacao,
+  mtd_status,
+  itens_gasto (
+    id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total,
+    ${ITEM_MTD_COLS}
+  )
+`;
+
+function mapGastoMtdResumoFromDb(
+  row: { tipo_gasto?: string | null; mtd_status?: string | null },
+  itens: Array<{ mtd_status?: string | null; direcionamento_mtd?: string | null; classificacao_geral_mtd?: string | null; natureza_mtd_raiz?: string | null; natureza_mtd_caminho?: string[] | null }>
+): GastoMtdInfo {
+  const { classificados, total } = contagemMtdItens(
+    itens.map((i) => ({
+      mtdStatus: i.mtd_status ?? MTD_STATUS_NAO_CLASSIFICADO,
+      direcionamentoMtd: i.direcionamento_mtd ?? null,
+      classificacaoGeralMtd: i.classificacao_geral_mtd ?? null,
+      naturezaMtdRaiz: i.natureza_mtd_raiz ?? null,
+      naturezaMtdCaminho: i.natureza_mtd_caminho ?? null,
+    }))
+  );
+  return {
+    tipoGasto: row.tipo_gasto ?? 'Não Classificado',
+    mtdStatus: row.mtd_status ?? computarMtdStatusGasto(itens as any),
+    itensClassificados: classificados,
+    itensTotal: total,
+  };
+}
+
+/** Recalcula gastos.mtd_status (resumo) a partir dos itens. */
+export async function sincronizarMtdStatusGasto(gastoId: string): Promise<void> {
+  if (!supabase) return;
+
+  const { data: itens, error: itensError } = await supabase
+    .from('itens_gasto')
+    .select(
+      'mtd_status, direcionamento_mtd, classificacao_geral_mtd, natureza_mtd_raiz, natureza_mtd_caminho'
+    )
+    .eq('gasto_id', gastoId);
+
+  if (itensError || !itens) {
+    console.error('sincronizarMtdStatusGasto', itensError);
+    return;
+  }
+
+  const mtdStatus = computarMtdStatusGasto(
+    itens.map((i: any) => ({
+      mtdStatus: i.mtd_status,
+      direcionamentoMtd: i.direcionamento_mtd,
+      classificacaoGeralMtd: i.classificacao_geral_mtd,
+      naturezaMtdRaiz: i.natureza_mtd_raiz,
+      naturezaMtdCaminho: i.natureza_mtd_caminho,
+    }))
+  );
+
+  const { error } = await supabase
+    .from('gastos')
+    .update({ mtd_status: mtdStatus })
+    .eq('id', gastoId);
+
+  if (error) console.error('sincronizarMtdStatusGasto update', error);
+}
+
+/** Listagem agrupada para Classificar MTD — gastos empresariais com itens. */
+export async function fetchGastosParaClassificacaoMtd(orgId: string): Promise<GastoMtdGrupo[]> {
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('gastos')
+    .select(GASTO_MTD_GRUPO_SELECT)
+    .eq('org_id', orgId)
+    .eq('tipo_gasto', 'Empresarial')
+    .order('data_compra', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (error || !data) return [];
+
+  return sortGastosMtdGruposDesc(data.map((row: any) => mapGastoMtdGrupoFromDb(row)));
+}
+
+export type ClassificarItensMtdEmMassaInput = {
+  itemIds: string[];
+  orgId: string;
+  payload: GastoMtdGravacaoPayload;
+  responsavelClassificacao: string;
+};
+
+export type ClassificarItensMtdEmMassaResult =
+  | { ok: true; updatedCount: number; gastoIds: string[] }
+  | { ok: false; error: string };
+
+/** Atualiza classificação MTD em massa nos itens selecionados. */
+export async function classificarItensMtdEmMassa(
+  input: ClassificarItensMtdEmMassaInput
+): Promise<ClassificarItensMtdEmMassaResult> {
+  if (!supabase) {
+    return { ok: false, error: 'Não foi possível classificar MTD. Tente novamente.' };
+  }
+
+  if (input.itemIds.length === 0) {
+    return { ok: false, error: 'Não é possível classificar sem seleção.' };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, error: 'Usuário não autenticado.' };
+  }
+
+  const payloadOk = mtdPayloadEstaCompleto({
+    direcionamentoMtd: input.payload.direcionamentoMtd as any,
+    classificacaoGeralMtd: input.payload.classificacaoGeralMtd as any,
+    naturezaMtdRaiz: input.payload.naturezaMtdRaiz as any,
+    naturezaMtdCaminho: input.payload.naturezaMtdCaminho,
+  });
+
+  if (!payloadOk) {
+    return { ok: false, error: 'Classificação MTD incompleta.' };
+  }
+
+  const { data: itensAlvo, error: fetchError } = await supabase
+    .from('itens_gasto')
+    .select(`id, gasto_id, gastos!inner(org_id, tipo_gasto)`)
+    .in('id', input.itemIds)
+    .eq('gastos.org_id', input.orgId)
+    .eq('gastos.tipo_gasto', 'Empresarial');
+
+  if (fetchError || !itensAlvo?.length) {
+    console.error('classificarItensMtdEmMassa fetch', fetchError);
+    return { ok: false, error: 'Itens não encontrados ou não elegíveis para MTD.' };
+  }
+
+  if (itensAlvo.length !== input.itemIds.length) {
+    return { ok: false, error: 'Alguns itens selecionados não são elegíveis para MTD.' };
+  }
+
+  const now = new Date().toISOString();
+  const idsValidos = itensAlvo.map((i: any) => i.id);
+
+  const { data: updated, error } = await supabase
+    .from('itens_gasto')
+    .update({
+      direcionamento_mtd: input.payload.direcionamentoMtd,
+      classificacao_geral_mtd: input.payload.classificacaoGeralMtd,
+      natureza_mtd_raiz: input.payload.naturezaMtdRaiz,
+      natureza_mtd_caminho: input.payload.naturezaMtdCaminho,
+      mtd_status: MTD_STATUS_CLASSIFICADO,
+      mtd_classificado_em: now,
+      mtd_classificado_por: input.responsavelClassificacao,
+    })
+    .in('id', idsValidos)
+    .select('id, gasto_id');
+
+  if (error) {
+    console.error('classificarItensMtdEmMassa', error);
+    return { ok: false, error: 'Não foi possível classificar MTD. Tente novamente.' };
+  }
+
+  const gastoIds = [...new Set((updated ?? itensAlvo).map((i: any) => i.gasto_id as string))];
+  await Promise.all(gastoIds.map((gastoId) => sincronizarMtdStatusGasto(gastoId)));
+
+  return { ok: true, updatedCount: updated?.length ?? idsValidos.length, gastoIds };
+}
+
+/** @deprecated Use classificarItensMtdEmMassa. */
+export async function classificarMtdEmMassa(input: {
+  ids: string[];
+  orgId: string;
+  payload: GastoMtdGravacaoPayload;
+  responsavelClassificacao: string;
+}): Promise<{ ok: true; updatedCount: number } | { ok: false; error: string }> {
+  const result = await classificarItensMtdEmMassa({
+    itemIds: input.ids,
+    orgId: input.orgId,
+    payload: input.payload,
+    responsavelClassificacao: input.responsavelClassificacao,
+  });
+  if (!result.ok) return result;
+  return { ok: true, updatedCount: result.updatedCount };
+}
+
 export type ClassificarGastosEmMassaInput = {
   ids: string[];
   orgId: string;
@@ -333,7 +533,12 @@ export async function fetchGastoById(gastoId: string): Promise<GastoRecord | nul
     .select(`
       id, data_compra, fornecedor, forma_pagamento, meio_pagamento,
       instituicao_financeira, observacoes, total, comprovante_url, numero_parcelas, created_at,
-      itens_gasto ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total, created_at )
+      tipo_gasto, mtd_status,
+      itens_gasto (
+        id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total, created_at,
+        direcionamento_mtd, classificacao_geral_mtd, natureza_mtd_raiz, natureza_mtd_caminho,
+        mtd_status, mtd_classificado_em, mtd_classificado_por
+      )
     `)
     .eq('id', gastoId)
     .single();
@@ -359,6 +564,7 @@ export async function fetchGastoById(gastoId: string): Promise<GastoRecord | nul
     comprovanteUrl: data.comprovante_url || '',
     parcelas: data.numero_parcelas || undefined,
     createdAt: data.created_at,
+    mtd: mapGastoMtdResumoFromDb(data, (data as any).itens_gasto ?? []),
     items: ((data as any).itens_gasto || [])
       .sort((a: any, b: any) => a.ordem - b.ordem)
       .map((item: any) => ({
@@ -368,6 +574,7 @@ export async function fetchGastoById(gastoId: string): Promise<GastoRecord | nul
         quantidade: item.quantidade_adquirida,
         unidade: item.unidade_medida,
         valorCentavos: Math.round((item.valor_total || 0) * 100),
+        mtd: mapItemMtdInfoFromDb(item),
       })),
   };
 }
@@ -385,6 +592,7 @@ export async function updateGasto(
   newComprovanteUrl: string | null, // null = keep existing
   parcelas: number | undefined,
   items: Array<{
+    id?: string;
     ordem: number;
     descricao: string;
     quantidade: number;
@@ -407,7 +615,6 @@ export async function updateGasto(
     numero_parcelas: numeroParcelasParaDb(formaPagamento, parcelas),
   };
 
-  // Only update comprovante_url if a new file was provided
   if (newComprovanteUrl !== null) {
     updateData.comprovante_url = newComprovanteUrl || null;
   }
@@ -419,28 +626,42 @@ export async function updateGasto(
 
   if (gastoError) throw gastoError;
 
-  // Delete old items and insert new ones
-  const { error: deleteError } = await supabase
+  const { data: existingItems, error: existingError } = await supabase
     .from('itens_gasto')
-    .delete()
+    .select('id')
     .eq('gasto_id', gastoId);
 
-  if (deleteError) throw deleteError;
+  if (existingError) throw existingError;
 
-  const itensData = items.map((item) => ({
-    gasto_id: gastoId,
-    ordem: item.ordem,
-    descricao_produto_servico: item.descricao,
-    quantidade_adquirida: item.quantidade,
-    unidade_medida: item.unidade,
-    valor_total: item.valorCentavos / 100,
-  }));
+  const existingIds = new Set((existingItems ?? []).map((r: { id: string }) => r.id));
+  const incomingIds = new Set(items.filter((i) => i.id).map((i) => i.id!));
+  const idsToDelete = [...existingIds].filter((id) => !incomingIds.has(id));
 
-  const { error: itensError } = await supabase
-    .from('itens_gasto')
-    .insert(itensData);
+  if (idsToDelete.length > 0) {
+    const { error: deleteError } = await supabase.from('itens_gasto').delete().in('id', idsToDelete);
+    if (deleteError) throw deleteError;
+  }
 
-  if (itensError) throw itensError;
+  for (const item of items) {
+    const row = {
+      gasto_id: gastoId,
+      ordem: item.ordem,
+      descricao_produto_servico: item.descricao,
+      quantidade_adquirida: item.quantidade,
+      unidade_medida: item.unidade,
+      valor_total: item.valorCentavos / 100,
+    };
+
+    if (item.id && existingIds.has(item.id)) {
+      const { error: updateError } = await supabase.from('itens_gasto').update(row).eq('id', item.id);
+      if (updateError) throw updateError;
+    } else {
+      const { error: insertError } = await supabase.from('itens_gasto').insert(row);
+      if (insertError) throw insertError;
+    }
+  }
+
+  await sincronizarMtdStatusGasto(gastoId);
 
   return { id: gastoId };
 }

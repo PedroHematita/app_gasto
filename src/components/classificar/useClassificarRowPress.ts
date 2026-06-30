@@ -24,7 +24,7 @@ export function useClassificarRowPress({
   }, []);
 
   const onPointerDown = useCallback(
-    (e: React.PointerEvent<HTMLTableRowElement>) => {
+    (e: React.PointerEvent<HTMLElement>) => {
       if (e.button !== 0) return;
       longPressFiredRef.current = false;
       startRef.current = { x: e.clientX, y: e.clientY };
@@ -39,7 +39,7 @@ export function useClassificarRowPress({
   );
 
   const onPointerMove = useCallback(
-    (e: React.PointerEvent<HTMLTableRowElement>) => {
+    (e: React.PointerEvent<HTMLElement>) => {
       if (timerRef.current === null) return;
       const dx = Math.abs(e.clientX - startRef.current.x);
       const dy = Math.abs(e.clientY - startRef.current.y);
@@ -49,7 +49,7 @@ export function useClassificarRowPress({
   );
 
   const onPointerUp = useCallback(
-    (e: React.PointerEvent<HTMLTableRowElement>) => {
+    (e: React.PointerEvent<HTMLElement>) => {
       if (e.button !== 0) return;
       clearTimer();
       if (!longPressFiredRef.current) {

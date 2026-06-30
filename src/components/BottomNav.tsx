@@ -1,8 +1,8 @@
-import { PlusCircle, List, Scale, Tags } from 'lucide-react';
+import { PlusCircle, List, Scale, Tags, Building2 } from 'lucide-react';
 import type { Screen } from '../types';
 
 interface BottomNavProps {
-  active: 'main' | 'meus_gastos' | 'cotacoes' | 'classificar_gastos';
+  active: 'main' | 'meus_gastos' | 'cotacoes' | 'classificar_gastos' | 'classificar_mtd';
   onNavigate: (screen: Screen) => void;
 }
 
@@ -35,6 +35,15 @@ export const BottomNav: React.FC<BottomNavProps> = ({ active, onNavigate }) => {
       >
         <Tags size={20} aria-hidden />
         <span>Classificar</span>
+      </button>
+      <button
+        className={`bottom-nav__item ${active === 'classificar_mtd' ? 'bottom-nav__item--active' : ''}`}
+        onClick={() => onNavigate('classificar_mtd')}
+        type="button"
+        aria-current={active === 'classificar_mtd' ? 'page' : undefined}
+      >
+        <Building2 size={20} aria-hidden />
+        <span>MTD</span>
       </button>
       <button
         className={`bottom-nav__item ${active === 'cotacoes' ? 'bottom-nav__item--active' : ''}`}

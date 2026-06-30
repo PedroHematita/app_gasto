@@ -5,6 +5,19 @@ export interface GastoItem {
   quantidade: number;
   unidade: string;
   valorCentavos: number; // stored as integer cents
+  /** Classificação MTD do item (fonte principal). */
+  mtd?: ItemMtdInfo;
+}
+
+/** MTD gravada no item do gasto. */
+export interface ItemMtdInfo {
+  direcionamentoMtd: string | null;
+  classificacaoGeralMtd: string | null;
+  naturezaMtdRaiz: string | null;
+  naturezaMtdCaminho: string[] | null;
+  mtdStatus: string;
+  mtdClassificadoEm: string | null;
+  mtdClassificadoPor: string | null;
 }
 
 export interface PaymentData {
@@ -40,6 +53,7 @@ export interface GastoRecord {
   parcelas?: number;
   createdAt: string;
   items: GastoItem[];
+  mtd?: GastoMtdInfo;
 }
 
 export type CompromissoStatus = 'pendente' | 'vencido' | 'quitado' | 'cancelado';
@@ -135,6 +149,67 @@ export interface GastoClassificacaoPayload {
   setor: string | null;
 }
 
+/** Linha para a tela Classificar MTD — item com contexto do gasto pai. */
+export interface ItemMtdRow {
+  id: string;
+  gastoId: string;
+  ordem: number;
+  descricao: string;
+  quantidade: number;
+  unidade: string;
+  valorCentavos: number;
+  direcionamentoMtd: string | null;
+  classificacaoGeralMtd: string | null;
+  naturezaMtdRaiz: string | null;
+  naturezaMtdCaminho: string[] | null;
+  mtdStatus: string;
+  mtdClassificadoEm: string | null;
+  mtdClassificadoPor: string | null;
+}
+
+/** Gasto empresarial agrupado com itens para Classificar MTD. */
+export interface GastoMtdGrupo extends GastoClassificacaoRow {
+  /** Resumo consolidado (gastos.mtd_status). */
+  mtdStatus: string;
+  itens: ItemMtdRow[];
+}
+
+/** @deprecated Use GastoMtdGrupo + ItemMtdRow. Mantido temporariamente para filtros legados. */
+export interface GastoMtdRow extends GastoClassificacaoRow {
+  direcionamentoMtd: string | null;
+  classificacaoGeralMtd: string | null;
+  naturezaMtdRaiz: string | null;
+  naturezaMtdCaminho: string[] | null;
+  mtdStatus: string;
+  mtdClassificadoEm: string | null;
+  mtdClassificadoPor: string | null;
+}
+
+/** Payload para gravação de classificação MTD. */
+export interface GastoMtdGravacaoPayload {
+  direcionamentoMtd: string;
+  classificacaoGeralMtd: string;
+  naturezaMtdRaiz: string;
+  naturezaMtdCaminho: string[];
+}
+
+export type ClassificarMtdFiltroStatus = 'pendente' | 'classificado' | 'todos';
+
+export interface ClassificarMtdFiltrosState {
+  statusMtd: ClassificarMtdFiltroStatus;
+  data: ClassificarFiltroData;
+  fornecedores: string[];
+  pagamento: ClassificarFiltroPagamento;
+}
+
+/** Resumo MTD consolidado do gasto (detalhe). */
+export interface GastoMtdInfo {
+  tipoGasto: string;
+  mtdStatus: string;
+  itensClassificados: number;
+  itensTotal: number;
+}
+
 /** Presets de filtro por data_compra na tela Classificar Gastos. */
 export type ClassificarFiltroDataPreset =
   | 'hoje'
@@ -186,6 +261,7 @@ export type Screen =
   | 'confirmation'
   | 'meus_gastos'
   | 'classificar_gastos'
+  | 'classificar_mtd'
   | 'gasto_detail'
   | 'gasto_edit'
   | 'compromisso_detail'
