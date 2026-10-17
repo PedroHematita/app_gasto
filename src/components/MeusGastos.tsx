@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { ChevronDown, ChevronUp, Plus, Search } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, Search, Shield } from 'lucide-react';
 import { ScreenHeader, ScreenHeaderIconButton } from './ScreenHeader';
 import { LogoutButton } from './LogoutButton';
 import { fetchGastos, fetchCompromissosAtivos, fetchGastosPerenesAtivos } from '../lib/supabase';
@@ -40,6 +40,7 @@ interface MeusGastosProps {
   onSelectGastoPerene: (gp: GastoPereneRecord) => void;
   onNewGasto: () => void;
   onNovoGastoPerene: () => void;
+  onOpenAdmin?: () => void;
   refreshKey: number;
   focusCompromissosNonce: number;
 }
@@ -100,6 +101,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
   onSelectGastoPerene,
   onNewGasto,
   onNovoGastoPerene,
+  onOpenAdmin,
   refreshKey,
   focusCompromissosNonce,
 }) => {
@@ -740,6 +742,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
 
     // Total de "itens" para o cabeçalho da seção
     const nTotal = unicos.length + parcelasFlat.length;
+    if (nTotal === 0) return null;
     const showSubtitles = unicos.length > 0 && parcelasFlat.length > 0;
     const isExpanded = displayCompromissosExpanded;
 
@@ -920,7 +923,10 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                   </div>
                   <div className="gasto-card__bottom">
                     <span className="gasto-card__date">{gasto.dataCompra}</span>
-                    <span className="gasto-card__meio">{gasto.meioPagamento}</span>
+                    <span className="gasto-card__meio">
+                      {gasto.meioPagamento}
+                      {gasto.comprovantePendente ? ' · Comprovante pendente' : ''}
+                    </span>
                   </div>
                 </button>
               ))}
@@ -948,9 +954,20 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
       <ScreenHeader
         title="Meus Gastos"
         action={
-          <ScreenHeaderIconButton onClick={onNewGasto} ariaLabel="Novo gasto">
-            <Plus size={18} aria-hidden />
-          </ScreenHeaderIconButton>
+          <>
+            {onOpenAdmin ? (
+              <ScreenHeaderIconButton
+                onClick={onOpenAdmin}
+                ariaLabel="Painel administrativo"
+                className="screen-header__icon-btn--admin"
+              >
+                <Shield size={18} aria-hidden />
+              </ScreenHeaderIconButton>
+            ) : null}
+            <ScreenHeaderIconButton onClick={onNewGasto} ariaLabel="Novo gasto">
+              <Plus size={18} aria-hidden />
+            </ScreenHeaderIconButton>
+          </>
         }
       />
 

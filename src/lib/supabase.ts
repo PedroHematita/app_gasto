@@ -94,7 +94,10 @@ export async function saveGasto(
     .from('itens_gasto')
     .insert(itensData);
 
-  if (itensError) throw itensError;
+  if (itensError) {
+    await supabase.from('gastos').delete().eq('id', gasto.id);
+    throw itensError;
+  }
 
   return gasto;
 }
@@ -206,18 +209,36 @@ function brToISO(br: string): string {
 }
 
 // Fetch all gastos with items (for search across fornecedor AND item descriptions)
-export async function fetchGastos(orgId: string): Promise<GastoRecord[]> {
-  if (!supabase) return [];
+const GASTOS_COM_ITENS = `
+      id, data_compra, fornecedor, forma_pagamento, meio_pagamento,
+      instituicao_financeira, observacoes, total, comprovante_url, comprovante_pendente, numero_parcelas, created_at,
+      itens_gasto ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total, created_at )
+    `;
 
-  const { data, error } = await supabase
-    .from('gastos')
-    .select(`
+const GASTOS_COM_ITENS_SEM_FLAG = `
       id, data_compra, fornecedor, forma_pagamento, meio_pagamento,
       instituicao_financeira, observacoes, total, comprovante_url, numero_parcelas, created_at,
       itens_gasto ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total, created_at )
-    `)
+    `;
+
+export async function fetchGastos(orgId: string): Promise<GastoRecord[]> {
+  if (!supabase) return [];
+
+  const comFlag = await supabase
+    .from('gastos')
+    .select(GASTOS_COM_ITENS)
     .eq('org_id', orgId)
     .order('created_at', { ascending: false });
+
+  const resultado = comFlag.error && isMissingColumnError(comFlag.error, 'comprovante_pendente')
+    ? await supabase
+        .from('gastos')
+        .select(GASTOS_COM_ITENS_SEM_FLAG)
+        .eq('org_id', orgId)
+        .order('created_at', { ascending: false })
+    : comFlag;
+
+  const { data, error } = resultado;
 
   if (error || !data) return [];
 
@@ -232,6 +253,7 @@ export async function fetchGastos(orgId: string): Promise<GastoRecord[]> {
     observacoes: row.observacoes || '',
     total: Math.round((row.total || 0) * 100),
     comprovanteUrl: row.comprovante_url || '',
+    comprovantePendente: Boolean(row.comprovante_pendente),
     parcelas: row.numero_parcelas || undefined,
     createdAt: row.created_at,
     items: (row.itens_gasto || [])
@@ -328,15 +350,21 @@ export async function classificarGastosEmMassa(
 export async function fetchGastoById(gastoId: string): Promise<GastoRecord | null> {
   if (!supabase) return null;
 
-  const { data, error } = await supabase
+  const comFlag = await supabase
     .from('gastos')
-    .select(`
-      id, data_compra, fornecedor, forma_pagamento, meio_pagamento,
-      instituicao_financeira, observacoes, total, comprovante_url, numero_parcelas, created_at,
-      itens_gasto ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total, created_at )
-    `)
+    .select(GASTOS_COM_ITENS)
     .eq('id', gastoId)
     .single();
+
+  const resultado = comFlag.error && isMissingColumnError(comFlag.error, 'comprovante_pendente')
+    ? await supabase
+        .from('gastos')
+        .select(GASTOS_COM_ITENS_SEM_FLAG)
+        .eq('id', gastoId)
+        .single()
+    : comFlag;
+
+  const { data, error } = resultado;
 
   if (error || !data) return null;
 
@@ -357,6 +385,7 @@ export async function fetchGastoById(gastoId: string): Promise<GastoRecord | nul
     observacoes: data.observacoes || '',
     total: Math.round((data.total || 0) * 100),
     comprovanteUrl: data.comprovante_url || '',
+    comprovantePendente: Boolean((data as { comprovante_pendente?: boolean }).comprovante_pendente),
     parcelas: data.numero_parcelas || undefined,
     createdAt: data.created_at,
     items: ((data as any).itens_gasto || [])
@@ -744,26 +773,46 @@ export async function cancelCompromisso(compromissoId: string): Promise<void> {
 export async function linkCompromissoQuitado(compromissoId: string, gastoId: string): Promise<void> {
   if (!supabase) throw new Error('Supabase não configurado');
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('compromissos')
     .update({ status: 'quitado', gasto_id: gastoId })
-    .eq('id', compromissoId);
+    .eq('id', compromissoId)
+    .select('id')
+    .maybeSingle();
 
   if (error) throw error;
+  if (!data) throw new Error('Não foi possível marcar o compromisso como quitado.');
+}
+
+function isMissingColumnError(error: { code?: string; message?: string } | null, column: string): boolean {
+  if (!error) return false;
+  const message = error.message ?? '';
+  return error.code === '42703' || error.code === 'PGRST204' || message.includes(column);
 }
 
 export async function linkParcelaQuitada(parcelaId: string, gastoId: string): Promise<void> {
   if (!supabase) throw new Error('Supabase não configurado');
 
-  // 1. Atualiza a parcela para quitado e vincula o gasto
+  // Status primeiro: a lista de pendentes depende disso. gasto_id é vínculo opcional
+  // (a coluna pode ainda não existir no banco).
   const { data: updatedParcela, error: updateError } = await supabase
     .from('compromisso_parcelas')
-    .update({ status: 'quitado', gasto_id: gastoId })
+    .update({ status: 'quitado' })
     .eq('id', parcelaId)
     .select('compromisso_id')
     .single();
 
   if (updateError || !updatedParcela) throw updateError || new Error('Parcela não encontrada');
+
+  const { error: linkError } = await supabase
+    .from('compromisso_parcelas')
+    .update({ gasto_id: gastoId })
+    .eq('id', parcelaId);
+
+  // A lista depende do status. gasto_id é vínculo opcional enquanto a coluna não existir.
+  if (linkError && !isMissingColumnError(linkError, 'gasto_id')) {
+    console.error('Vínculo gasto_id da parcela não gravado:', linkError);
+  }
 
   const compId = updatedParcela.compromisso_id;
 
@@ -776,14 +825,14 @@ export async function linkParcelaQuitada(parcelaId: string, gastoId: string): Pr
   if (fetchError || !parcelas) throw fetchError;
 
   const todasConcluidas = parcelas.every(p => p.status === 'quitado' || p.status === 'cancelado');
-  if (todasConcluidas) {
-    const { error: compError } = await supabase
-      .from('compromissos')
-      .update({ status: 'quitado' })
-      .eq('id', compId);
+  if (!todasConcluidas) return;
 
-    if (compError) throw compError;
-  }
+  const { error: compError } = await supabase
+    .from('compromissos')
+    .update({ status: 'quitado' })
+    .eq('id', compId);
+
+  if (compError) console.error('Compromisso pai não encerrado:', compError);
 }
 
 // ----- Gastos perenes -----

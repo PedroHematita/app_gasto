@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   appendObservacaoDiferencaValor,
+  isDataPagamentoQuitacaoValida,
   observacaoAutomaticaDiferencaValor,
   scaleItemsValorToTotal,
 } from './utils';
@@ -22,6 +23,21 @@ describe('observacaoAutomaticaDiferencaValor', () => {
     const msg = observacaoAutomaticaDiferencaValor(30_000, 33_000)!;
     expect(msg).toContain('maior que o planejado');
     expect(msg).toContain('+R$');
+  });
+});
+
+describe('isDataPagamentoQuitacaoValida', () => {
+  const hoje = new Date(2026, 9, 16);
+
+  it('aceita hoje e datas passadas', () => {
+    expect(isDataPagamentoQuitacaoValida('16/10/2026', hoje)).toBe(true);
+    expect(isDataPagamentoQuitacaoValida('14/10/2026', hoje)).toBe(true);
+  });
+
+  it('recusa data futura ou inválida', () => {
+    expect(isDataPagamentoQuitacaoValida('17/10/2026', hoje)).toBe(false);
+    expect(isDataPagamentoQuitacaoValida('31/02/2026', hoje)).toBe(false);
+    expect(isDataPagamentoQuitacaoValida('', hoje)).toBe(false);
   });
 });
 

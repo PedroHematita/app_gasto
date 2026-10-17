@@ -3,12 +3,14 @@ import { Upload } from 'lucide-react';
 import { FloatingInput } from './FloatingInput';
 import { FloatingSelect } from './FloatingSelect';
 import { CurrencyInput } from './CurrencyInput';
+import { DatePickerSheet } from './DatePickerSheet';
 import {
   MEIOS_PAGAMENTO,
   INSTITUICOES,
   formatCurrency,
   formatDiferencaValorCents,
   FORNECEDOR_REQUIRED_MSG,
+  isDataPagamentoQuitacaoValida,
 } from '../utils';
 import { searchFornecedores } from '../lib/supabase';
 import type { PaymentData } from '../types';
@@ -32,6 +34,9 @@ interface PaymentModalProps {
   onValorRealizadoChange?: (cents: number) => void;
   /** Oculta a escolha de forma de pagamento (À Vista/Parcelado) */
   hideFormaPagamento?: boolean;
+  /** Quitação: data efetiva do pagamento (dd/mm/aaaa). Não altera o compromisso. */
+  dataPagamentoBR?: string;
+  onDataPagamentoChange?: (dataBR: string) => void;
 }
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -49,10 +54,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   valorRealizadoCents,
   onValorRealizadoChange,
   hideFormaPagamento = false,
+  dataPagamentoBR,
+  onDataPagamentoChange,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [warningParcela, setWarningParcela] = useState<{ valorParcela: number } | null>(null);
   const [fornecedorError, setFornecedorError] = useState(false);
+  const [showDataPagamento, setShowDataPagamento] = useState(false);
 
   const isQuitMode =
     valorPlanejadoCents !== undefined &&
@@ -65,6 +73,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     if (isQuitMode && valorRealizadoCents <= 0) {
       alert('Informe o valor realizado maior que zero.');
       setTimeout(() => document.getElementById('input-valor-realizado')?.focus(), 10);
+      return;
+    }
+
+    if (isQuitMode && dataPagamentoBR !== undefined && !isDataPagamentoQuitacaoValida(dataPagamentoBR)) {
+      alert('Informe a data do pagamento. Ela não pode ser futura.');
       return;
     }
 
@@ -168,6 +181,16 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 )}
               </div>
             </div>
+            {dataPagamentoBR !== undefined && onDataPagamentoChange && (
+              <button
+                type="button"
+                className="quit-data-pagamento"
+                onClick={() => setShowDataPagamento(true)}
+              >
+                <span className="quit-data-pagamento__label">Data do pagamento</span>
+                <span className="quit-data-pagamento__value">{dataPagamentoBR}</span>
+              </button>
+            )}
             <div className="payment-separator">— pagamento —</div>
           </>
         )}
@@ -281,7 +304,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             : 'Anexar comprovante'}
         </button>
         <div className="btn-attach__hint">
-          {payment.comprovanteFile ? 'toque para substituir' : 'opcional'}
+          {payment.comprovanteFile
+            ? 'toque para substituir'
+            : isQuitMode && totalCents > 50000
+              ? 'obrigatório acima de R$ 500,00'
+              : 'opcional'}
         </div>
         </div>
 
@@ -304,6 +331,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           </button>
         </footer>
       </div>
+
+      {showDataPagamento && dataPagamentoBR && onDataPagamentoChange && (
+        <DatePickerSheet
+          elevate
+          selectedDate={dataPagamentoBR}
+          onSelect={onDataPagamentoChange}
+          onClose={() => setShowDataPagamento(false)}
+        />
+      )}
 
       {/* Warning Modal for low parcel value */}
       {warningParcela && (

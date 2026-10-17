@@ -57,6 +57,11 @@ export const GastoDetail: React.FC<GastoDetailProps> = ({
             {gasto.fornecedor || 'Sem fornecedor'}
           </h2>
           <p className="detail-summary-card__meta">Compra em {gasto.dataCompra}</p>
+          {gasto.comprovantePendente ? (
+            <p className="detail-comprovante-pendente" role="status">
+              Pagamento confirmado. O comprovante ainda não foi anexado. Use Editar para enviar o arquivo. Isso não cria outro gasto.
+            </p>
+          ) : null}
           <div className="detail-chips detail-summary-card__chips">
             <span className="detail-chip">
               {gasto.formaPagamento === 'À Vista'

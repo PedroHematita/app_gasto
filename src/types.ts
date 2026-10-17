@@ -37,6 +37,8 @@ export interface GastoRecord {
   observacoes: string;
   total: number; // cents
   comprovanteUrl: string;
+  /** Pagamento acima de R$ 500,00 já confirmado, com o arquivo ainda não anexado. */
+  comprovantePendente?: boolean;
   parcelas?: number;
   createdAt: string;
   items: GastoItem[];

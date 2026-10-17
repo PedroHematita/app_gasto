@@ -768,6 +768,17 @@ export function parseDateBR(str: string): Date | null {
   return new Date(y, m - 1, d);
 }
 
+/** Data efetiva da quitação: calendário válido e não posterior a hoje. */
+export function isDataPagamentoQuitacaoValida(dataBR: string, hoje: Date = new Date()): boolean {
+  const parsed = parseDateBR(dataBR);
+  if (!parsed) return false;
+  const [d, m, y] = dataBR.split('/').map(Number);
+  if (parsed.getFullYear() !== y || parsed.getMonth() !== m - 1 || parsed.getDate() !== d) return false;
+  const pagamento = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+  const limite = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+  return pagamento.getTime() <= limite.getTime();
+}
+
 export function startOfDayLocal(d: Date): Date {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);

@@ -1880,6 +1880,40 @@ html.keyboard-open .modal-form-shell__body .btn-attach {
   color: #ffcc00;
 }
 
+.quit-data-pagamento {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px 2px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.quit-data-pagamento__label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-comprovante-pendente {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #ffcc00;
+}
+
+.quit-data-pagamento__value {
+  font-size: var(--font-secondary);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+
 /* Payment tabs */
 .payment-tabs {
   margin-bottom: 16px;
@@ -3171,6 +3205,9 @@ html.keyboard-open .modal-form-shell__body .btn-attach {
 }
 
 .screen-header__action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -3250,6 +3287,14 @@ html.keyboard-open .modal-form-shell__body .btn-attach {
   --button-finance-bg: var(--accent);
   --button-finance-color: var(--text-primary);
   --button-finance-hover-bg: var(--accent-hover);
+  --button-finance-hover-color: var(--text-primary);
+}
+
+.screen-header__icon-btn--admin.button-finance,
+.meus-gastos-screen .screen-header__icon-btn--admin.button-finance {
+  --button-finance-bg: transparent;
+  --button-finance-color: var(--text-muted);
+  --button-finance-hover-bg: transparent;
   --button-finance-hover-color: var(--text-primary);
 }
 

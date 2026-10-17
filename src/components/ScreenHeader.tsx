@@ -33,17 +33,19 @@ interface ScreenHeaderIconButtonProps {
   onClick: () => void;
   ariaLabel: string;
   children: ReactNode;
+  className?: string;
 }
 
 export function ScreenHeaderIconButton({
   onClick,
   ariaLabel,
   children,
+  className = '',
 }: ScreenHeaderIconButtonProps) {
   return (
     <button
       type="button"
-      className="screen-header__icon-btn button-finance"
+      className={`screen-header__icon-btn button-finance ${className}`.trim()}
       onClick={onClick}
       aria-label={ariaLabel}
     >

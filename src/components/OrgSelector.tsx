@@ -4,9 +4,10 @@ import type { OrgRecord } from '../types';
 interface OrgSelectorProps {
   orgs: OrgRecord[];
   onSelect: (orgId: string) => void;
+  onOpenAdmin?: () => void;
 }
 
-export const OrgSelector: React.FC<OrgSelectorProps> = ({ orgs, onSelect }) => {
+export const OrgSelector: React.FC<OrgSelectorProps> = ({ orgs, onSelect, onOpenAdmin }) => {
   return (
     <div className="app-container" style={{ justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ textAlign: 'center', marginBottom: 36 }}>
@@ -27,6 +28,24 @@ export const OrgSelector: React.FC<OrgSelectorProps> = ({ orgs, onSelect }) => {
             : 'Não foi possível carregar suas organizações. Verifique o console do navegador para detalhes.'}
         </p>
       </div>
+
+      {onOpenAdmin ? (
+        <button
+          type="button"
+          onClick={onOpenAdmin}
+          style={{
+            margin: '0 auto 16px',
+            display: 'block',
+            background: 'transparent',
+            border: 0,
+            color: 'var(--text-secondary)',
+            fontSize: 12,
+            cursor: 'pointer',
+          }}
+        >
+          Painel administrativo
+        </button>
+      ) : null}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {orgs.map((org) => (

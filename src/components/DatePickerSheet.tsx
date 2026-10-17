@@ -8,6 +8,8 @@ interface DatePickerSheetProps {
   onClose: () => void;
   /** Permite datas futuras e navegação além do mês corrente (ex.: data prevista de pagamento). */
   allowFutureDates?: boolean;
+  /** Abre por cima de outro modal (a quitação já usa um overlay). */
+  elevate?: boolean;
   /**
    * Data da compra (dd/mm/aaaa): desabilita dias em ou antes desta data.
    * O primeiro dia clicável é o dia seguinte à compra (uso no modal de compromisso).
@@ -43,6 +45,7 @@ export const DatePickerSheet: React.FC<DatePickerSheetProps> = ({
   onSelect,
   onClose,
   allowFutureDates = false,
+  elevate = false,
   disableDatesOnOrBeforeCompraBR,
 }) => {
   const today = useMemo(() => {
@@ -146,8 +149,11 @@ export const DatePickerSheet: React.FC<DatePickerSheetProps> = ({
 
   return (
     <div
-      className={`modal-overlay${allowFutureDates ? ' modal-overlay--datepicker-front' : ''}`}
-      onClick={onClose}
+      className={`modal-overlay${allowFutureDates || elevate ? ' modal-overlay--datepicker-front' : ''}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClose();
+      }}
     >
       <div className="modal-sheet datepicker-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="modal-sheet__handle" />

@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Shield } from 'lucide-react';
 import { FloatingInput } from './components/FloatingInput';
 import { TotalBar } from './components/TotalBar';
 import { ItemForm } from './components/ItemForm';
@@ -19,10 +19,9 @@ import { GastoPereneDetail } from './components/GastoPereneDetail';
 import { GastoPereneFormModal } from './components/GastoPereneFormModal';
 import { SalvarCompromissoModal } from './components/SalvarCompromissoModal';
 import { CompromissosSummaryStrip } from './components/CompromissosSummaryStrip';
-import { ScreenHeader } from './components/ScreenHeader';
+import { ScreenHeader, ScreenHeaderIconButton } from './components/ScreenHeader';
 import { PriceWarningModal } from './components/PriceWarningModal';
 import { OrgSelector } from './components/OrgSelector';
-import { AdminGateway } from './components/admin/AdminGateway';
 import { AdminPanel } from './components/admin/AdminPanel';
 import { OrgProvider, useOrg } from './contexts/OrgContext';
 import {
@@ -30,6 +29,7 @@ import {
   generateId,
   compromissoDisplayTitle,
   appendObservacaoDiferencaValor,
+  isDataPagamentoQuitacaoValida,
   scaleItemsValorToTotal,
   summarizeCompromissosPendentesUrgency,
   type CompromissoPendentesUrgencySummary,
@@ -43,11 +43,10 @@ import {
   fetchCompromissosAtivos,
   fetchCompromissoById,
   fetchGastoById,
-  linkCompromissoQuitado,
-  linkParcelaQuitada,
   uploadComprovante,
   ensureCompromissosFromGastosPerenes,
 } from './lib/supabase';
+import { quitarCompromisso } from './lib/quitarCompromisso';
 import type { GastoItem, PaymentData, Screen, GastoRecord, CompromissoRecord, GastoPereneRecord, CompromissoParcela } from './types';
 
 const defaultPayment: PaymentData = {
@@ -104,7 +103,6 @@ function AppInner() {
   // Screen state
   const [screen, setScreen] = useState<Screen>('main');
   const [gastoDetailReturnScreen, setGastoDetailReturnScreen] = useState<Screen>('meus_gastos');
-  const [adminChoice, setAdminChoice] = useState<'admin' | 'user' | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -164,6 +162,7 @@ function AppInner() {
   const [showSalvarCompromissoModal, setShowSalvarCompromissoModal] = useState(false);
   const [showQuitPaymentModal, setShowQuitPaymentModal] = useState(false);
   const [quitValorRealizadoCents, setQuitValorRealizadoCents] = useState(0);
+  const [quitDataPagamentoBR, setQuitDataPagamentoBR] = useState(formatDateBR(new Date()));
   const [compromissosPendentesSummary, setCompromissosPendentesSummary] =
     useState<CompromissoPendentesUrgencySummary>({
       total: 0,
@@ -617,21 +616,25 @@ function AppInner() {
 
   const handleQuitCompromissoSave = useCallback(async () => {
     if (!selectedCompromisso) return;
+    if (!isDataPagamentoQuitacaoValida(quitDataPagamentoBR)) {
+      alert('Informe a data do pagamento. Ela não pode ser futura.');
+      return;
+    }
     setSaving(true);
     try {
       const planejadoCents = selectedParcela ? selectedParcela.valorCentavos : selectedCompromisso.total;
       const realizadoCents = quitValorRealizadoCents;
-      
+
       // Para parcelas individuais de um compromisso, o gasto real é sempre À Vista (não faz sentido parcelar uma parcela)
       const forma = selectedParcela ? 'À Vista' : (payment.formaPagamento === 'a_vista' ? 'À Vista' : 'Parcelado');
       const parcelasFinal = selectedParcela ? 1 : (payment.formaPagamento === 'a_vista' ? 1 : payment.parcelas);
-      
+
       const observacoesFinal = appendObservacaoDiferencaValor(
         payment.observacoes,
         planejadoCents,
         realizadoCents
       );
-      
+
       const itemsPayload = scaleItemsValorToTotal(
         selectedCompromisso.items.map((item) => ({
           ordem: item.ordem,
@@ -643,35 +646,36 @@ function AppInner() {
         realizadoCents
       );
 
-      const gastoResult = await saveGasto(
+      const { gastoId } = await quitarCompromisso({
         orgId,
-        selectedParcela ? selectedParcela.dataVencimentoBR : selectedCompromisso.dataCompra,
-        payment.fornecedor,
-        forma,
-        payment.meioPagamento,
-        payment.instituicaoFinanceira,
-        observacoesFinal,
-        realizadoCents,
-        payment.comprovanteUrl,
-        parcelasFinal,
-        itemsPayload
-      );
+        compromissoId: selectedCompromisso.id,
+        parcelaId: selectedParcela?.id ?? null,
+        dataPagamentoBR: quitDataPagamentoBR,
+        fornecedor: payment.fornecedor,
+        formaPagamento: forma,
+        meioPagamento: payment.meioPagamento,
+        instituicaoFinanceira: payment.instituicaoFinanceira,
+        observacoes: observacoesFinal,
+        totalCents: realizadoCents,
+        parcelas: parcelasFinal,
+        items: itemsPayload,
+      });
 
-      const inserted = gastoResult as { id?: string } | null;
-      if (!inserted?.id) throw new Error('Falha ao criar gasto');
-
+      let comprovanteFalhou = false;
       if (payment.comprovanteFile && supabase) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const url = await uploadComprovante(user.id, inserted.id, payment.comprovanteFile);
-          await supabase.from('gastos').update({ comprovante_url: url }).eq('id', inserted.id);
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) throw new Error('Usuário não autenticado');
+          const url = await uploadComprovante(user.id, gastoId, payment.comprovanteFile);
+          const { error: comprovanteError } = await supabase
+            .from('gastos')
+            .update({ comprovante_url: url })
+            .eq('id', gastoId);
+          if (comprovanteError) throw comprovanteError;
+        } catch (comprovanteError) {
+          console.error('Comprovante não enviado após a baixa:', comprovanteError);
+          comprovanteFalhou = true;
         }
-      }
-
-      if (selectedParcela) {
-        await linkParcelaQuitada(selectedParcela.id, inserted.id);
-      } else {
-        await linkCompromissoQuitado(selectedCompromisso.id, inserted.id);
       }
 
       setShowQuitPaymentModal(false);
@@ -682,13 +686,16 @@ function AppInner() {
       setScreen('meus_gastos');
       setRefreshKey((k) => k + 1);
       await refreshCompromissosPendentesSummary(orgId);
+      if (comprovanteFalhou) {
+        alert('A baixa foi registrada e o compromisso saiu dos pendentes. O comprovante não foi enviado. Abra o gasto e anexe o arquivo de novo.');
+      }
     } catch (error) {
       console.error('Error quitting compromisso:', error);
-      alert('Erro ao quitar. Verifique o console.');
+      alert(error instanceof Error ? error.message : 'Erro ao quitar. Nada foi gravado. Tente novamente.');
     } finally {
       setSaving(false);
     }
-  }, [selectedCompromisso, selectedParcela, payment, quitValorRealizadoCents, orgId]);
+  }, [selectedCompromisso, selectedParcela, payment, quitValorRealizadoCents, quitDataPagamentoBR, orgId, refreshCompromissosPendentesSummary]);
 
   // Org loading
   if (orgLoading) {
@@ -704,28 +711,20 @@ function AppInner() {
     );
   }
 
-  // Admin Gateway
-  if (isSuperAdmin && !adminChoice) {
-    return (
-      <AdminGateway
-        onSelect={(choice) => {
-          setAdminChoice(choice);
-          if (choice === 'admin') {
-            setScreen('admin_panel');
-          }
-        }}
-      />
-    );
+  // Admin Panel — antes da escolha de empresa, para o Super Admin entrar mesmo sem organização ativa
+  if (screen === 'admin_panel' && isSuperAdmin) {
+    return <AdminPanel onClose={() => setScreen('main')} />;
   }
 
   // Org selection (multiple orgs, none selected)
-  if (!currentOrg && adminChoice !== 'admin') {
-    return <OrgSelector orgs={orgs} onSelect={switchOrg} />;
-  }
-
-  // Admin Panel
-  if (screen === 'admin_panel' && isSuperAdmin) {
-    return <AdminPanel onClose={() => setScreen('main')} />;
+  if (!currentOrg) {
+    return (
+      <OrgSelector
+        orgs={orgs}
+        onSelect={switchOrg}
+        onOpenAdmin={isSuperAdmin ? () => setScreen('admin_panel') : undefined}
+      />
+    );
   }
 
   // Confirmation screen
@@ -798,6 +797,7 @@ function AppInner() {
           onSelectGastoPerene={handleSelectGastoPerene}
           onNewGasto={() => handleNavigate('main')}
           onNovoGastoPerene={() => setShowGastoPereneModal(true)}
+          onOpenAdmin={isSuperAdmin ? () => setScreen('admin_panel') : undefined}
           refreshKey={refreshKey}
           focusCompromissosNonce={focusCompromissosNonce}
         />
@@ -850,11 +850,13 @@ function AppInner() {
           }}
           onRequestQuit={() => {
             const c = selectedCompromisso;
+            setSelectedParcela(null);
             setPayment({
               ...defaultPayment,
               fornecedor: c.fornecedor.trim() || compromissoDisplayTitle(c),
             });
             setQuitValorRealizadoCents(c.total);
+            setQuitDataPagamentoBR(formatDateBR(new Date()));
             setShowQuitPaymentModal(true);
           }}
           onRequestQuitParcela={(parcela) => {
@@ -864,6 +866,7 @@ function AppInner() {
               fornecedor: selectedCompromisso.fornecedor.trim() || compromissoDisplayTitle(selectedCompromisso),
             });
             setQuitValorRealizadoCents(parcela.valorCentavos);
+            setQuitDataPagamentoBR(formatDateBR(new Date()));
             setShowQuitPaymentModal(true);
           }}
           onCancelled={() => {
@@ -890,6 +893,8 @@ function AppInner() {
             valorPlanejadoCents={selectedParcela ? selectedParcela.valorCentavos : selectedCompromisso.total}
             valorRealizadoCents={quitValorRealizadoCents}
             onValorRealizadoChange={setQuitValorRealizadoCents}
+            dataPagamentoBR={quitDataPagamentoBR}
+            onDataPagamentoChange={setQuitDataPagamentoBR}
             hideFormaPagamento={!!selectedParcela}
           />
         )}
@@ -944,6 +949,17 @@ function AppInner() {
         <ScreenHeader
           title="Novo Gasto"
           subtitle="Registre uma compra, compromisso ou pagamento"
+          action={
+            isSuperAdmin ? (
+              <ScreenHeaderIconButton
+                onClick={() => setScreen('admin_panel')}
+                ariaLabel="Painel administrativo"
+                className="screen-header__icon-btn--admin"
+              >
+                <Shield size={18} aria-hidden />
+              </ScreenHeaderIconButton>
+            ) : undefined
+          }
         />
       )}
 
