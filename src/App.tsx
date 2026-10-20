@@ -11,6 +11,7 @@ import { DatePickerSheet } from './components/DatePickerSheet';
 import { BottomNav } from './components/BottomNav';
 import { MeusGastos } from './components/MeusGastos';
 import { ClassificarGastosScreen } from './components/classificar/ClassificarGastosScreen';
+import { VisaoFinanceiraScreen } from './components/visao/VisaoFinanceiraScreen';
 import { CotacoesScreen } from './components/cotacoes/CotacoesScreen';
 import { CotacaoDetailScreen } from './components/cotacoes/CotacaoDetailScreen';
 import { GastoDetail } from './components/GastoDetail';
@@ -769,6 +770,15 @@ function AppInner() {
         }}
         onChanged={() => setRefreshKey((k) => k + 1)}
       />
+    );
+  }
+
+  if (screen === 'visao_financeira') {
+    return (
+      <>
+        <VisaoFinanceiraScreen orgId={orgId} />
+        <BottomNav active="visao_financeira" onNavigate={handleNavigate} wide />
+      </>
     );
   }
 

@@ -1,14 +1,15 @@
-import { PlusCircle, List, Scale, Tags } from 'lucide-react';
+import { PlusCircle, List, Scale, Tags, BarChart3 } from 'lucide-react';
 import type { Screen } from '../types';
 
 interface BottomNavProps {
-  active: 'main' | 'meus_gastos' | 'cotacoes' | 'classificar_gastos';
+  active: 'main' | 'meus_gastos' | 'cotacoes' | 'classificar_gastos' | 'visao_financeira';
   onNavigate: (screen: Screen) => void;
+  wide?: boolean;
 }
 
-export const BottomNav: React.FC<BottomNavProps> = ({ active, onNavigate }) => {
+export const BottomNav: React.FC<BottomNavProps> = ({ active, onNavigate, wide = false }) => {
   return (
-    <nav className="bottom-nav">
+    <nav className={wide ? 'bottom-nav bottom-nav--wide' : 'bottom-nav'}>
       <button
         className={`bottom-nav__item ${active === 'main' ? 'bottom-nav__item--active' : ''}`}
         onClick={() => onNavigate('main')}
@@ -44,6 +45,15 @@ export const BottomNav: React.FC<BottomNavProps> = ({ active, onNavigate }) => {
       >
         <Scale size={20} aria-hidden />
         <span>Cotações</span>
+      </button>
+      <button
+        className={`bottom-nav__item ${active === 'visao_financeira' ? 'bottom-nav__item--active' : ''}`}
+        onClick={() => onNavigate('visao_financeira')}
+        type="button"
+        aria-current={active === 'visao_financeira' ? 'page' : undefined}
+      >
+        <BarChart3 size={20} aria-hidden />
+        <span>Visão</span>
       </button>
     </nav>
   );

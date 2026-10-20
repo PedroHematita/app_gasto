@@ -532,7 +532,7 @@ function effectiveStatusFromPrevistaISO(iso: string): 'pendente' | 'vencido' {
   return prev < today ? 'vencido' : 'pendente';
 }
 
-function mapCompromissoRow(row: any): CompromissoRecord {
+export function mapCompromissoRow(row: any): CompromissoRecord {
   const items = ((row.compromisso_itens || []) as any[])
     .sort((a: any, b: any) => a.ordem - b.ordem)
     .map((item: any) => ({
@@ -600,6 +600,48 @@ export async function syncCompromissosStatus(orgId: string): Promise<void> {
       await supabase.from('compromissos').update({ status: expected }).eq('id', row.id);
     }
   }
+}
+
+/** Leitura dos compromissos ainda em aberto, sem atualizar status no banco. */
+export async function fetchCompromissosPendentesLeitura(orgId: string): Promise<CompromissoRecord[]> {
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('compromissos')
+    .select(`
+      id, data_compra, data_prevista_pagamento, fornecedor, status, tipo, created_at, gasto_id, gasto_perene_id, competencia_chave,
+      compromisso_itens ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total ),
+      compromisso_parcelas ( id, numero_parcela, total_parcelas, valor_centavos, data_vencimento, status )
+    `)
+    .eq('org_id', orgId)
+    .in('status', ['pendente', 'vencido']);
+
+  if (error) throw error;
+  return (data ?? []).map(mapCompromissoRow);
+}
+
+/**
+ * Leitura só consulta de compromissos parcelados (histórico e abertos).
+ * Inclui quitados; exclui cancelados. Não grava status.
+ */
+export async function fetchCompromissosParceladosLeitura(orgId: string): Promise<CompromissoRecord[]> {
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('compromissos')
+    .select(`
+      id, data_compra, data_prevista_pagamento, fornecedor, status, tipo, created_at, gasto_id, gasto_perene_id, competencia_chave,
+      compromisso_itens ( id, ordem, descricao_produto_servico, quantidade_adquirida, unidade_medida, valor_total ),
+      compromisso_parcelas ( id, numero_parcela, total_parcelas, valor_centavos, data_vencimento, status )
+    `)
+    .eq('org_id', orgId)
+    .eq('tipo', 'parcelado')
+    .neq('status', 'cancelado');
+
+  if (error) throw error;
+  return (data ?? [])
+    .map(mapCompromissoRow)
+    .filter((c) => c.tipo === 'parcelado');
 }
 
 export async function fetchCompromissosAtivos(orgId: string): Promise<CompromissoRecord[]> {

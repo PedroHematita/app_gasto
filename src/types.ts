@@ -194,6 +194,7 @@ export type Screen =
   | 'gasto_perene_detail'
   | 'cotacoes'
   | 'cotacao_detail'
+  | 'visao_financeira'
   | 'org_selector'
   | 'admin_gateway'
   | 'admin_panel';
