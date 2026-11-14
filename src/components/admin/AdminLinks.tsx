@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { adminSearchUserByEmail, adminFetchOrgs, adminLinkUserToOrg, adminFetchLinks, adminUnlinkUser } from '../../lib/supabase';
 import { FloatingInput } from '../FloatingInput';
+import { FloatingSelect } from '../FloatingSelect';
 import { Trash2, Search, Link as LinkIcon } from 'lucide-react';
 
 export const AdminLinks: React.FC = () => {
@@ -101,56 +102,28 @@ export const AdminLinks: React.FC = () => {
               type="email"
             />
           </div>
-          <div style={{ flex: 2, position: 'relative' }}>
-            <select
-              value={selectedOrgId}
-              onChange={(e) => setSelectedOrgId(e.target.value)}
-              style={{
-                width: '100%',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid var(--border)',
-                borderRadius: 12,
-                padding: '16px 12px 6px',
-                color: 'var(--text-primary)',
-                fontSize: 14,
-                appearance: 'none',
-                outline: 'none',
-                height: 52
+          <div style={{ flex: 2 }}>
+            <FloatingSelect
+              id="admin-link-org"
+              label="Organização"
+              value={orgs.find((o) => o.id === selectedOrgId)?.nome ?? ''}
+              onChange={(nome) => {
+                const org = orgs.find((o) => o.nome === nome);
+                if (org) setSelectedOrgId(org.id);
               }}
-            >
-              {orgs.map(o => (
-                <option key={o.id} value={o.id}>{o.nome}</option>
-              ))}
-            </select>
-            <label style={{
-              position: 'absolute', top: 6, left: 12,
-              fontSize: 10, color: 'var(--text-inactive)', pointerEvents: 'none'
-            }}>Organização</label>
+              options={orgs.map((o) => o.nome as string)}
+              bgVariant="surface"
+            />
           </div>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as any)}
-              style={{
-                width: '100%',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid var(--border)',
-                borderRadius: 12,
-                padding: '16px 12px 6px',
-                color: 'var(--text-primary)',
-                fontSize: 14,
-                appearance: 'none',
-                outline: 'none',
-                height: 52
-              }}
-            >
-              <option value="member">Membro</option>
-              <option value="owner">Owner</option>
-            </select>
-            <label style={{
-              position: 'absolute', top: 6, left: 12,
-              fontSize: 10, color: 'var(--text-inactive)', pointerEvents: 'none'
-            }}>Role</label>
+          <div style={{ flex: 1 }}>
+            <FloatingSelect
+              id="admin-link-role"
+              label="Role"
+              value={role === 'owner' ? 'Owner' : 'Membro'}
+              onChange={(v) => setRole(v === 'Owner' ? 'owner' : 'member')}
+              options={['Membro', 'Owner']}
+              bgVariant="surface"
+            />
           </div>
         </div>
         

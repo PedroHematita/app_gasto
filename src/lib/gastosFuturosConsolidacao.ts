@@ -188,6 +188,8 @@ export function consolidarGastosFuturos(input: ConsolidarGastosFuturosInput): An
         totalCents: g.total,
         formaPagamento: g.formaPagamento,
         numeroParcelas: n,
+        meioPagamento: g.meioPagamento,
+        instituicaoFinanceira: g.instituicaoFinanceira,
       },
       input.hoje
     );

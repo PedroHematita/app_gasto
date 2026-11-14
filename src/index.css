@@ -94,7 +94,8 @@ html.keyboard-open .cadastro-action-bar--no-bottom-nav {
 
 html.keyboard-open .modal-overlay:has(.payment-modal-sheet),
 html.keyboard-open .modal-overlay:has(.classificar-filtro-sheet),
-html.keyboard-open .modal-overlay:has(.modal-sheet--form) {
+html.keyboard-open .modal-overlay:has(.modal-sheet--form),
+html.keyboard-open .modal-overlay:has(.select-options-sheet) {
   padding-bottom: var(--keyboard-inset);
   box-sizing: border-box;
   align-items: flex-end;
@@ -164,6 +165,12 @@ html.keyboard-open .date-header__row {
 .floating-field__select {
   padding-right: 36px;
   cursor: pointer;
+}
+
+button.floating-field__select-trigger {
+  padding-right: 36px;
+  cursor: pointer;
+  box-sizing: border-box;
 }
 
 .floating-field__select-arrow {
@@ -2342,6 +2349,126 @@ html.keyboard-open .modal-form-shell__body .btn-attach {
   border-radius: 4px;
 }
 
+/* ===== SELECT OPTIONS SHEET (mobile) ===== */
+.select-options-sheet-overlay {
+  z-index: var(--z-select-sheet);
+}
+
+.select-options-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: min(72vh, calc(100dvh - 24px));
+  overflow: hidden;
+  padding: var(--space-3) 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.select-options-sheet--compact {
+  max-height: min(52vh, calc(100dvh - 24px));
+}
+
+.select-options-sheet__header {
+  position: relative;
+  flex-shrink: 0;
+  padding: 0 var(--space-4) var(--space-3);
+}
+
+.select-options-sheet__title {
+  margin-bottom: 0;
+  padding-right: 40px;
+}
+
+.select-options-sheet__close {
+  position: absolute;
+  top: -4px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.select-options-sheet__search {
+  flex-shrink: 0;
+  padding: 0 var(--space-4) var(--space-3);
+}
+
+.select-options-sheet__search .floating-field__input {
+  background: var(--bg-base);
+}
+
+.select-options-sheet__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 var(--space-3) var(--space-3);
+}
+
+.select-options-sheet__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 48px;
+  margin-bottom: var(--space-1);
+  padding: var(--space-3) var(--space-3);
+  text-align: left;
+  font-size: var(--font-primary);
+  color: var(--text-primary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.select-options-sheet__item--selected {
+  color: var(--accent);
+  background: var(--accent-muted);
+  border-color: var(--accent-border);
+}
+
+.select-options-sheet__check {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--border-medium);
+  border-radius: 4px;
+  background: var(--bg-base);
+}
+
+.select-options-sheet__check--on {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.select-options-sheet__empty {
+  margin: 0;
+  padding: var(--space-4);
+  color: var(--text-inactive);
+  font-size: var(--font-secondary);
+  text-align: center;
+}
+
+.select-options-sheet__footer {
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-4);
+  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--border-subtle);
+}
+
+.select-options-sheet__footer .btn-save-modal {
+  width: 100%;
+  margin-top: 0;
+}
+
 /* ===== DATE PICKER SHEET ===== */
 .datepicker-sheet {
   padding-bottom: 28px;
@@ -2572,8 +2699,17 @@ html.keyboard-open .modal-form-shell__body .btn-attach {
   display: none;
 }
 
-.classificar-gastos-screen__classificacao-filtro {
+.classificar-gastos-screen__toolbar {
   margin-top: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.classificar-gastos-screen__classificacao-filtro {
+  margin-top: 0;
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-wrap: nowrap;
   gap: var(--space-2);
@@ -2581,6 +2717,10 @@ html.keyboard-open .modal-form-shell__body .btn-attach {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   padding-bottom: 2px;
+}
+
+.classificar-gastos-screen__toolbar .meus-gastos-filtros-btn {
+  flex-shrink: 0;
 }
 
 .classificar-gastos-screen__classificacao-filtro::-webkit-scrollbar {
@@ -3462,6 +3602,47 @@ html.keyboard-open .modal-form-shell__body .btn-attach {
 /* Search (Etapa 6b — input-finance) */
 .input-finance--search,
 .meus-gastos-search.input-finance {
+  margin: 0 var(--space-4) var(--space-3);
+}
+
+.meus-gastos-search-row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
+  margin: 0 var(--space-4) var(--space-3);
+}
+
+.meus-gastos-search-row .meus-gastos-search.input-finance,
+.meus-gastos-search-row .input-finance--search {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.meus-gastos-filtros-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-secondary);
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.meus-gastos-filtros-btn--ativo {
+  border-color: var(--accent-border);
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.meus-gastos-filtros-bar {
   margin: 0 var(--space-4) var(--space-3);
 }
 

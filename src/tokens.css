@@ -125,5 +125,6 @@
   --z-modal-overlay: 100;
   --z-modal-sheet: 200;
   --z-datepicker: 300;
+  --z-select-sheet: 400;
   --z-toast: 1000;
 }

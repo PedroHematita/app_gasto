@@ -6,7 +6,7 @@
 
 import type { CompromissoRecord, CompromissoStatus, GastoRecord } from '../types';
 import {
-  dataVencimentoParcela,
+  dataVencimentoAgendaGasto,
   distribuirValorParcelas,
   isFormaPagamentoParcelado,
 } from './gastosParceladosFuturos';
@@ -113,7 +113,12 @@ export function montarFatiasDivida(input: MontarDividaInput): FatiaDivida[] {
     const fornecedorBase = tituloGasto(g);
 
     for (let k = 1; k <= n; k += 1) {
-      const due = dataVencimentoParcela(g.dataCompra, k);
+      const due = dataVencimentoAgendaGasto(
+        g.dataCompra,
+        k,
+        g.meioPagamento,
+        g.instituicaoFinanceira,
+      );
       if (!due) continue;
       const dataVencimento = startOfDayLocal(due);
       fatias.push({

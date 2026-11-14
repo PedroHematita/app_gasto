@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  dataVencimentoAgendaGasto,
   dataVencimentoParcela,
   distribuirValorParcelas,
   fimJanelaDozeMeses,
   isFormaPagamentoParcelado,
+  isMeioCartaoCredito,
+  numeroFatiasAgendaCartaoVisao,
   parcelasFuturasDoGasto,
 } from './gastosParceladosFuturos';
 
@@ -25,6 +28,34 @@ describe('isFormaPagamentoParcelado', () => {
 
   it('rejeita À Vista', () => {
     expect(isFormaPagamentoParcelado('À Vista')).toBe(false);
+  });
+});
+
+describe('numeroFatiasAgendaCartaoVisao', () => {
+  it('À Vista + PIX ou débito não entram na agenda da Visão', () => {
+    expect(numeroFatiasAgendaCartaoVisao('À Vista', undefined, 'PIX')).toBe(0);
+    expect(numeroFatiasAgendaCartaoVisao('À Vista', 1, 'Cartão de Débito')).toBe(0);
+  });
+
+  it('À Vista + Cartão de Crédito gera uma fatia; Meus Gastos futuros continuam sem parcelas', () => {
+    expect(numeroFatiasAgendaCartaoVisao('À Vista', undefined, 'Cartão de Crédito')).toBe(1);
+    expect(isMeioCartaoCredito('Cartão de Crédito')).toBe(true);
+    expect(
+      parcelasFuturasDoGasto(
+        {
+          dataCompraBR: '15/11/2026',
+          totalCents: 250_00,
+          formaPagamento: 'À Vista',
+          numeroParcelas: undefined,
+        },
+        new Date(2026, 10, 15),
+      ),
+    ).toEqual([]);
+  });
+
+  it('Parcelado N>1 gera N fatias independente do meio', () => {
+    expect(numeroFatiasAgendaCartaoVisao('Parcelado', 3, 'PIX')).toBe(3);
+    expect(numeroFatiasAgendaCartaoVisao('Parcelado', 3, 'Cartão de Crédito')).toBe(3);
   });
 });
 
@@ -57,6 +88,13 @@ describe('distribuirValorParcelas', () => {
 
   it('valor divisível', () => {
     expect(distribuirValorParcelas(300, 3)).toEqual([100, 100, 100]);
+  });
+});
+
+describe('dataVencimentoAgendaGasto', () => {
+  it('crédito usa o vencimento da fatura; PIX permanece no dia 6', () => {
+    expect(toYmd(dataVencimentoAgendaGasto('05/11/2026', 1, 'Cartão de Crédito', 'Nubank')!)).toBe('2026-12-10');
+    expect(toYmd(dataVencimentoAgendaGasto('05/11/2026', 1, 'PIX')!)).toBe('2026-12-06');
   });
 });
 
@@ -96,6 +134,26 @@ describe('parcelasFuturasDoGasto', () => {
         refHoje
       )
     ).toEqual([]);
+  });
+
+  it('parcelado no crédito usa o dia 10 da fatura, sem incluir à vista', () => {
+    const list = parcelasFuturasDoGasto(
+      {
+        dataCompraBR: '05/11/2026',
+        totalCents: 600_00,
+        formaPagamento: 'Parcelado',
+        numeroParcelas: 3,
+        meioPagamento: 'Cartão de Crédito',
+        instituicaoFinanceira: 'Nubank PJ',
+      },
+      new Date(2026, 10, 6),
+    );
+    expect(list.map((p) => toYmd(p.dataVencimento))).toEqual([
+      '2026-12-10',
+      '2027-01-10',
+      '2027-02-10',
+    ]);
+    expect(list.map((p) => p.valorCents)).toEqual([200_00, 200_00, 200_00]);
   });
 
   it('três parcelas maio/2026 — jun, jul, ago dentro da janela até mai/2027', () => {

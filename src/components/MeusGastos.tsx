@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { ChevronDown, ChevronUp, Plus, Search, Shield } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, Search, Shield, SlidersHorizontal } from 'lucide-react';
 import { ScreenHeader, ScreenHeaderIconButton } from './ScreenHeader';
 import { LogoutButton } from './LogoutButton';
 import { fetchGastos, fetchCompromissosAtivos, fetchGastosPerenesAtivos } from '../lib/supabase';
@@ -32,6 +32,23 @@ import {
   setMeusGastosPereneForecastWindowDays,
   type PereneForecastWindowDays,
 } from '../meusGastosPereneForecastWindow';
+import {
+  agruparGastosPorDataCompra,
+  type AnoGastosGroup,
+} from '../lib/meusGastosAgrupamento';
+import {
+  filtrarGastosConferencia,
+  listarInstituicoesConferencia,
+  rotuloFiltroConferencia,
+  temFiltroConferenciaAtivo,
+  type MeusGastosFiltroConferencia,
+} from '../lib/meusGastosFiltroConferencia';
+import {
+  lerMeusGastosFiltroConferencia,
+  limparMeusGastosFiltroConferencia,
+  setMeusGastosFiltroConferencia,
+} from '../meusGastosFiltroConferenciaState';
+import { MeusGastosFiltroSheet } from './MeusGastosFiltroSheet';
 
 interface MeusGastosProps {
   orgId: string;
@@ -45,34 +62,6 @@ interface MeusGastosProps {
   focusCompromissosNonce: number;
 }
 
-const MONTH_NAMES = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
-];
-
-type MonthGroup = {
-  key: string;
-  year: number;
-  month: number;
-  label: string;
-  gastos: GastoRecord[];
-  total: number;
-  count: number;
-};
-
-type YearGroup = {
-  year: number;
-  total: number;
-  months: MonthGroup[];
-};
-
-function getDateTime(gasto: GastoRecord): number {
-  const [d, m, y] = gasto.dataCompra.split('/').map(Number);
-  const dateTime = new Date(y, (m || 1) - 1, d || 1).getTime();
-  const createdAtTime = new Date(gasto.createdAt).getTime();
-
-  return Number.isNaN(createdAtTime) ? dateTime : createdAtTime;
-}
 
 function matchesSearchCompromisso(c: CompromissoRecord, q: string): boolean {
   const nq = q.toLowerCase();
@@ -110,6 +99,10 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
   const [gastosPerenesAtivos, setGastosPerenesAtivos] = useState<GastoPereneRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filtroConferencia, setFiltroConferencia] = useState<MeusGastosFiltroConferencia>(
+    () => lerMeusGastosFiltroConferencia(),
+  );
+  const [filtroSheetOpen, setFiltroSheetOpen] = useState(false);
   const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
   const [, setCollapseTick] = useState(0);
   const [forecastWindowTick, setForecastWindowTick] = useState(0);
@@ -138,7 +131,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     }
   }, [focusCompromissosNonce]);
 
-  const filteredGastos = useMemo(() => {
+  const gastosAposBusca = useMemo(() => {
     if (!search.trim()) return gastos;
     const q = search.toLowerCase();
     return gastos.filter((g) => {
@@ -146,6 +139,30 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
       return g.items.some((item) => item.descricao.toLowerCase().includes(q));
     });
   }, [gastos, search]);
+
+  const filteredGastos = useMemo(
+    () => filtrarGastosConferencia(gastosAposBusca, filtroConferencia),
+    [gastosAposBusca, filtroConferencia],
+  );
+
+  const instituicoesDisponiveis = useMemo(
+    () => listarInstituicoesConferencia(gastos),
+    [gastos],
+  );
+
+  const filtroConferenciaAtivo = temFiltroConferenciaAtivo(filtroConferencia);
+  const rotuloConferencia = rotuloFiltroConferencia(filtroConferencia);
+
+  const applyFiltroConferencia = (filtro: MeusGastosFiltroConferencia) => {
+    setMeusGastosFiltroConferencia(filtro);
+    setFiltroConferencia(lerMeusGastosFiltroConferencia());
+    setFiltroSheetOpen(false);
+  };
+
+  const limparFiltroConferencia = () => {
+    limparMeusGastosFiltroConferencia();
+    setFiltroConferencia(lerMeusGastosFiltroConferencia());
+  };
 
   const filteredCompromissos = useMemo(() => {
     if (!search.trim()) return compromissosAtivos;
@@ -225,14 +242,12 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     return { sumCents, byId };
   }, [gastosPerenesParaExibir, forecastWindowTick, refreshKey]);
 
-  const totalPagoSum = useMemo(() => {
-    if (search.trim()) return filteredGastos.reduce((s, g) => s + g.total, 0);
-    return gastos.reduce((s, g) => s + g.total, 0);
-  }, [gastos, filteredGastos, search]);
+  const totalPagoSum = useMemo(
+    () => filteredGastos.reduce((s, g) => s + g.total, 0),
+    [filteredGastos],
+  );
 
-
-
-  const countGastosExibicao = search.trim() ? filteredGastos.length : gastos.length;
+  const countGastosExibicao = filteredGastos.length;
 
   const includeRealizadosFuturos = meusGastosFuturosIncludeRealizados.include;
 
@@ -258,54 +273,10 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
     [gastosFuturosAnos]
   );
 
-  const grouped = useMemo<YearGroup[]>(() => {
-    const monthMap = new Map<string, MonthGroup>();
-
-    filteredGastos.forEach((gasto) => {
-      const [, monthStr, yearStr] = gasto.dataCompra.split('/');
-      const month = Number(monthStr);
-      const year = Number(yearStr);
-      const key = `${year}-${String(month).padStart(2, '0')}`;
-
-      if (!monthMap.has(key)) {
-        monthMap.set(key, {
-          key,
-          year,
-          month,
-          label: MONTH_NAMES[month - 1],
-          gastos: [],
-          total: 0,
-          count: 0,
-        });
-      }
-
-      const monthGroup = monthMap.get(key)!;
-      monthGroup.gastos.push(gasto);
-      monthGroup.total += gasto.total;
-      monthGroup.count += 1;
-    });
-
-    const months = [...monthMap.values()]
-      .map((monthGroup) => ({
-        ...monthGroup,
-        gastos: [...monthGroup.gastos].sort((a, b) => getDateTime(b) - getDateTime(a)),
-      }))
-      .sort((a, b) => (b.year - a.year) || (b.month - a.month));
-
-    const yearMap = new Map<number, MonthGroup[]>();
-    months.forEach((monthGroup) => {
-      if (!yearMap.has(monthGroup.year)) yearMap.set(monthGroup.year, []);
-      yearMap.get(monthGroup.year)!.push(monthGroup);
-    });
-
-    return [...yearMap.entries()]
-      .sort((a, b) => b[0] - a[0])
-      .map(([year, monthsInYear]) => ({
-        year,
-        total: monthsInYear.reduce((sum, monthGroup) => sum + monthGroup.total, 0),
-        months: monthsInYear,
-      }));
-  }, [filteredGastos]);
+  const grouped = useMemo<AnoGastosGroup[]>(
+    () => agruparGastosPorDataCompra(filteredGastos),
+    [filteredGastos],
+  );
 
   const monthKeysInOrder = useMemo(
     () => grouped.flatMap((yearGroup) => yearGroup.months.map((month) => month.key)),
@@ -864,12 +835,16 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
 
   const renderGastosGrouped = () => {
     if (filteredGastos.length === 0) {
-      if (!search.trim()) return null;
+      if (!search.trim() && !filtroConferenciaAtivo) return null;
       return (
         <div className="meus-gastos-empty meus-gastos-empty--soft" role="status">
-          <span className="meus-gastos-empty__title">Nenhum gasto realizado nesta busca</span>
+          <span className="meus-gastos-empty__title">
+            {filtroConferenciaAtivo ? 'Nenhum gasto neste filtro' : 'Nenhum gasto realizado nesta busca'}
+          </span>
           <span className="meus-gastos-empty__hint">
-            Tente outro termo em fornecedor ou item.
+            {filtroConferenciaAtivo
+              ? 'Ajuste os filtros ou limpe para ver os gastos realizados.'
+              : 'Tente outro termo em fornecedor ou item.'}
           </span>
         </div>
       );
@@ -971,18 +946,45 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
         }
       />
 
-      <div className="meus-gastos-search input-finance input-finance--search">
-        <Search size={14} className="meus-gastos-search__icon" aria-hidden />
-        <input
-          type="text"
-          placeholder="Buscar por fornecedor ou item..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="meus-gastos-search__input input-finance__field"
-          autoComplete="off"
-          aria-label="Buscar por fornecedor ou item"
-        />
+      <div className="meus-gastos-search-row">
+        <div className="meus-gastos-search input-finance input-finance--search">
+          <Search size={14} className="meus-gastos-search__icon" aria-hidden />
+          <input
+            type="text"
+            placeholder="Buscar por fornecedor ou item..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="meus-gastos-search__input input-finance__field"
+            autoComplete="off"
+            aria-label="Buscar por fornecedor ou item"
+          />
+        </div>
+        <button
+          type="button"
+          className={`meus-gastos-filtros-btn ${filtroConferenciaAtivo ? 'meus-gastos-filtros-btn--ativo' : ''}`}
+          onClick={() => setFiltroSheetOpen(true)}
+          aria-expanded={filtroSheetOpen}
+          aria-haspopup="dialog"
+        >
+          <SlidersHorizontal size={14} aria-hidden />
+          Filtros
+        </button>
       </div>
+
+      {filtroConferenciaAtivo && rotuloConferencia ? (
+        <div className="classificar-gastos-screen__filtros-bar meus-gastos-filtros-bar">
+          <p className="classificar-gastos-screen__filtros-count">
+            <span className="classificar-gastos-screen__filtros-label">{rotuloConferencia}</span>
+          </p>
+          <button
+            type="button"
+            className="classificar-gastos-screen__limpar-filtros"
+            onClick={limparFiltroConferencia}
+          >
+            Limpar filtros
+          </button>
+        </div>
+      ) : null}
 
       <div className="meus-gastos-perene-cta">
         <button type="button" className="meus-gastos-perene-cta__btn" onClick={onNovoGastoPerene}>
@@ -1087,6 +1089,15 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
           )}
         </>
       )}
+
+      {filtroSheetOpen ? (
+        <MeusGastosFiltroSheet
+          instituicoesDisponiveis={instituicoesDisponiveis}
+          filtroAplicado={filtroConferencia}
+          onClose={() => setFiltroSheetOpen(false)}
+          onApply={applyFiltroConferencia}
+        />
+      ) : null}
 
       <div className="screen-logout-discrete">
         <LogoutButton

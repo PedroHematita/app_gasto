@@ -259,6 +259,191 @@ describe('montarLinhasVisao', () => {
   });
 });
 
+describe('agenda de compra à vista no cartão de crédito', () => {
+  const creditoAvista = gasto({
+    id: 'credito',
+    total: 25001,
+    dataCompra: '15/11/2026',
+    formaPagamento: 'À Vista',
+    meioPagamento: 'Cartão de Crédito',
+    instituicaoFinanceira: 'Nubank',
+    fornecedor: 'Mercado',
+  });
+
+  it('não inclui PIX nem débito à vista no comprometimento', () => {
+    const pix = gasto({ id: 'pix', total: 1000, dataCompra: '15/11/2026' });
+    const debito = gasto({
+      id: 'deb', total: 2000, dataCompra: '15/11/2026', meioPagamento: 'Cartão de Débito',
+    });
+    const linhas = montarLinhasVisao(base({
+      perspectiva: 'comprometimento',
+      gastos: [pix, debito],
+    }));
+    expect(linhas.some((item) => item.id.startsWith('agenda:'))).toBe(false);
+    expect(linhas.some((item) => item.id.startsWith('gasto:'))).toBe(false);
+  });
+
+  it('projeta uma ocorrência no vencimento nominal da fatura, Demais gastos, instituição e natureza originais', () => {
+    const linhas = montarLinhasVisao(base({
+      perspectiva: 'comprometimento',
+      gastos: [creditoAvista],
+      tipoGastoPorId: new Map([['credito', 'Pessoal']]),
+    }));
+    expect(linhas).toHaveLength(1);
+    expect(linhas[0]).toMatchObject({
+      id: 'agenda:credito:1',
+      monthKey: '2026-12',
+      valorCents: 25001,
+      modalidade: 'demais',
+      situacao: 'projecao',
+      natureza: 'pessoal',
+      instituicaoFinanceira: 'Nubank',
+      meioPagamento: 'Cartão de Crédito',
+      formaPagamento: 'À Vista',
+      fornecedor: 'Mercado',
+    });
+    expect(linhas[0].dataRef.getDate()).toBe(10);
+    expect(linhas[0].dataRef.getMonth()).toBe(11);
+  });
+
+  it('compra no fechamento entra na fatura do mês; após o fechamento, no ciclo seguinte', () => {
+    const input = { perspectiva: 'comprometimento' as const };
+    const noDia = montarLinhasVisao(base({
+      ...input,
+      gastos: [gasto({
+        id: 'fecha', total: 1000, dataCompra: '03/11/2026',
+        formaPagamento: 'À Vista', meioPagamento: 'Cartão de Crédito',
+      })],
+    }));
+    const depois = montarLinhasVisao(base({
+      ...input,
+      gastos: [gasto({
+        id: 'depois', total: 1000, dataCompra: '04/11/2026',
+        formaPagamento: 'À Vista', meioPagamento: 'Cartão de Crédito',
+      })],
+    }));
+    expect(noDia[0].monthKey).toBe('2026-11');
+    expect(noDia[0].dataRef.getDate()).toBe(10);
+    expect(depois[0].monthKey).toBe('2026-12');
+    expect(depois[0].dataRef.getDate()).toBe(10);
+  });
+
+  it('compra em dezembro projeta janeiro do ano seguinte', () => {
+    const linhas = montarLinhasVisao(base({
+      perspectiva: 'comprometimento',
+      gastos: [gasto({
+        id: 'dez',
+        total: 8000,
+        dataCompra: '20/12/2026',
+        formaPagamento: 'À Vista',
+        meioPagamento: 'Cartão de Crédito',
+      })],
+    }));
+    expect(linhas[0].monthKey).toBe('2027-01');
+    expect(linhas[0].dataRef.getFullYear()).toBe(2027);
+    expect(linhas[0].dataRef.getMonth()).toBe(0);
+    expect(linhas[0].dataRef.getDate()).toBe(10);
+  });
+
+  it('na visão completa aparece só no vencimento projetado, sem duplicar o mês da compra', () => {
+    const linhas = montarLinhasVisao(base({
+      perspectiva: 'completa',
+      gastos: [creditoAvista],
+      tipoGastoPorId: new Map([['credito', 'Pessoal']]),
+    }));
+    expect(linhas.filter((item) => item.id === 'gasto:credito')).toHaveLength(0);
+    expect(linhas.filter((item) => item.id === 'agenda:credito:1')).toHaveLength(1);
+    expect(linhas.filter((item) => item.monthKey === '2026-11')).toHaveLength(0);
+    const dezembro = linhas.filter((item) => item.monthKey === '2026-12');
+    expect(dezembro.reduce((s, item) => s + item.valorCents, 0)).toBe(25001);
+    expect(resumirLinhasVisao(dezembro).porModalidade.demais).toBe(25001);
+    expect(resumirLinhasVisao(dezembro).porModalidade.parcelado).toBe(0);
+  });
+
+  it('Gastos registrados continuam no mês da data_compra', () => {
+    const linhas = montarLinhasVisao(base({
+      perspectiva: 'registrados',
+      gastos: [creditoAvista],
+    }));
+    expect(linhas.map((item) => item.id)).toEqual(['gasto:credito']);
+    expect(linhas[0].monthKey).toBe('2026-11');
+    expect(linhas[0].valorCents).toBe(25001);
+    expect(linhas[0].modalidade).toBe('demais');
+  });
+
+  it('preserva parcelado no crédito e em outros meios; gráfico não mistura à vista crédito com parcelado', () => {
+    const linhas = montarLinhasVisao(base({
+      perspectiva: 'comprometimento',
+      gastos: [
+        creditoAvista,
+        gasto({
+          id: 'parc-cred', total: 30000, dataCompra: '15/11/2026',
+          formaPagamento: 'Parcelado', parcelas: 3, meioPagamento: 'Cartão de Crédito',
+        }),
+        gasto({
+          id: 'parc-pix', total: 20000, dataCompra: '15/11/2026',
+          formaPagamento: 'Parcelado', parcelas: 2, meioPagamento: 'PIX',
+        }),
+      ],
+    }));
+    expect(linhas.filter((item) => item.id.startsWith('agenda:credito:'))).toHaveLength(1);
+    expect(linhas.filter((item) => item.id.startsWith('agenda:parc-cred:'))).toHaveLength(3);
+    expect(linhas.filter((item) => item.id.startsWith('agenda:parc-pix:'))).toHaveLength(2);
+    expect(linhas.find((item) => item.id === 'agenda:credito:1')?.modalidade).toBe('demais');
+    expect(linhas.filter((item) => item.id.startsWith('agenda:parc-cred:')).every((item) => item.modalidade === 'parcelado')).toBe(true);
+  });
+
+  it('parcelado no crédito segue o ciclo da fatura; PIX parcelado permanece no dia 6', () => {
+    const linhas = montarLinhasVisao(base({
+      perspectiva: 'comprometimento',
+      gastos: [
+        gasto({
+          id: 'cred', total: 60000, dataCompra: '05/11/2026',
+          formaPagamento: 'Parcelado', parcelas: 3, meioPagamento: 'Cartão de Crédito',
+          instituicaoFinanceira: 'Nubank',
+        }),
+        gasto({
+          id: 'pix', total: 40000, dataCompra: '05/11/2026',
+          formaPagamento: 'Parcelado', parcelas: 2, meioPagamento: 'PIX',
+        }),
+      ],
+    }));
+    const cred = linhas.filter((item) => item.id.startsWith('agenda:cred:'));
+    const pix = linhas.filter((item) => item.id.startsWith('agenda:pix:'));
+    expect(cred.map((item) => item.monthKey)).toEqual(['2026-12', '2027-01', '2027-02']);
+    expect(cred.every((item) => item.dataRef.getDate() === 10)).toBe(true);
+    expect(cred.reduce((s, item) => s + item.valorCents, 0)).toBe(60000);
+    expect(pix.map((item) => item.monthKey)).toEqual(['2026-12', '2027-01']);
+    expect(pix.every((item) => item.dataRef.getDate() === 6)).toBe(true);
+  });
+
+  it('editar a data da compra reposiciona a fatura; editar o meio de PIX para crédito gera agenda', () => {
+    const baseGasto = {
+      id: 'edit',
+      total: 4000,
+      formaPagamento: 'À Vista' as const,
+      meioPagamento: 'Cartão de Crédito',
+    };
+    const input = { perspectiva: 'comprometimento' as const };
+    const antesFecha = montarLinhasVisao(base({
+      ...input,
+      gastos: [gasto({ ...baseGasto, dataCompra: '02/11/2026' })],
+    }));
+    const depoisFecha = montarLinhasVisao(base({
+      ...input,
+      gastos: [gasto({ ...baseGasto, dataCompra: '04/11/2026' })],
+    }));
+    expect(antesFecha[0].monthKey).toBe('2026-11');
+    expect(depoisFecha[0].monthKey).toBe('2026-12');
+
+    const comoPix = gasto({ id: 'edit', total: 4000, dataCompra: '10/11/2026' });
+    const comoCredito = { ...comoPix, meioPagamento: 'Cartão de Crédito' };
+    expect(montarLinhasVisao(base({ ...input, gastos: [comoPix] }))).toHaveLength(0);
+    expect(montarLinhasVisao(base({ ...input, gastos: [comoCredito] }))).toHaveLength(1);
+    expect(montarLinhasVisao(base({ ...input, gastos: [comoPix] }))).toHaveLength(0);
+  });
+});
+
 describe('filtros e evolução', () => {
   const linhas = montarLinhasVisao(base({
     gastos: [

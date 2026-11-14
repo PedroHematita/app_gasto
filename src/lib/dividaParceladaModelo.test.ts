@@ -6,6 +6,7 @@ import {
   montarFatiasDivida,
   normalizarInstituicaoDivida,
 } from './dividaParceladaModelo';
+import { montarLinhasVisao } from './visaoFinanceiraModelo';
 
 function gasto(partial: Partial<GastoRecord> & Pick<GastoRecord, 'id' | 'dataCompra' | 'total'>): GastoRecord {
   return {
@@ -71,6 +72,65 @@ describe('montarFatiasDivida', () => {
     expect(fatias[0].parcela).toBe(1);
     expect(fatias[5].parcela).toBe(6);
     expect(fatias.reduce((s, f) => s + f.valorCents, 0)).toBe(60000);
+    expect(fatias.every((f) => f.dataVencimento.getDate() === 10)).toBe(true);
+  });
+
+  it('compra após o fechamento no crédito alinha Visão e Dívida; PIX permanece no dia 6', () => {
+    const cred = gasto({
+      id: 'cred', dataCompra: '05/11/2026', total: 60000, parcelas: 3,
+      instituicaoFinanceira: 'Nubank',
+    });
+    const pix = gasto({
+      id: 'pix', dataCompra: '05/11/2026', total: 40000, parcelas: 2,
+      meioPagamento: 'PIX', instituicaoFinanceira: '',
+    });
+    const input = {
+      hoje: HOJE,
+      gastos: [cred, pix],
+      tipoGastoPorId: new Map(),
+      gastoIdsPerene: new Set<string>(),
+      gastoIdsParcela: new Set<string>(),
+      compromissosParcelados: [],
+    };
+    const fatias = montarFatiasDivida(input);
+    const visao = montarLinhasVisao({
+      hoje: HOJE,
+      gastos: [cred, pix],
+      tipoGastoPorId: new Map(),
+      gastoIdsPerene: new Set(),
+      gastoIdsParcela: new Set(),
+      compromissos: [],
+      perenes: [],
+      perspectiva: 'comprometimento',
+    });
+    const credFatias = fatias.filter((f) => f.gastoId === 'cred');
+    const pixFatias = fatias.filter((f) => f.gastoId === 'pix');
+    expect(credFatias.map((f) => f.monthKeyVencimento)).toEqual(['2026-12', '2027-01', '2027-02']);
+    expect(visao.filter((l) => l.id.startsWith('agenda:cred:')).map((l) => l.monthKey)).toEqual(
+      credFatias.map((f) => f.monthKeyVencimento),
+    );
+    expect(visao.filter((l) => l.id.startsWith('agenda:cred:')).map((l) => l.dataRef.getTime())).toEqual(
+      credFatias.map((f) => f.dataVencimento.getTime()),
+    );
+    expect(pixFatias.map((f) => f.monthKeyVencimento)).toEqual(['2026-12', '2027-01']);
+    expect(pixFatias.every((f) => f.dataVencimento.getDate() === 6)).toBe(true);
+    expect(montarComprasNovas(input).reduce((s, c) => s + c.totalCents, 0)).toBe(100000);
+  });
+
+  it('não mistura instituições na mesma linha de fatia', () => {
+    const fatias = montarFatiasDivida({
+      hoje: HOJE,
+      gastos: [
+        gasto({ id: 'nubank', dataCompra: '05/11/2026', total: 30000, parcelas: 3, instituicaoFinanceira: 'Nubank' }),
+        gasto({ id: 'c6', dataCompra: '05/11/2026', total: 30000, parcelas: 3, instituicaoFinanceira: 'C6 Madrigal' }),
+      ],
+      tipoGastoPorId: new Map(),
+      gastoIdsPerene: new Set(),
+      gastoIdsParcela: new Set(),
+      compromissosParcelados: [],
+    });
+    expect(fatias.filter((f) => f.instituicao === 'Nubank').every((f) => f.gastoId === 'nubank')).toBe(true);
+    expect(fatias.filter((f) => f.instituicao === 'C6 Madrigal').every((f) => f.gastoId === 'c6')).toBe(true);
   });
 
   it('não gera agenda para gasto de quitação de parcela', () => {
@@ -123,6 +183,26 @@ describe('montarFatiasDivida', () => {
 });
 
 describe('montarComprasNovas', () => {
+  it('compra à vista no crédito não entra em novas compras nem na agenda da dívida', () => {
+    const input = {
+      hoje: HOJE,
+      gastos: [gasto({
+        id: 'avista',
+        dataCompra: '15/11/2026',
+        total: 25001,
+        formaPagamento: 'À Vista',
+        parcelas: undefined,
+        meioPagamento: 'Cartão de Crédito',
+      })],
+      tipoGastoPorId: new Map(),
+      gastoIdsPerene: new Set<string>(),
+      gastoIdsParcela: new Set<string>(),
+      compromissosParcelados: [],
+    };
+    expect(montarFatiasDivida(input)).toHaveLength(0);
+    expect(montarComprasNovas(input)).toHaveLength(0);
+  });
+
   it('lista compras pelo mês da data_compra sem lump no eixo', () => {
     const compras = montarComprasNovas({
       hoje: HOJE,

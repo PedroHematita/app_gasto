@@ -40,6 +40,20 @@ import { ClassificarFiltroFornecedorSheet } from './ClassificarFiltroFornecedorS
 import { ClassificarFiltroPagamentoSheet } from './ClassificarFiltroPagamentoSheet';
 import { ClassificarGastoRow } from './ClassificarGastoRow';
 import { ScreenHeader } from '../ScreenHeader';
+import { SlidersHorizontal } from 'lucide-react';
+import { MeusGastosFiltroSheet } from '../MeusGastosFiltroSheet';
+import {
+  filtrarGastosConferencia,
+  listarInstituicoesConferencia,
+  rotuloFiltroConferencia,
+  temFiltroConferenciaAtivo,
+  type MeusGastosFiltroConferencia,
+} from '../../lib/meusGastosFiltroConferencia';
+import {
+  lerClassificarFiltroConferencia,
+  limparClassificarFiltroConferencia,
+  setClassificarFiltroConferencia,
+} from '../../classificarFiltroConferenciaState';
 
 interface ClassificarGastosScreenProps {
   orgId: string;
@@ -76,6 +90,10 @@ export const ClassificarGastosScreen: React.FC<ClassificarGastosScreenProps> = (
   const [pagamentoSheetOpen, setPagamentoSheetOpen] = useState(false);
   const [classificarSheetOpen, setClassificarSheetOpen] = useState(false);
   const [savingClassificacao, setSavingClassificacao] = useState(false);
+  const [filtroConferencia, setFiltroConferencia] = useState<MeusGastosFiltroConferencia>(
+    () => lerClassificarFiltroConferencia(),
+  );
+  const [filtroConferenciaSheetOpen, setFiltroConferenciaSheetOpen] = useState(false);
 
   const reloadGastos = useCallback(async () => {
     try {
@@ -104,10 +122,10 @@ export const ClassificarGastosScreen: React.FC<ClassificarGastosScreenProps> = (
     };
   }, [orgId, refreshKey]);
 
-  const gastosVisiveis = useMemo(
-    () => aplicarFiltrosEOrdenacaoClassificacao(gastosBrutos, filtros, ordenacao),
-    [gastosBrutos, filtros, ordenacao]
-  );
+  const gastosVisiveis = useMemo(() => {
+    const base = aplicarFiltrosEOrdenacaoClassificacao(gastosBrutos, filtros, ordenacao);
+    return filtrarGastosConferencia(base, filtroConferencia);
+  }, [gastosBrutos, filtros, ordenacao, filtroConferencia]);
 
   const totalVisivelCents = useMemo(
     () => gastosVisiveis.reduce((acc, gasto) => acc + gasto.total, 0),
@@ -129,7 +147,14 @@ export const ClassificarGastosScreen: React.FC<ClassificarGastosScreenProps> = (
     [gastosBrutos]
   );
 
-  const filtrosAtivos = temFiltrosClassificacaoAtivos(filtros);
+  const instituicoesConferencia = useMemo(
+    () => listarInstituicoesConferencia(gastosBrutos),
+    [gastosBrutos]
+  );
+
+  const filtroConferenciaAtivo = temFiltroConferenciaAtivo(filtroConferencia);
+  const rotuloConferenciaAtivo = rotuloFiltroConferencia(filtroConferencia);
+  const filtrosAtivos = temFiltrosClassificacaoAtivos(filtros) || filtroConferenciaAtivo;
   const filtroDataAtivo = temFiltroDataClassificacaoAtivo(filtros.data);
   const filtroFornecedorAtivo = temFiltroFornecedorClassificacaoAtivo(filtros.fornecedores);
   const filtroPagamentoAtivo = temFiltroPagamentoClassificacaoAtivo(filtros.pagamento);
@@ -176,22 +201,34 @@ export const ClassificarGastosScreen: React.FC<ClassificarGastosScreenProps> = (
     [clearSelection]
   );
 
+  const applyFiltroConferencia = useCallback((filtro: MeusGastosFiltroConferencia) => {
+    setClassificarFiltroConferencia(filtro);
+    setFiltroConferencia(lerClassificarFiltroConferencia());
+    clearSelection();
+    setFiltroConferenciaSheetOpen(false);
+  }, [clearSelection]);
+
   const limparFiltros = useCallback(() => {
     setFiltros(CLASSIFICAR_FILTROS_VAZIO);
     setOrdenacao(CLASSIFICAR_ORDENACAO_PADRAO);
+    limparClassificarFiltroConferencia();
+    setFiltroConferencia(lerClassificarFiltroConferencia());
     clearSelection();
   }, [clearSelection]);
 
   const handleValorHeaderClick = useCallback(() => {
     const nextOrdenacao = proximaOrdenacaoValorClassificacao(ordenacao);
     setOrdenacao(nextOrdenacao);
-    const nextVisible = aplicarFiltrosEOrdenacaoClassificacao(
-      gastosBrutos,
-      filtros,
-      nextOrdenacao
+    const nextVisible = filtrarGastosConferencia(
+      aplicarFiltrosEOrdenacaoClassificacao(
+        gastosBrutos,
+        filtros,
+        nextOrdenacao
+      ),
+      filtroConferencia,
     );
     setSelectedIds((prev) => pruneSelectionToVisible(prev, nextVisible));
-  }, [ordenacao, gastosBrutos, filtros]);
+  }, [ordenacao, gastosBrutos, filtros, filtroConferencia]);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -303,32 +340,50 @@ export const ClassificarGastosScreen: React.FC<ClassificarGastosScreenProps> = (
           )}
         </ScreenHeader>
         {!loading && gastosBrutos.length > 0 && (
-          <div
-            className="classificar-gastos-screen__classificacao-filtro"
-            role="group"
-            aria-label="Filtrar por classificação"
-          >
-            {CLASSIFICAR_FILTRO_CLASSIFICACAO_OPCOES.map((opcao) => (
-              <button
-                key={opcao.id}
-                type="button"
-                className={`classificar-gastos-screen__classificacao-chip ${
-                  filtros.classificacao === opcao.id
-                    ? 'classificar-gastos-screen__classificacao-chip--active'
-                    : ''
-                }`}
-                aria-pressed={filtros.classificacao === opcao.id}
-                onClick={() => applyFiltroClassificacao(opcao.id)}
-              >
-                {opcao.label}
-              </button>
-            ))}
+          <div className="classificar-gastos-screen__toolbar">
+            <div
+              className="classificar-gastos-screen__classificacao-filtro"
+              role="group"
+              aria-label="Filtrar por classificação"
+            >
+              {CLASSIFICAR_FILTRO_CLASSIFICACAO_OPCOES.map((opcao) => (
+                <button
+                  key={opcao.id}
+                  type="button"
+                  className={`classificar-gastos-screen__classificacao-chip ${
+                    filtros.classificacao === opcao.id
+                      ? 'classificar-gastos-screen__classificacao-chip--active'
+                      : ''
+                  }`}
+                  aria-pressed={filtros.classificacao === opcao.id}
+                  onClick={() => applyFiltroClassificacao(opcao.id)}
+                >
+                  {opcao.label}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className={`meus-gastos-filtros-btn ${filtroConferenciaAtivo ? 'meus-gastos-filtros-btn--ativo' : ''}`}
+              onClick={() => setFiltroConferenciaSheetOpen(true)}
+              aria-expanded={filtroConferenciaSheetOpen}
+              aria-haspopup="dialog"
+            >
+              <SlidersHorizontal size={14} aria-hidden />
+              Filtros
+            </button>
           </div>
         )}
         {!loading && filtrosAtivos && gastosBrutos.length > 0 && (
           <div className="classificar-gastos-screen__filtros-bar">
             <p className="classificar-gastos-screen__filtros-count">
               {gastosVisiveis.length} de {gastosBrutos.length} gastos
+              {rotuloConferenciaAtivo ? (
+                <span className="classificar-gastos-screen__filtros-label">
+                  {' '}
+                  · {rotuloConferenciaAtivo}
+                </span>
+              ) : null}
               {rotuloDataAtivo ? (
                 <span className="classificar-gastos-screen__filtros-label">
                   {' '}
@@ -537,6 +592,15 @@ export const ClassificarGastosScreen: React.FC<ClassificarGastosScreenProps> = (
           filtroAplicado={filtros.pagamento}
           onClose={() => setPagamentoSheetOpen(false)}
           onApply={applyFiltroPagamento}
+        />
+      )}
+
+      {filtroConferenciaSheetOpen && (
+        <MeusGastosFiltroSheet
+          instituicoesDisponiveis={instituicoesConferencia}
+          filtroAplicado={filtroConferencia}
+          onClose={() => setFiltroConferenciaSheetOpen(false)}
+          onApply={applyFiltroConferencia}
         />
       )}
 

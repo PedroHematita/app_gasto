@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useCompactSelect } from '../../hooks/useCompactSelect';
+import { SelectOptionsSheet } from '../SelectOptionsSheet';
 
 interface FiltroColunaLancamentoProps {
   rotulo: string;
@@ -14,6 +16,7 @@ export function FiltroColunaLancamento({
   selecionadas,
   onAlternar,
 }: FiltroColunaLancamentoProps) {
+  const compact = useCompactSelect();
   const [aberto, setAberto] = useState(false);
   const [posicao, setPosicao] = useState({ top: 0, left: 0 });
   const botaoRef = useRef<HTMLButtonElement>(null);
@@ -22,7 +25,7 @@ export function FiltroColunaLancamento({
   const ativo = selecionadas.length > 0;
 
   useEffect(() => {
-    if (!aberto) return;
+    if (!aberto || compact) return;
     function posicionar() {
       const rect = botaoRef.current?.getBoundingClientRect();
       if (!rect) return;
@@ -37,10 +40,10 @@ export function FiltroColunaLancamento({
       window.removeEventListener('resize', posicionar);
       window.removeEventListener('scroll', posicionar, true);
     };
-  }, [aberto]);
+  }, [aberto, compact]);
 
   useEffect(() => {
-    if (!aberto) return;
+    if (!aberto || compact) return;
     function fecharAoClicarFora(event: MouseEvent) {
       const alvo = event.target as Node;
       if (botaoRef.current?.contains(alvo) || painelRef.current?.contains(alvo)) return;
@@ -57,7 +60,12 @@ export function FiltroColunaLancamento({
       document.removeEventListener('mousedown', fecharAoClicarFora);
       document.removeEventListener('keydown', fecharComEscape);
     };
-  }, [aberto]);
+  }, [aberto, compact]);
+
+  const fechar = () => {
+    setAberto(false);
+    botaoRef.current?.focus();
+  };
 
   return (
     <>
@@ -72,7 +80,21 @@ export function FiltroColunaLancamento({
       >
         {rotulo}
       </button>
-      {aberto
+      {aberto && compact ? (
+        <SelectOptionsSheet
+          title={`Filtrar ${rotulo}`}
+          options={opcoes.map((opcao) => ({
+            value: opcao,
+            label: opcao === '—' ? 'Indisponível' : opcao,
+          }))}
+          selectedValues={selecionadas}
+          multiple
+          searchable={opcoes.length >= 8}
+          onChoose={onAlternar}
+          onClose={fechar}
+        />
+      ) : null}
+      {aberto && !compact
         ? createPortal(
             <div
               ref={painelRef}

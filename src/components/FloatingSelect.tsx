@@ -1,5 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { useCompactSelect } from '../hooks/useCompactSelect';
+import {
+  filtrarOpcoesSelect,
+  selectDeveExibirPesquisa,
+  toSelectOptionItems,
+} from '../lib/selectOptions';
+import { SelectOptionsSheet } from './SelectOptionsSheet';
 
 interface FloatingSelectProps {
   label: string;
@@ -22,10 +29,12 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
   id,
   disabled = false,
 }) => {
+  const compact = useCompactSelect();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const bgClass =
     bgVariant === 'edit'
@@ -36,16 +45,11 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
           ? 'floating-field--surface-bg input-finance--surface-bg'
           : '';
 
-  // Filtered options based on search
-  const filtered = search.trim()
-    ? options.filter((opt) =>
-        opt.toLowerCase().includes(search.toLowerCase())
-      )
-    : options;
+  const items = toSelectOptionItems(options);
+  const filtered = filtrarOpcoesSelect(items, search);
 
-  // Close on outside click
   useEffect(() => {
-    if (!open) return;
+    if (!open || compact) return;
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
@@ -54,20 +58,27 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
+  }, [open, compact]);
+
+  const close = useCallback(() => {
+    setOpen(false);
+    setSearch('');
+    triggerRef.current?.focus();
+  }, []);
 
   const handleOpen = useCallback(() => {
     if (disabled) return;
     setOpen(true);
     setSearch('');
-    setTimeout(() => inputRef.current?.focus(), 0);
-  }, [disabled]);
+    if (!compact) {
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  }, [disabled, compact]);
 
   const handleSelect = useCallback((opt: string) => {
     onChange(opt);
-    setOpen(false);
-    setSearch('');
-  }, [onChange]);
+    close();
+  }, [onChange, close]);
 
   const labelBg =
     bgVariant === 'edit' || bgVariant === 'surface'
@@ -76,81 +87,107 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
 
   return (
     <div className={`floating-field input-finance ${bgClass} ${className}`} ref={containerRef} style={{ position: 'relative' }}>
-      {/* Display value (when closed) */}
-      {!open && (
-        <div
+      {(!open || compact) && (
+        <button
+          ref={triggerRef}
           id={id}
-          className="floating-field__input has-value"
-          onClick={handleOpen}
-          style={{ 
-            cursor: disabled ? 'not-allowed' : 'pointer', 
-            display: 'flex', 
-            alignItems: 'center', 
+          type="button"
+          className="floating-field__input has-value floating-field__select-trigger"
+          onClick={() => (open ? close() : handleOpen())}
+          disabled={disabled}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-label={label}
+          style={{
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
             userSelect: 'none',
-            opacity: disabled ? 0.5 : 1
+            opacity: disabled ? 0.5 : 1,
+            textAlign: 'left',
           }}
         >
           <span style={{ flex: 1 }}>{value}</span>
-        </div>
+          <span
+            className="floating-field__select-arrow"
+            aria-hidden
+            style={{
+              position: 'static',
+              transform: open ? 'rotate(180deg)' : 'none',
+              opacity: disabled ? 0.3 : 1,
+              pointerEvents: 'none',
+            }}
+          >
+            <ChevronDown size={16} />
+          </span>
+        </button>
       )}
 
-      {/* Search input (when open) */}
-      {open && (
-        <input
-          ref={inputRef}
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Filtrar..."
-          className="floating-field__input has-value"
-          style={{ caretColor: 'var(--text-primary)' }}
-          autoComplete="off"
-        />
+      {open && !compact && (
+        <>
+          <input
+            ref={inputRef}
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Filtrar..."
+            className="floating-field__input has-value"
+            style={{ caretColor: 'var(--text-primary)', paddingRight: 36 }}
+            autoComplete="off"
+          />
+          <span
+            className="floating-field__select-arrow"
+            onClick={close}
+            style={{
+              transform: 'translateY(-50%) rotate(180deg)',
+              cursor: 'pointer',
+              pointerEvents: 'auto',
+            }}
+          >
+            <ChevronDown size={16} />
+          </span>
+        </>
       )}
-
-      <span
-        className="floating-field__select-arrow"
-        onClick={() => {
-          if (disabled) return;
-          if (open) { setOpen(false); setSearch(''); } else { handleOpen(); }
-        }}
-        style={{
-          transition: 'transform 0.2s',
-          transform: open ? 'translateY(-50%) rotate(180deg)' : 'translateY(-50%)',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          pointerEvents: 'auto',
-          opacity: disabled ? 0.3 : 1
-        }}
-      >
-        <ChevronDown size={16} />
-      </span>
 
       <label className="floating-field__label" style={{
         top: 0, transform: 'translateY(-50%)', fontSize: 10,
         color: disabled ? 'var(--text-inactive)' : 'var(--text-muted)',
         background: labelBg, padding: '0 5px',
-        opacity: disabled ? 0.6 : 1
+        opacity: disabled ? 0.6 : 1,
       }}>
         {label}
       </label>
 
-      {open && (
-        <div className="input-finance__dropdown custom-dropdown">
+      {open && !compact && (
+        <div className="input-finance__dropdown custom-dropdown" role="listbox">
           {filtered.length === 0 ? (
             <div className="input-finance__option--empty custom-dropdown__empty">Nenhuma opção encontrada</div>
           ) : (
             filtered.map((opt) => (
               <div
-                key={opt}
-                className={`input-finance__option custom-dropdown__item ${opt === value ? 'input-finance__option--active custom-dropdown__item--selected' : ''}`}
-                onClick={() => handleSelect(opt)}
+                key={opt.value}
+                role="option"
+                aria-selected={opt.value === value}
+                className={`input-finance__option custom-dropdown__item ${opt.value === value ? 'input-finance__option--active custom-dropdown__item--selected' : ''}`}
+                onClick={() => handleSelect(opt.value)}
               >
-                {opt}
+                {opt.label}
               </div>
             ))
           )}
         </div>
       )}
+
+      {open && compact ? (
+        <SelectOptionsSheet
+          title={label}
+          options={items}
+          selectedValues={value ? [value] : []}
+          searchable={selectDeveExibirPesquisa(options.length)}
+          onChoose={handleSelect}
+          onClose={close}
+        />
+      ) : null}
     </div>
   );
 };

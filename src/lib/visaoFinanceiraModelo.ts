@@ -6,10 +6,13 @@
 import type { CompromissoRecord, GastoPereneRecord, GastoRecord } from '../types';
 import { TIPO_GASTO_NAO_CLASSIFICADO } from '../types';
 import {
-  dataVencimentoParcela,
+  dataVencimentoAgendaGasto,
   distribuirValorParcelas,
   fimJanelaDozeMeses,
+  gastoEntraNaAgendaCartaoVisao,
   isFormaPagamentoParcelado,
+  isMeioCartaoCredito,
+  numeroFatiasAgendaCartaoVisao,
 } from './gastosParceladosFuturos';
 import { vencimentosPereneNoIntervalo } from './gastosPerenePeriods';
 import { monthKeyFromDate } from './visaoFinanceiraConsulta';
@@ -209,15 +212,17 @@ function ordenarLinhas(linhas: LinhaVisao[]): LinhaVisao[] {
   });
 }
 
-/** Gastos que não vão para a agenda do cartão: à vista, quitação de perene e quitação de parcela. */
+/** Gastos que não vão para a agenda do cartão: à vista (exceto crédito), quitação de perene e de parcela. */
 function montarGastosForaDaAgenda(input: MontarVisaoInput): LinhaVisao[] {
   const linhas: LinhaVisao[] = [];
   for (const gasto of input.gastos) {
     const compra = parseDateBR(gasto.dataCompra);
     if (!compra) continue;
-    const n = gasto.parcelas ?? 0;
-    const vaiParaAgenda = isFormaPagamentoParcelado(gasto.formaPagamento)
-      && n > 1
+    const vaiParaAgenda = gastoEntraNaAgendaCartaoVisao(
+      gasto.formaPagamento,
+      gasto.parcelas,
+      gasto.meioPagamento,
+    )
       && !input.gastoIdsPerene.has(gasto.id)
       && !input.gastoIdsParcela.has(gasto.id);
     if (vaiParaAgenda) continue;
@@ -256,11 +261,22 @@ function montarComprometimento(input: MontarVisaoInput): LinhaVisao[] {
     const natureza = naturezaDeTipoGasto(input.tipoGastoPorId.get(g.id));
     if (input.gastoIdsPerene.has(g.id) || input.gastoIdsParcela.has(g.id)) continue;
 
-    const n = g.parcelas ?? 0;
-    if (!isFormaPagamentoParcelado(g.formaPagamento) || n <= 1) continue;
+    const n = numeroFatiasAgendaCartaoVisao(g.formaPagamento, g.parcelas, g.meioPagamento);
+    if (n < 1) continue;
     const valores = distribuirValorParcelas(g.total, n);
+    const modalidadeAgenda: ModalidadeVisao =
+      isFormaPagamentoParcelado(g.formaPagamento) && n > 1 ? 'parcelado' : 'demais';
+    const origemAgenda = isMeioCartaoCredito(g.meioPagamento)
+      ? 'Projeção da fatura (vencimento nominal dia 10). Referência informada até o dia 13, sem confirmação de juros ou pagamento.'
+      : 'Previsto pela agenda do cartão. Não é um pagamento confirmado.';
+    const titulo = tituloGasto(g);
     for (let k = 1; k <= n; k++) {
-      const due = dataVencimentoParcela(g.dataCompra, k);
+      const due = dataVencimentoAgendaGasto(
+        g.dataCompra,
+        k,
+        g.meioPagamento,
+        g.instituicaoFinanceira,
+      );
       if (!due) continue;
       const dia = startOfDayLocal(due);
       linhas.push(linha({
@@ -268,11 +284,11 @@ function montarComprometimento(input: MontarVisaoInput): LinhaVisao[] {
         monthKey: monthKeyFromDate(dia),
         dataRef: dia,
         valorCents: valores[k - 1] ?? 0,
-        modalidade: 'parcelado',
+        modalidade: modalidadeAgenda,
         natureza,
         situacao: 'projecao',
-        fornecedor: `${tituloGasto(g)} · Parc. ${k}/${n}`,
-        origem: 'Previsto pela agenda do cartão. Não é um pagamento confirmado.',
+        fornecedor: n > 1 ? `${titulo} · Parc. ${k}/${n}` : titulo,
+        origem: origemAgenda,
         naturezaObservacao: null,
         ...pagamentoDoGasto(g),
       }));
