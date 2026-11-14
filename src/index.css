@@ -167,6 +167,15 @@ html.keyboard-open .date-header__row {
   cursor: pointer;
 }
 
+.floating-field__select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.floating-field__select::-ms-expand {
+  display: none;
+}
+
 button.floating-field__select-trigger {
   padding-right: 36px;
   cursor: pointer;
