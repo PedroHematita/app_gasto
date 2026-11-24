@@ -164,7 +164,10 @@ export async function checkUnidadeForDescricao(orgId: string, descricao: string)
     .ilike('descricao_produto_servico', `%${queryDesc}%`)
     .order('created_at', { ascending: false });
 
-  if (error || !data) return null;
+  // Erro de rede/API: propaga para o caller (cadastro múltiplo marca falha + retry).
+  // Ausência de linhas continua sendo `null` (descrição ainda não cadastrada).
+  if (error) throw error;
+  if (!data) return null;
 
   const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
   const normInput = normalize(descricao);
@@ -253,7 +256,6 @@ export async function fetchGastos(orgId: string): Promise<GastoRecord[]> {
     observacoes: row.observacoes || '',
     total: Math.round((row.total || 0) * 100),
     comprovanteUrl: row.comprovante_url || '',
-    comprovantePendente: Boolean(row.comprovante_pendente),
     parcelas: row.numero_parcelas || undefined,
     createdAt: row.created_at,
     items: (row.itens_gasto || [])
@@ -385,7 +387,6 @@ export async function fetchGastoById(gastoId: string): Promise<GastoRecord | nul
     observacoes: data.observacoes || '',
     total: Math.round((data.total || 0) * 100),
     comprovanteUrl: data.comprovante_url || '',
-    comprovantePendente: Boolean((data as { comprovante_pendente?: boolean }).comprovante_pendente),
     parcelas: data.numero_parcelas || undefined,
     createdAt: data.created_at,
     items: ((data as any).itens_gasto || [])

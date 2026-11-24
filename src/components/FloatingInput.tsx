@@ -24,6 +24,8 @@ interface FloatingInputProps {
   spellCheck?: boolean;
   /** Nome do campo no DOM (usa `id` quando omitido). */
   name?: string;
+  /** Tabela / linha compacta: sem floating label (usa aria-label). */
+  hideLabel?: boolean;
 }
 
 export const FloatingInput: React.FC<FloatingInputProps> = ({
@@ -45,6 +47,7 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
   autoCorrect = 'off',
   spellCheck = false,
   name,
+  hideLabel = false,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -123,7 +126,7 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
 
   return (
     <div
-      className={`floating-field input-finance ${bgClass} ${className}${showError ? ' input-finance--error floating-field--error' : ''}`}
+      className={`floating-field input-finance ${bgClass} ${className}${hideLabel ? ' floating-field--nolabel' : ''}${showError ? ' input-finance--error floating-field--error' : ''}`}
       ref={containerRef}
       style={{ position: 'relative' }}
     >
@@ -134,18 +137,19 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
         type={type}
         value={value}
         onChange={(e) => handleChange(e.target.value)}
-        className={`floating-field__input ${value ? 'has-value' : ''}${showError ? ' floating-field__input--error' : ''} ${inputClassName}`}
+        className={`floating-field__input ${value || hideLabel ? 'has-value' : ''}${showError ? ' floating-field__input--error' : ''} ${inputClassName}`}
         readOnly={readOnly}
         onClick={onClick}
         inputMode={inputMode}
         autoComplete={autoComplete}
         autoCorrect={autoCorrect}
         spellCheck={spellCheck}
+        aria-label={hideLabel ? label : undefined}
         onFocus={() => {
           if (suggestions.length > 0) setShowSuggestions(true);
         }}
       />
-      <label className="floating-field__label">{label}</label>
+      {!hideLabel ? <label className="floating-field__label">{label}</label> : null}
 
       {showSuggestions && suggestions.length > 0 && (
         <div className="input-finance__dropdown custom-dropdown">

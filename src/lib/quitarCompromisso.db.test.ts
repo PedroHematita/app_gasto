@@ -136,6 +136,11 @@ beforeAll(async () => {
     'utf8'
   );
   await db.exec(migration);
+  const migrationPendencia = readFileSync(
+    resolve('supabase/migrations/20261124_quitar_compromisso_comprovante_pendente_false.sql'),
+    'utf8'
+  );
+  await db.exec(migrationPendencia);
 
   await db.exec(`
     create or replace function public.fail_compromisso_update()
@@ -218,22 +223,15 @@ describe('quitar_compromisso', () => {
     expect(compromisso.data_prevista_pagamento).not.toBe(gasto.data_compra);
   });
 
-  it('marca comprovante pendente acima de R$ 500 e limpa a marca quando a URL é gravada', async () => {
+  it('quitação acima de R$ 500 grava o gasto sem marcar comprovante pendente', async () => {
     const id = await novoCompromisso('unico', 'vencido');
     const gastoId = await quitar({ compromissoId: id, centavos: 50900, fornecedor: 'ProLife' });
-    const antes = await scalar<{ comprovante_pendente: boolean; comprovante_url: string | null }>(
+    const gasto = await scalar<{ comprovante_pendente: boolean; comprovante_url: string | null }>(
       'select comprovante_pendente, comprovante_url from public.gastos where id = $1',
       [gastoId]
     );
-    expect(antes.comprovante_pendente).toBe(true);
-    expect(antes.comprovante_url).toBeNull();
-
-    await sql(`update public.gastos set comprovante_url = 'https://exemplo/comprovante.jpg' where id = $1`, [gastoId]);
-    const depois = await scalar<{ comprovante_pendente: boolean }>(
-      'select comprovante_pendente from public.gastos where id = $1',
-      [gastoId]
-    );
-    expect(depois.comprovante_pendente).toBe(false);
+    expect(gasto.comprovante_pendente).toBe(false);
+    expect(gasto.comprovante_url).toBeNull();
   });
 
   it('desfaz gasto e itens se a quitação do compromisso falhar', async () => {

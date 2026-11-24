@@ -98,13 +98,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       }
     }
 
-    // 2. Check comprovante obrigatório
-    if (totalCents > 50000 && !payment.comprovanteFile && !payment.comprovanteUrl) {
-      alert('Para gastos acima de R$ 500,00, anexe o comprovante antes de salvar.');
-      return;
-    }
-
-    // 3. Check low parcel value
+    // 2. Check low parcel value
     if (payment.formaPagamento === 'parcelado') {
       const p = payment.parcelas || 2;
       const valorParcela = totalCents / p;
@@ -284,32 +278,32 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           autoComplete="off"
         />
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          style={{ display: 'none' }}
-          autoComplete="off"
-          onChange={handleFileChange}
-        />
+        {isQuitMode ? (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              autoComplete="off"
+              onChange={handleFileChange}
+            />
 
-        <button
-          className={`btn-attach ${payment.comprovanteFile ? 'btn-attach--has-file' : ''}`}
-          onClick={handleFileSelect}
-          type="button"
-        >
-          <Upload size={14} />
-          {payment.comprovanteFile
-            ? payment.comprovanteFile.name
-            : 'Anexar comprovante'}
-        </button>
-        <div className="btn-attach__hint">
-          {payment.comprovanteFile
-            ? 'toque para substituir'
-            : isQuitMode && totalCents > 50000
-              ? 'obrigatório acima de R$ 500,00'
-              : 'opcional'}
-        </div>
+            <button
+              className={`btn-attach ${payment.comprovanteFile ? 'btn-attach--has-file' : ''}`}
+              onClick={handleFileSelect}
+              type="button"
+            >
+              <Upload size={14} />
+              {payment.comprovanteFile
+                ? payment.comprovanteFile.name
+                : 'Anexar comprovante'}
+            </button>
+            <div className="btn-attach__hint">
+              {payment.comprovanteFile ? 'toque para substituir' : 'opcional'}
+            </div>
+          </>
+        ) : null}
         </div>
 
         <footer className="modal-form-shell__footer">

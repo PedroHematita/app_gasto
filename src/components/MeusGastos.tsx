@@ -57,6 +57,7 @@ interface MeusGastosProps {
   onSelectGastoPerene: (gp: GastoPereneRecord) => void;
   onNewGasto: () => void;
   onNovoGastoPerene: () => void;
+  onCadastroMultiplo: () => void;
   onOpenAdmin?: () => void;
   refreshKey: number;
   focusCompromissosNonce: number;
@@ -90,6 +91,7 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
   onSelectGastoPerene,
   onNewGasto,
   onNovoGastoPerene,
+  onCadastroMultiplo,
   onOpenAdmin,
   refreshKey,
   focusCompromissosNonce,
@@ -900,7 +902,6 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
                     <span className="gasto-card__date">{gasto.dataCompra}</span>
                     <span className="gasto-card__meio">
                       {gasto.meioPagamento}
-                      {gasto.comprovantePendente ? ' · Comprovante pendente' : ''}
                     </span>
                   </div>
                 </button>
@@ -987,6 +988,13 @@ export const MeusGastos: React.FC<MeusGastosProps> = ({
       ) : null}
 
       <div className="meus-gastos-perene-cta">
+        <button
+          type="button"
+          className="meus-gastos-perene-cta__btn"
+          onClick={onCadastroMultiplo}
+        >
+          Cadastro múltiplo
+        </button>
         <button type="button" className="meus-gastos-perene-cta__btn" onClick={onNovoGastoPerene}>
           Novo gasto perene
         </button>

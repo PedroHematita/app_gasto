@@ -1917,13 +1917,6 @@ html.keyboard-open .modal-form-shell__body .btn-attach {
   letter-spacing: 0.5px;
 }
 
-.detail-comprovante-pendente {
-  margin: 8px 0 0;
-  font-size: 12px;
-  line-height: 1.4;
-  color: #ffcc00;
-}
-
 .quit-data-pagamento__value {
   font-size: var(--font-secondary);
   font-weight: var(--weight-medium);
@@ -4557,6 +4550,45 @@ html.keyboard-open .modal-form-shell__body .btn-attach {
   color: var(--accent);
 }
 
+.price-hint-bar--warn {
+  border-color: color-mix(in srgb, var(--status-warning, #c9a227) 55%, transparent);
+  background: color-mix(in srgb, var(--status-warning, #c9a227) 12%, rgba(22, 22, 22, 0.55));
+}
+
+.price-hint-bar--ok {
+  border-color: color-mix(in srgb, var(--status-success, #3d9a6a) 45%, transparent);
+  background: color-mix(in srgb, var(--status-success, #3d9a6a) 10%, rgba(22, 22, 22, 0.55));
+}
+
+.price-hint-bar__badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.price-hint-bar__badge--ok {
+  color: var(--status-success, #3d9a6a);
+  background: color-mix(in srgb, var(--status-success, #3d9a6a) 18%, transparent);
+}
+
+.price-hint-bar__badge--warn {
+  color: var(--status-warning, #e6c35c);
+  background: color-mix(in srgb, var(--status-warning, #c9a227) 22%, transparent);
+}
+
+.price-hint-bar__warn-text {
+  font-size: 9px;
+  color: var(--status-warning, #c9a227);
+  font-weight: var(--weight-medium);
+}
+
 /* ===== PRICE HISTORY SHEET ===== */
 .price-history-sheet {
   max-height: 85vh;
@@ -4695,12 +4727,18 @@ html.keyboard-open .modal-form-shell__body .btn-attach {
   font-variant-numeric: tabular-nums;
 }
 
-/* ----- Gastos perenes ----- */
+/* ----- Gastos perenes / atalhos de cadastro ----- */
 .meus-gastos-perene-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   padding: 0 20px 12px;
 }
 
 .meus-gastos-perene-cta__btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  --button-finance-width: auto;
   --button-finance-padding: 10px 14px;
   --button-finance-radius: var(--radius-sm);
   --button-finance-bg: transparent;
@@ -5080,3 +5118,1230 @@ html.keyboard-open .modal-form-shell__body .btn-attach {
   border: 1px solid var(--border-medium);
   margin-bottom: 10px;
 }
+
+/* —— Cadastro múltiplo — cards colapsáveis —— */
+.cad-multi {
+  /* Paleta preto carvão fosco (só esta tela) */
+  --cm-page: #0f0f0f;
+  --cm-card: #191919;
+  --cm-card-open: #1b1b1b;
+  --cm-card-border: transparent;
+  --cm-field: #232323;
+  --cm-field-border: transparent;
+  --cm-field-hover: #272727;
+  --cm-focus-bg: #2a2a2a;
+  --cm-focus-border: rgba(255, 255, 255, 0.14);
+  --cm-focus-ring: 0 0 0 3px rgba(255, 255, 255, 0.04);
+  --cm-focus: var(--cm-focus-border);
+  --cm-divider: transparent;
+  --cm-text-strong: #e3e3df;
+  --cm-text: #cfcfcb;
+  --cm-text-muted: #7d7d7a;
+  --cm-text-faint: #545452;
+  --cm-warning: #e6c229;
+  --cm-danger: #ff453a;
+  --cm-field-error: rgba(255, 69, 58, 0.6);
+  --cm-field-error-text: #ff6b61;
+
+  --cad-max: 1320px;
+  --cad-pad: 16px;
+  --cad-gap: 6px;
+  --cad-data: 110px;
+  --cad-pag: 200px;
+  --cad-qtd: 64px;
+  --cad-un: 108px;
+  --cad-valor: 120px;
+  --cad-hint: 22px;
+  --cad-rm: 28px;
+  --cad-row: 36px;
+  --cad-grid-cols:
+    minmax(0, 1fr)
+    var(--cad-qtd)
+    var(--cad-un)
+    var(--cad-valor)
+    var(--cad-hint)
+    var(--cad-rm);
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--cm-page);
+  color: var(--cm-text);
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  overflow-x: clip;
+}
+
+/* Header alinhado à coluna da lista (mesmo max-width dos cards) */
+.cad-multi .screen-header {
+  background: var(--cm-page);
+  width: min(100% - (var(--cad-pad) * 2), var(--cad-max));
+  margin-inline: auto;
+  padding-left: 0;
+  padding-right: 0;
+  box-sizing: border-box;
+}
+.cad-multi .screen-header__title {
+  color: var(--cm-text-strong);
+  font-weight: 500;
+}
+.cad-multi .screen-header__subtitle {
+  color: var(--cm-text-muted);
+  font-weight: 400;
+}
+.cad-multi .button-finance {
+  --button-finance-font-weight: 500;
+}
+.cad-multi__shell {
+  width: min(100% - (var(--cad-pad) * 2), var(--cad-max));
+  margin-inline: auto;
+  flex: 1;
+  min-width: 0;
+}
+.cad-multi__layout {
+  display: grid;
+  gap: 12px;
+  padding: 0 0 24px;
+  min-width: 0;
+}
+.cad-multi__layout--com-painel {
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
+}
+.cad-multi__main {
+  min-width: 0;
+}
+.cad-multi__fechar.screen-header__icon-btn.button-finance,
+.cad-multi .screen-header__icon-btn.button-finance.button-finance--ghost {
+  --button-finance-bg: transparent;
+  --button-finance-border: none;
+  --button-finance-color: var(--cm-text-muted);
+  --button-finance-hover-bg: transparent;
+  --button-finance-hover-color: var(--cm-text-strong);
+  flex-shrink: 0;
+}
+.cad-multi .screen-header__action {
+  flex-shrink: 0;
+  overflow: visible;
+}
+.cad-multi__resumo {
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+.cad-multi__resumo--erro {
+  background: #3a1515;
+  color: #ffb4b4;
+}
+.cad-multi__resumo--aviso {
+  background: #3a3215;
+  color: #ffe6a0;
+}
+.cad-multi__resumo p {
+  margin: 0 0 4px;
+}
+.cad-multi__resumo-titulo {
+  font-weight: 500;
+  margin-bottom: 6px !important;
+}
+
+/* Dia */
+.cad-multi-dia {
+  margin-bottom: 12px;
+}
+.cad-multi-dia__header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  color: var(--cm-text-muted);
+  font-weight: 400;
+  font-size: 12px;
+  padding: 4px 2px 8px;
+  cursor: pointer;
+  text-align: left;
+}
+.cad-multi-dia__data {
+  color: var(--cm-text-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.cad-multi-dia__subtotal {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--cm-text-muted);
+  font-weight: 400;
+}
+.cad-multi-dia__header svg {
+  width: 14px;
+  height: 14px;
+  color: var(--cm-text-muted);
+}
+.cad-multi-dia__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Card do gasto — flutua com sombra, sem borda */
+.cad-multi-gasto.card-finance.card-finance--section {
+  margin: 0;
+  border: none;
+  background: var(--cm-card);
+  border-radius: 14px;
+  overflow: hidden;
+  min-width: 0;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 8px 24px rgba(0, 0, 0, 0.45);
+  transition: box-shadow 150ms ease, background-color 150ms ease;
+}
+.cad-multi-gasto--aberto {
+  border: none;
+  background: var(--cm-card-open);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.5),
+    0 16px 40px rgba(0, 0, 0, 0.6);
+}
+.cad-multi-gasto__header {
+  width: 100%;
+}
+.cad-multi-gasto__header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.cad-multi-gasto__header-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
+  min-width: 0;
+}
+.cad-multi-gasto__pag-resumo {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cad-multi-gasto__titulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+.cad-multi-gasto__titulo-vazio {
+  color: var(--cm-text-faint);
+  font-weight: 500;
+}
+.cad-multi-gasto__erro-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cm-danger);
+  flex-shrink: 0;
+}
+
+/* Cabeçalho do card — título/total estáveis aberto e fechado */
+.cad-multi .meus-gastos-month-header__title,
+.cad-multi .meus-gastos-month-header--expanded .meus-gastos-month-header__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--cm-text-strong);
+  letter-spacing: 0.3px;
+}
+.cad-multi .meus-gastos-month-header__count,
+.cad-multi .meus-gastos-month-header--expanded .meus-gastos-month-header__count {
+  font-size: var(--font-auxiliary);
+  font-weight: 400;
+  color: var(--cm-text-muted);
+}
+.cad-multi .meus-gastos-month-header__total,
+.cad-multi .meus-gastos-month-header--expanded .meus-gastos-month-header__total {
+  display: inline;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--cm-text-strong);
+}
+.cad-multi .meus-gastos-month-header__icon {
+  color: var(--cm-text-muted);
+}
+.cad-multi .meus-gastos-month-header--expanded::after {
+  display: none;
+}
+
+.cad-multi-gasto__corpo {
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  border-top: none;
+}
+.cad-multi .floating-field {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+/* Células flat (sem floating label / sem caixa alta) */
+.cad-multi .cad-multi-cell,
+.cad-multi .cad-multi-cell-field.floating-field--nolabel .floating-field__input,
+.cad-multi .cad-multi-cell-field.floating-field--nolabel .floating-field__select,
+.cad-multi .cad-multi-item__valor.floating-field--nolabel .floating-field__input,
+.cad-multi .floating-field--main-bg.floating-field--nolabel .floating-field__input,
+.cad-multi .floating-field--surface-bg.floating-field--nolabel .floating-field__input,
+.cad-multi .floating-field--surface-bg.floating-field--nolabel .floating-field__select,
+.cad-multi .input-finance--main-bg.floating-field--nolabel .floating-field__input,
+.cad-multi .input-finance--surface-bg.floating-field--nolabel .floating-field__input,
+.cad-multi .input-finance--surface-bg.floating-field--nolabel .floating-field__select {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--cad-row);
+  min-height: var(--cad-row);
+  max-height: var(--cad-row);
+  padding: 0 10px;
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--cm-field);
+  color: var(--cm-text);
+  font-size: var(--font-secondary);
+  line-height: calc(var(--cad-row) - 2px);
+  box-shadow: none;
+  outline: none;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+.cad-multi .cad-multi-pag .floating-field__input,
+.cad-multi .cad-multi-pag .floating-field__select,
+.cad-multi .cad-multi-pag-sheet .floating-field__input,
+.cad-multi .cad-multi-pag-sheet .floating-field__select {
+  background: var(--cm-field);
+  border: 1px solid transparent;
+  color: var(--cm-text);
+  box-shadow: none;
+  outline: none;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+.cad-multi .cad-multi-cell-field.floating-field--nolabel .floating-field__input::placeholder,
+.cad-multi .cad-multi-item__valor.floating-field--nolabel .floating-field__input::placeholder {
+  color: var(--cm-text-faint);
+}
+.cad-multi .cad-multi-cell:hover,
+.cad-multi .cad-multi-cell-field.floating-field--nolabel .floating-field__input:hover,
+.cad-multi .cad-multi-cell-field.floating-field--nolabel .floating-field__select:hover,
+.cad-multi .cad-multi-item__valor.floating-field--nolabel .floating-field__input:hover,
+.cad-multi .cad-multi-pag .floating-field__input:hover,
+.cad-multi .cad-multi-pag .floating-field__select:hover,
+.cad-multi .cad-multi-pag-sheet .floating-field__input:hover,
+.cad-multi .cad-multi-pag-sheet .floating-field__select:hover {
+  background: var(--cm-field-hover);
+}
+.cad-multi .cad-multi-cell-field.floating-field--nolabel .floating-field__select {
+  padding-right: 28px;
+}
+.cad-multi .cad-multi-cell-field.floating-field--nolabel .floating-field__select-arrow {
+  right: 8px;
+  color: var(--cm-text-muted);
+}
+.cad-multi .cad-multi-cell-field.floating-field--nolabel .floating-field__select:disabled {
+  opacity: 1;
+  color: var(--cm-text);
+  background: var(--cm-field);
+  cursor: default;
+}
+.cad-multi .cad-multi-cell-field.floating-field--nolabel .floating-field__select:not(.has-value) {
+  color: var(--cm-text-faint);
+}
+.cad-multi .cad-multi-cell:focus,
+.cad-multi .cad-multi-cell:focus-visible,
+.cad-multi .cad-multi-cell-field.floating-field--nolabel .floating-field__input:focus,
+.cad-multi .cad-multi-cell-field.floating-field--nolabel .floating-field__select:focus,
+.cad-multi .cad-multi-item__valor.floating-field--nolabel .floating-field__input:focus,
+.cad-multi .floating-field--main-bg.floating-field--nolabel .floating-field__input:focus,
+.cad-multi .floating-field--surface-bg.floating-field--nolabel .floating-field__input:focus,
+.cad-multi .floating-field--surface-bg.floating-field--nolabel .floating-field__select:focus,
+.cad-multi .input-finance--main-bg.floating-field--nolabel .floating-field__input:focus,
+.cad-multi .input-finance--surface-bg.floating-field--nolabel .floating-field__input:focus,
+.cad-multi .input-finance--surface-bg.floating-field--nolabel .floating-field__select:focus,
+.cad-multi .cad-multi-pag .floating-field__input:focus,
+.cad-multi .cad-multi-pag .floating-field__select:focus,
+.cad-multi .cad-multi-pag-sheet .floating-field__input:focus,
+.cad-multi .cad-multi-pag-sheet .floating-field__select:focus {
+  border-color: var(--cm-focus-border);
+  background: var(--cm-focus-bg);
+  box-shadow: var(--cm-focus-ring);
+  outline: none;
+}
+.cad-multi .cad-multi-cell--erro,
+.cad-multi .cad-multi-cell-field.floating-field--error .floating-field__input,
+.cad-multi .cad-multi-cell-field.floating-field--error .floating-field__select,
+.cad-multi .cad-multi-item__valor.floating-field--error .floating-field__input,
+.cad-multi .input-finance--error.cad-multi-cell-field .floating-field__input,
+.cad-multi .input-finance--error.cad-multi-cell-field .floating-field__select,
+.cad-multi .cad-multi-pag .floating-field--error .floating-field__input,
+.cad-multi .cad-multi-pag .floating-field--error .floating-field__select,
+.cad-multi .cad-multi-pag-sheet .floating-field--error .floating-field__input,
+.cad-multi .cad-multi-pag-sheet .floating-field--error .floating-field__select {
+  border-color: var(--cm-field-error);
+}
+.cad-multi .cad-multi-cell--erro:focus,
+.cad-multi .cad-multi-cell--erro:focus-visible,
+.cad-multi .cad-multi-cell-field.floating-field--error .floating-field__input:focus,
+.cad-multi .cad-multi-cell-field.floating-field--error .floating-field__select:focus,
+.cad-multi .cad-multi-item__valor.floating-field--error .floating-field__input:focus,
+.cad-multi .input-finance--error.cad-multi-cell-field .floating-field__input:focus,
+.cad-multi .input-finance--error.cad-multi-cell-field .floating-field__select:focus,
+.cad-multi .cad-multi-pag .floating-field--error .floating-field__input:focus,
+.cad-multi .cad-multi-pag .floating-field--error .floating-field__select:focus,
+.cad-multi .cad-multi-pag-sheet .floating-field--error .floating-field__input:focus,
+.cad-multi .cad-multi-pag-sheet .floating-field--error .floating-field__select:focus {
+  border-color: var(--cm-field-error);
+  background: var(--cm-focus-bg);
+  box-shadow: var(--cm-focus-ring);
+  outline: none;
+}
+.cad-multi-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  width: 100%;
+}
+.cad-multi-field__erro,
+.cad-multi-item__unidade-erro {
+  margin: 0;
+  padding: 0 2px;
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--cm-field-error-text);
+}
+.cad-multi-item__msg-incompleta {
+  margin: 4px 0 0;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #ff6b61;
+  text-align: left;
+}
+.cad-multi .cad-multi-item__unidade .floating-field--empty .floating-field__select {
+  color: var(--cm-text-faint);
+}
+.cad-multi .cad-multi-cell {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: inherit;
+}
+.cad-multi .cad-multi-cell-field.floating-field--nolabel {
+  height: var(--cad-row);
+}
+
+.cad-multi-gasto__campos-block,
+.cad-multi-gasto__itens {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.cad-multi-campos-head,
+.cad-multi-itens-head,
+.cad-multi-gasto__campos,
+.cad-multi-item {
+  display: grid;
+  grid-template-columns: var(--cad-grid-cols);
+  gap: var(--cad-gap);
+  align-items: center;
+  min-width: 0;
+  width: 100%;
+}
+.cad-multi-campos-head,
+.cad-multi-itens-head {
+  padding: 0;
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--cm-text-muted);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.02em;
+}
+.cad-multi-gasto__data-forn {
+  display: grid;
+  grid-template-columns: var(--cad-data) minmax(0, 1fr);
+  gap: var(--cad-gap);
+  min-width: 0;
+  width: 100%;
+  grid-column: 1;
+}
+.cad-multi-campos-head__pag,
+.cad-multi-gasto__pag-resumo-btn,
+.cad-multi-gasto__pag-field {
+  grid-column: 2 / 5;
+  min-width: 0;
+}
+.cad-multi-gasto__pag-field .cad-multi-gasto__pag-resumo-btn {
+  grid-column: auto;
+  width: 100%;
+}
+.cad-multi-gasto__data-btn {
+  min-width: 0;
+}
+.cad-multi-gasto__herdada {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--cm-warning) 35%, transparent);
+  background: transparent;
+  color: var(--cm-warning);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.cad-multi-itens-head__qtd,
+.cad-multi-itens-head__val {
+  text-align: right;
+  padding-right: 10px;
+  box-sizing: border-box;
+}
+.cad-multi-item-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  width: 100%;
+}
+.cad-multi-item {
+  min-height: var(--cad-row);
+  height: var(--cad-row);
+  padding: 0;
+  border-top: none;
+  align-items: center;
+}
+.cad-multi-item-wrap:first-of-type .cad-multi-item {
+  border-top: none;
+}
+.cad-multi-item .cad-multi-field,
+.cad-multi-item__unidade {
+  height: var(--cad-row);
+  min-height: var(--cad-row);
+  max-height: var(--cad-row);
+  justify-content: center;
+}
+.cad-multi-item__rm--spacer {
+  visibility: hidden;
+  pointer-events: none;
+}
+.cad-multi-item__qtd .floating-field__input,
+.cad-multi-item__valor .floating-field__input {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.cad-multi-item__unidade {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+.cad-multi-item__unidade .floating-field__select {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cad-multi-item__hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 22px;
+}
+.cad-multi-item__rm,
+.price-hint-icon {
+  border: none;
+  background: transparent;
+  color: var(--cm-text-faint);
+  cursor: pointer;
+  padding: 2px;
+  width: 22px;
+  height: 22px;
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+}
+.cad-multi-item__rm:hover {
+  color: var(--cm-danger);
+  background: transparent;
+}
+.price-hint-icon:hover {
+  color: var(--cm-text-muted);
+  background: transparent;
+}
+.price-hint-icon--warn {
+  color: var(--cm-warning);
+}
+.cad-multi .price-hint-icon {
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  padding: 0;
+}
+.cad-multi .price-hint-icon--warn {
+  color: var(--cm-warning);
+}
+.cad-multi .price-hint-icon svg {
+  width: 14px;
+  height: 14px;
+}
+.cad-multi-item__unidade-retry {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 2px);
+  z-index: 1;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font-size: 9px;
+  line-height: 12px;
+  color: var(--cm-warning);
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+}
+/* Rodapé do card */
+.cad-multi-gasto__rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+  flex-wrap: wrap;
+}
+.cad-multi-gasto__add-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: var(--cm-text-muted);
+  font-size: 12px;
+  font-weight: 400;
+  padding: 4px 0;
+  cursor: pointer;
+}
+.cad-multi-gasto__add-item svg {
+  width: 14px;
+  height: 14px;
+}
+.cad-multi-gasto__rodape-acoes {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+.cad-multi-gasto__acao-texto {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: var(--cm-text-faint);
+  font-size: 12px;
+  font-weight: 400;
+  padding: 4px 0;
+  cursor: pointer;
+}
+.cad-multi-gasto__acao-texto svg {
+  width: 14px;
+  height: 14px;
+}
+.cad-multi-gasto__acao-texto:first-child:hover {
+  color: var(--cm-text-muted);
+}
+.cad-multi-gasto__acao-texto:last-child:hover {
+  color: var(--cm-danger);
+}
+
+.cad-multi__add-gasto {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--cm-text-muted);
+  font-size: var(--font-secondary);
+  cursor: pointer;
+}
+.cad-multi__add-gasto:hover {
+  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--cm-text-muted);
+}
+
+.cad-multi__footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 12px var(--cad-pad) calc(16px + env(safe-area-inset-bottom));
+  background: #0f0f0f;
+  border-top: none;
+  z-index: 40;
+  box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.6);
+}
+.cad-multi__footer-inner {
+  width: min(100%, var(--cad-max));
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+.cad-multi__footer .button-finance--primary {
+  width: auto;
+  min-width: 140px;
+  flex-shrink: 0;
+}
+.cad-multi__footer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  min-width: 0;
+  color: var(--cm-text-muted);
+}
+.cad-multi__footer-meta strong {
+  color: var(--cm-text-strong);
+  font-weight: 500;
+}
+.cad-multi-gasto__total--zero {
+  color: var(--cm-text-faint) !important;
+}
+
+/* Painel / sheet de pagamento nesta tela */
+.cad-multi .cad-multi-pag--side,
+.cad-multi .cad-multi-pag-sheet {
+  background: var(--cm-card);
+  border: none;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.cad-multi-pag--side {
+  position: sticky;
+  top: 12px;
+  border: none;
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--cm-card);
+}
+.cad-multi-pag__titulo {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: var(--cm-text-strong);
+}
+.cad-multi-pag__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cad-multi-pag__forma {
+  display: flex;
+  gap: 8px;
+}
+.cad-multi-pag__ok {
+  margin-top: 4px;
+}
+.cad-multi-pag-sheet {
+  padding: 12px 16px 24px;
+}
+.cad-multi .cad-multi-pag .floating-field__label,
+.cad-multi .cad-multi-pag-sheet .floating-field__label {
+  color: var(--cm-text-muted);
+  background: var(--cm-card);
+}
+.cad-multi-excluir {
+  background: var(--cm-card);
+  color: var(--cm-text);
+}
+.cad-multi-excluir .modal-sheet__title {
+  color: var(--cm-text);
+}
+.cad-multi-excluir .modal-finance__body,
+.cad-multi-excluir .compromisso-cancel-confirm__body {
+  color: var(--cm-text-muted);
+}
+.cad-multi-excluir__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--cm-text);
+  cursor: pointer;
+  user-select: none;
+}
+.cad-multi-excluir__check input {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: var(--cm-danger);
+  cursor: pointer;
+}
+.cad-multi-excluir__btn-danger:not(:disabled) {
+  --button-finance-bg: color-mix(in srgb, var(--cm-danger) 18%, transparent);
+  --button-finance-border: 1px solid color-mix(in srgb, var(--cm-danger) 45%, transparent);
+  --button-finance-color: var(--cm-danger);
+  --button-finance-hover-bg: color-mix(in srgb, var(--cm-danger) 28%, transparent);
+  --button-finance-hover-border: color-mix(in srgb, var(--cm-danger) 55%, transparent);
+  --button-finance-hover-color: var(--cm-danger);
+}
+.cad-multi-excluir__btn-danger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+/* Modal Revisar e salvar */
+.cad-multi-revisar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: rgba(0, 0, 0, 0.6);
+}
+.cad-multi-revisar {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 520px);
+  max-height: min(90dvh, 720px);
+  background: var(--cm-card);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+  border: none;
+  color: var(--cm-text);
+  overflow: hidden;
+}
+.cad-multi-revisar__header {
+  flex-shrink: 0;
+  padding: 20px 20px 0;
+}
+.cad-multi-revisar__titulo {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--cm-text-strong);
+  line-height: 1.3;
+}
+.cad-multi-revisar__subtitulo {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--cm-text-muted);
+  line-height: 1.4;
+}
+.cad-multi-revisar__total {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 20px 0;
+  padding: 14px 16px;
+  background: var(--cm-field);
+  border-radius: 12px;
+}
+.cad-multi-revisar__total span {
+  font-size: 12px;
+  color: var(--cm-text-muted);
+}
+.cad-multi-revisar__total strong {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--cm-text-strong);
+  font-variant-numeric: tabular-nums;
+}
+.cad-multi-revisar__lista {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cad-multi-revisar__dia-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: var(--cm-text-muted);
+}
+.cad-multi-revisar__gastos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cad-multi-revisar__gasto {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  background: var(--cm-field);
+  border-radius: 10px;
+  min-width: 0;
+}
+.cad-multi-revisar__gasto-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.cad-multi-revisar__fornecedor {
+  font-size: 13px;
+  color: var(--cm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cad-multi-revisar__meta {
+  font-size: 11px;
+  color: var(--cm-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cad-multi-revisar__gasto-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.cad-multi-revisar__valor {
+  font-size: 13px;
+  color: var(--cm-text);
+  font-variant-numeric: tabular-nums;
+}
+.cad-multi-revisar__aviso-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.cad-multi-revisar__dot {
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--cm-warning);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.cad-multi-revisar__dot--inline {
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: middle;
+  cursor: default;
+}
+.cad-multi-revisar__tip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 2;
+  width: max-content;
+  max-width: 240px;
+  padding: 8px 10px;
+  background: #121212;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--cm-text-muted);
+}
+.cad-multi-revisar__tip p {
+  margin: 0;
+}
+.cad-multi-revisar__tip p + p {
+  margin-top: 6px;
+}
+.cad-multi-revisar__tip strong {
+  color: var(--cm-text);
+  font-weight: 500;
+}
+.cad-multi-revisar__footer {
+  flex-shrink: 0;
+  padding: 0 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  padding-top: 12px;
+}
+.cad-multi-revisar__aviso-lote {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--cm-text-muted);
+}
+.cad-multi-revisar__erro {
+  margin: 0;
+  font-size: 13px;
+  color: #ff6b61;
+}
+.cad-multi-revisar__footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cad-multi-revisar__json-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 11px;
+  color: var(--cm-text-faint);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.cad-multi-revisar__json-link:hover {
+  color: var(--cm-text-muted);
+}
+.cad-multi-revisar__acoes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.cad-multi-revisar__btn-sec,
+.cad-multi-revisar__btn-pri {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 120ms ease, opacity 120ms ease;
+}
+.cad-multi-revisar__btn-sec {
+  background: var(--cm-field);
+  color: var(--cm-text);
+}
+.cad-multi-revisar__btn-sec:hover:not(:disabled) {
+  background: var(--cm-field-hover);
+}
+.cad-multi-revisar__btn-pri {
+  background: var(--accent);
+  color: #fff;
+}
+.cad-multi-revisar__btn-pri:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+.cad-multi-revisar__btn-sec:disabled,
+.cad-multi-revisar__btn-pri:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.cad-multi-revisar__spin {
+  animation: cad-multi-spin 0.8s linear infinite;
+}
+@keyframes cad-multi-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.cad-multi-revisar__json {
+  margin: 0;
+  max-height: 160px;
+  overflow: auto;
+  padding: 10px 12px;
+  background: var(--cm-field);
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--cm-text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.cad-multi-revisar__resultado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 36px 24px 28px;
+  gap: 8px;
+}
+.cad-multi-revisar__check {
+  color: #5fcf8b;
+  margin-bottom: 8px;
+}
+.cad-multi-revisar__resultado-titulo {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--cm-text-strong);
+}
+.cad-multi-revisar__resultado-total {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--cm-text-muted);
+}
+.cad-multi-revisar__resultado-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+.cad-multi-revisar__resultado-acoes .cad-multi-revisar__btn-sec,
+.cad-multi-revisar__resultado-acoes .cad-multi-revisar__btn-pri {
+  min-width: 140px;
+}
+
+@media (max-width: 699px) {
+  .cad-multi-revisar-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .cad-multi-revisar {
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: 16px 16px 0 0;
+    animation: slideUp 0.28s ease;
+  }
+}
+
+.cad-multi-preview {
+  padding: 16px;
+  max-height: 85dvh;
+  overflow: auto;
+  background: var(--cm-card);
+  color: var(--cm-text);
+}
+.cad-multi-preview__hint {
+  font-size: 13px;
+  color: var(--cm-text-muted);
+  margin: 0 0 8px;
+}
+.cad-multi-preview__json {
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--cm-field);
+  color: var(--cm-text);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin: 0 0 12px;
+  max-height: 50dvh;
+  overflow: auto;
+}
+
+@media (max-width: 1099px) {
+  .cad-multi__layout--com-painel {
+    grid-template-columns: 1fr;
+  }
+  .cad-multi-campos-head__pag,
+  .cad-multi-gasto__pag-resumo-btn,
+  .cad-multi-gasto__pag-field {
+    grid-column: 2 / 5;
+  }
+}
+
+@media (max-width: 699px) {
+  .cad-multi {
+    --cad-data: 100px;
+    --cad-qtd: 56px;
+    --cad-un: 96px;
+    --cad-valor: 112px;
+  }
+  .cad-multi-itens-head,
+  .cad-multi-campos-head {
+    display: none;
+  }
+  .cad-multi-item {
+    grid-template-columns:
+      var(--cad-qtd)
+      minmax(0, 1fr)
+      var(--cad-valor)
+      var(--cad-hint)
+      var(--cad-rm);
+    grid-template-rows: auto auto;
+  }
+  .cad-multi-item__desc {
+    grid-column: 1 / 4;
+    grid-row: 1;
+  }
+  .cad-multi-item__hint {
+    grid-column: 4;
+    grid-row: 1;
+  }
+  .cad-multi-item__rm {
+    grid-column: 5;
+    grid-row: 1;
+  }
+  .cad-multi-item__qtd {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .cad-multi-item__unidade {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .cad-multi-item__valor {
+    grid-column: 3;
+    grid-row: 2;
+  }
+  .cad-multi-gasto__campos {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cad-multi-gasto__data-forn {
+    grid-column: 1;
+  }
+  .cad-multi-gasto__pag-resumo-btn {
+    grid-column: 1;
+  }
+  .cad-multi__footer-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cad-multi__footer .button-finance--primary {
+    width: 100%;
+  }
+}
+

@@ -10,6 +10,8 @@ interface FloatingSelectProps {
   bgVariant?: 'surface' | 'main' | 'edit';
   id?: string;
   disabled?: boolean;
+  hideLabel?: boolean;
+  showError?: boolean;
 }
 
 export const FloatingSelect: React.FC<FloatingSelectProps> = ({
@@ -21,6 +23,8 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
   bgVariant = 'main',
   id,
   disabled = false,
+  hideLabel = false,
+  showError = false,
 }) => {
   const bgClass =
     bgVariant === 'edit'
@@ -39,10 +43,12 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
       : 'var(--bg-main)';
 
   return (
-    <div className={`floating-field input-finance ${bgClass} ${className}`}>
+    <div
+      className={`floating-field input-finance ${bgClass} ${className}${hideLabel ? ' floating-field--nolabel' : ''}${showError ? ' floating-field--error' : ''}${!value ? ' floating-field--empty' : ''}`}
+    >
       <select
         id={id}
-        className={`floating-field__select${value ? ' has-value' : ''}`}
+        className={`floating-field__select${value || hideLabel ? ' has-value' : ''}`}
         value={value}
         disabled={disabled}
         aria-label={label}
@@ -60,21 +66,23 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
       <span className="floating-field__select-arrow" aria-hidden>
         <ChevronDown size={16} />
       </span>
-      <label
-        htmlFor={id}
-        className="floating-field__label"
-        style={{
-          top: 0,
-          transform: 'translateY(-50%)',
-          fontSize: 10,
-          color: disabled ? 'var(--text-inactive)' : 'var(--text-muted)',
-          background: labelBg,
-          padding: '0 5px',
-          opacity: disabled ? 0.6 : 1,
-        }}
-      >
-        {label}
-      </label>
+      {!hideLabel ? (
+        <label
+          htmlFor={id}
+          className="floating-field__label"
+          style={{
+            top: 0,
+            transform: 'translateY(-50%)',
+            fontSize: 10,
+            color: disabled ? 'var(--text-inactive)' : 'var(--text-muted)',
+            background: labelBg,
+            padding: '0 5px',
+            opacity: disabled ? 0.6 : 1,
+          }}
+        >
+          {label}
+        </label>
+      ) : null}
     </div>
   );
 };

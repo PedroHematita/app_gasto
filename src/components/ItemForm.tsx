@@ -67,7 +67,13 @@ export const ItemForm: React.FC<ItemFormProps> = ({
           }
         }}
       />
-      <PriceHintBar orgId={orgId} descricao={descricao} unidade={unidade} />
+      <PriceHintBar
+        orgId={orgId}
+        descricao={descricao}
+        unidade={unidade}
+        valorTotalCentavos={valorCentavos}
+        quantidade={Number(quantidade.replace(',', '.')) || null}
+      />
 
       <div className="form-row">
         <FloatingInput

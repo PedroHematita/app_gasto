@@ -24,6 +24,7 @@ import { ScreenHeader, ScreenHeaderIconButton } from './components/ScreenHeader'
 import { PriceWarningModal } from './components/PriceWarningModal';
 import { OrgSelector } from './components/OrgSelector';
 import { AdminPanel } from './components/admin/AdminPanel';
+import { CadastroMultiploScreen } from './components/cadastroMultiplo/CadastroMultiploScreen';
 import { OrgProvider, useOrg } from './contexts/OrgContext';
 import {
   formatDateBR,
@@ -35,6 +36,7 @@ import {
   summarizeCompromissosPendentesUrgency,
   type CompromissoPendentesUrgencySummary,
 } from './utils';
+import { avaliarDesvioComHistorico } from './lib/desvioPreco';
 import {
   supabase,
   saveGasto,
@@ -102,7 +104,12 @@ function AppInner() {
   // -------------------
 
   // Screen state
-  const [screen, setScreen] = useState<Screen>('main');
+  const [screen, setScreen] = useState<Screen>(() =>
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).has('cadastro_multiplo')
+      ? 'cadastro_multiplo'
+      : 'main'
+  );
   const [gastoDetailReturnScreen, setGastoDetailReturnScreen] = useState<Screen>('meus_gastos');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -259,12 +266,17 @@ function AppInner() {
       }
 
       // 2. Check DB
-      const { checkUnidadeForDescricao } = await import('./lib/supabase');
-      const dbUnit = await checkUnidadeForDescricao(orgId, descricao);
-      if (dbUnit) {
-        setLockedUnit(dbUnit);
-        setUnidade(dbUnit);
-      } else {
+      try {
+        const { checkUnidadeForDescricao } = await import('./lib/supabase');
+        const dbUnit = await checkUnidadeForDescricao(orgId, descricao);
+        if (dbUnit) {
+          setLockedUnit(dbUnit);
+          setUnidade(dbUnit);
+        } else {
+          setLockedUnit(null);
+        }
+      } catch {
+        // Falha de rede: não trava unidade no fluxo individual.
         setLockedUnit(null);
       }
     }, 300);
@@ -303,11 +315,16 @@ function AppInner() {
     }
 
     // 2. Validar no banco de dados
-    const { checkUnidadeForDescricao } = await import('./lib/supabase');
-    const unidadeNoBanco = await checkUnidadeForDescricao(orgId, descricao);
-    
-    if (unidadeNoBanco && unidadeNoBanco !== unidade) {
-      alert(`Esta descrição já está cadastrada com a unidade de medida "${unidadeNoBanco}".\nPara usar outra unidade, altere a descrição do item.\nExemplo: "${descricao.trim()} sem controle de litros".`);
+    try {
+      const { checkUnidadeForDescricao } = await import('./lib/supabase');
+      const unidadeNoBanco = await checkUnidadeForDescricao(orgId, descricao);
+
+      if (unidadeNoBanco && unidadeNoBanco !== unidade) {
+        alert(`Esta descrição já está cadastrada com a unidade de medida "${unidadeNoBanco}".\nPara usar outra unidade, altere a descrição do item.\nExemplo: "${descricao.trim()} sem controle de litros".`);
+        return;
+      }
+    } catch {
+      alert('Não foi possível consultar a unidade desta descrição. Verifique a conexão e tente de novo.');
       return;
     }
 
@@ -338,35 +355,22 @@ function AppInner() {
     };
 
     const checkPriceDeviationAndCommit = async () => {
-      // Price deviation check
       if (qty > 0 && valorCentavos > 0) {
         const history = await fetchPriceHistory(orgId, descricao.trim(), unidade);
-
-        if (history.length > 0) {
-          const totalHistCents = history.reduce((s, r) => s + r.valorCentavos, 0);
-          const totalHistQty = history.reduce((s, r) => s + r.quantidade, 0);
-          const mediaPonderada = totalHistQty > 0 ? Math.round(totalHistCents / totalHistQty) : 0;
-
-          if (mediaPonderada > 0) {
-            const limInf = Math.round(mediaPonderada * 0.9);
-            const limSup = Math.round(mediaPonderada * 1.1);
-            const valorUnitario = Math.round(valorCentavos / qty);
-
-            if (valorUnitario < limInf || valorUnitario > limSup) {
-              setPendingItemWarning({
-                media: mediaPonderada,
-                unidade,
-                limiteInferior: limInf,
-                limiteSuperior: limSup,
-                valorInformado: valorUnitario,
-                commit: () => {
-                  commitItem();
-                  setPendingItemWarning(null);
-                }
-              });
-              return;
-            }
-          }
+        const desvio = avaliarDesvioComHistorico(valorCentavos, qty, history);
+        if (desvio?.foraDaFaixa) {
+          setPendingItemWarning({
+            media: desvio.mediaPonderadaCentavos,
+            unidade,
+            limiteInferior: desvio.limiteInferiorCentavos,
+            limiteSuperior: desvio.limiteSuperiorCentavos,
+            valorInformado: desvio.valorUnitarioCentavos,
+            commit: () => {
+              commitItem();
+              setPendingItemWarning(null);
+            },
+          });
+          return;
         }
       }
 
@@ -782,6 +786,16 @@ function AppInner() {
     );
   }
 
+  if (screen === 'cadastro_multiplo') {
+    return (
+      <CadastroMultiploScreen
+        orgId={orgId}
+        onBack={() => setScreen('main')}
+        onVerMeusGastos={() => setScreen('meus_gastos')}
+      />
+    );
+  }
+
   // Classificar Gastos
   if (screen === 'classificar_gastos') {
     return (
@@ -807,6 +821,7 @@ function AppInner() {
           onSelectGastoPerene={handleSelectGastoPerene}
           onNewGasto={() => handleNavigate('main')}
           onNovoGastoPerene={() => setShowGastoPereneModal(true)}
+          onCadastroMultiplo={() => setScreen('cadastro_multiplo')}
           onOpenAdmin={isSuperAdmin ? () => setScreen('admin_panel') : undefined}
           refreshKey={refreshKey}
           focusCompromissosNonce={focusCompromissosNonce}
